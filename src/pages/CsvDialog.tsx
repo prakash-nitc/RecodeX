@@ -4,15 +4,18 @@ import { Button, Dialog, Segmented, Textarea, useUi } from '../components/ui';
 import { useData, settingsOf, importRows } from '../lib/store';
 import { csvToRows, problemsToCsv, CSV_TEMPLATE, CsvParseResult } from '../lib/csv';
 import { statusOf, revisionTypeOf } from '../lib/engine';
-import { getDownloads } from '../lib/backend';
 import { today } from '../lib/dates';
 
-/** Saves through the viewer's download prompt when available; otherwise shows the text to copy. */
+/** Downloads the text as a file; if the browser refuses, the caller shows the text to copy instead. */
 export async function saveFile(filename: string, data: string, mime: string): Promise<'saved' | 'fallback' | 'declined'> {
-  const dl = await getDownloads();
-  if (!dl) return 'fallback';
-  try { await dl.save({ filename, data: new Blob([data], { type: mime }) }); return 'saved'; }
-  catch (e: any) { return e?.code === 'declined' || e?.code === 'cancelled' ? 'declined' : 'fallback'; }
+  try {
+    const url = URL.createObjectURL(new Blob([data], { type: mime }));
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.rel = 'noopener'; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    return 'saved';
+  } catch { return 'fallback'; }
 }
 
 export function CopyBox({ text, label }: { text: string; label: string }) {
@@ -44,13 +47,13 @@ export function CsvDialog({ mode, onClose }: { mode: 'import' | 'export'; onClos
   if (mode === 'export') {
     const doSave = async () => {
       const data = csvOut();
-      const r = await saveFile(`dsa-problem-bank-${today()}.csv`, data, 'text/csv');
+      const r = await saveFile(`recodex-problem-bank-${today()}.csv`, data, 'text/csv');
       if (r === 'saved') { toast('CSV saved'); onClose(); } else if (r === 'fallback') setFallback(data);
     };
     return (
       <Dialog open onClose={onClose} title="Export problem bank" sub={`${Object.keys(d.problems).length} problems with ratings, dates, phases and notes`} width="max-w-2xl"
         footer={<><Button variant="ghost" onClick={onClose}>Close</Button>{!fallback && <Button variant="primary" onClick={doSave}><Download size={15} />Save CSV file</Button>}</>}>
-        {fallback ? <CopyBox text={fallback} label="Downloads are not available here. Copy the CSV and paste it into a file or Google Sheets." />
+        {fallback ? <CopyBox text={fallback} label="The download did not start. Copy the CSV and paste it into a file or Google Sheets." />
           : <p className="text-sm text-muted">The file opens in Google Sheets or Excel and can be imported back here. Revision history is not part of the CSV. Use Settings → Backup for a complete copy.</p>}
       </Dialog>
     );
