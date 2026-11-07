@@ -1,7 +1,6 @@
 // Application state: an in-memory mirror of the database plus every mutation the UI performs.
 import { useSyncExternalStore } from 'react';
 import type { Backend, Col, Change } from './backend';
-import { createBackend } from './backend';
 import type {
   Meta, Pattern, Problem, Revision, Session, Settings, Rating, Phase, Priority, Difficulty, Track, SessionResult,
 } from '../types';
@@ -15,6 +14,7 @@ export interface DataState {
   needsImport: boolean;
   backendKind: 'cloud' | 'local' | null;
   pending: number;
+  offline: boolean;
   error: string | null;
   meta: Meta | null;
   patterns: Record<string, Pattern>;
@@ -23,10 +23,11 @@ export interface DataState {
   sessions: Record<string, Session>;
 }
 
-let state: DataState = {
-  status: 'booting', needsImport: false, backendKind: null, pending: 0, error: null,
+const initialState = (): DataState => ({
+  status: 'booting', needsImport: false, backendKind: null, pending: 0, offline: false, error: null,
   meta: null, patterns: {}, problems: {}, revisions: {}, sessions: {},
-};
+});
+let state: DataState = initialState();
 let backend: Backend | null = null;
 const listeners = new Set<() => void>();
 function emit() { listeners.forEach(l => l()); }
@@ -40,22 +41,48 @@ export function settingsOf(s: DataState = state): Settings {
 }
 
 function applyChanges(col: Col | 'meta', changes: Change[]) {
-  if (col === 'meta') { set({ meta: changes[0].data }); return; }
+  if (col === 'meta') {
+    const meta = changes[0].data as Meta | null;
+    // Another device finished the first-run import while this one showed the import screen.
+    set(meta?.importedAt && state.needsImport ? { meta, needsImport: false } : { meta });
+    return;
+  }
   const next = { ...state[col] } as Record<string, any>;
   for (const c of changes) { if (c.data === null) delete next[c.id]; else next[c.id] = c.data; }
   set({ [col]: next } as any);
 }
 
-export async function boot() {
-  backend = await createBackend();
-  set({ backendKind: backend.kind });
-  backend.start({
-    onChanges: applyChanges,
-    onReady: hasMeta => set({ status: 'ready', needsImport: !hasMeta }),
-    onSlow: () => { if (state.status === 'booting') set({ status: 'slow' }); },
-    onError: msg => set({ error: msg }),
-    onPending: n => { if (n !== state.pending) set({ pending: n }); },
+/** An account needs the first-run import until it has been imported (or started empty) and holds no problems. */
+function isEmptyAccount(hasMeta: boolean) {
+  if (!hasMeta) return true;
+  return !state.meta?.importedAt && Object.keys(state.problems).length === 0;
+}
+
+export function boot(b: Backend) {
+  backend?.stop?.();
+  backend = b;
+  state = { ...initialState(), backendKind: b.kind };
+  emit();
+  const mine = b;
+  const live = <A extends unknown[]>(fn: (...a: A) => void) => (...a: A) => { if (backend === mine) fn(...a); };
+  b.start({
+    onChanges: live(applyChanges),
+    onReady: live((hasMeta: boolean) => set({ status: 'ready', needsImport: isEmptyAccount(hasMeta) })),
+    onSlow: live(() => { if (state.status === 'booting') set({ status: 'slow' }); }),
+    onError: live((msg: string) => set({ error: msg })),
+    onPending: live((n: number) => { if (n !== state.pending) set({ pending: n }); }),
+    onOffline: live((offline: boolean) => { if (offline !== state.offline) set({ offline }); }),
   });
+}
+
+/** Stops the current backend and empties memory (sign-out). With clearDevice, cached data is removed too. */
+export async function shutdown(clearDevice = false) {
+  const b = backend;
+  backend = null;
+  b?.stop?.();
+  if (clearDevice) await b?.clearLocal?.();
+  state = initialState();
+  emit();
 }
 export function clearError() { set({ error: null }); }
 export function flushed() { return backend?.flushed() ?? Promise.resolve(); }

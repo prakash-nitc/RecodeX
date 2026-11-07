@@ -1,6 +1,6 @@
 // Persistence layer. Every backend implements one interface, so the store does not care where data lives.
 //  - LocalBackend: browser localStorage.
-// A Supabase backend implements the same interface (Phase 2).
+//  - SupabaseBackend (src/lib/supabase/backend.ts): Supabase tables, with an offline cache and write queue.
 
 export type Col = 'patterns' | 'problems' | 'revisions' | 'sessions';
 export const COLS: Col[] = ['patterns', 'problems', 'revisions', 'sessions'];
@@ -12,6 +12,7 @@ export interface BackendEvents {
   onSlow(): void;
   onError(message: string): void;
   onPending(n: number): void;
+  onOffline?(offline: boolean): void;
 }
 
 export interface Backend {
@@ -21,6 +22,10 @@ export interface Backend {
   remove(col: Col, id: string): void;
   putMeta(data: any): void;
   flushed(): Promise<void>;
+  /** Stop syncing and remove listeners (sign-out). */
+  stop?(): void;
+  /** Remove data cached on this device. */
+  clearLocal?(): Promise<void>;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -62,6 +67,3 @@ export class LocalBackend implements Backend {
   flushed() { return new Promise<void>(r => setTimeout(r, 300)); }
 }
 
-export async function createBackend(): Promise<Backend> {
-  return new LocalBackend();
-}
