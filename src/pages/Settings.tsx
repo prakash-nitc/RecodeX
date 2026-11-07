@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Download, Upload, RotateCcw, Trash2, Plus, X, Monitor, Sun, Moon, Database, HardDrive } from 'lucide-react';
-import { useData, settingsOf, updateSettings, makeBackup, restoreBackup, resetToImport, Backup } from '../lib/store';
+import { useData, settingsOf, updateSettings, makeBackup, restoreBackup, resetToImport, Backup, BACKUP_APP_IDS } from '../lib/store';
 import { intervalFor } from '../lib/engine';
 import { applyTheme } from '../lib/theme';
 import { today } from '../lib/dates';
@@ -30,18 +30,18 @@ export default function Settings() {
 
   const backup = async () => {
     const json = JSON.stringify(makeBackup(), null, 1);
-    const r = await saveFile(`dsa-revision-backup-${today()}.json`, json, 'application/json');
+    const r = await saveFile(`recodex-backup-${today()}.json`, json, 'application/json');
     if (r === 'saved') toast('Backup saved'); else if (r === 'fallback') setFallback(json);
   };
   const restore = async (file: File | undefined) => {
     if (!file) return;
     try {
       const b = JSON.parse(await readFileText(file)) as Backup;
-      if (b.app !== 'dsa-revision-manager' || !Array.isArray(b.problems)) throw new Error('not a backup');
+      if (!BACKUP_APP_IDS.includes(b.app) || !Array.isArray(b.problems)) throw new Error('not a backup');
       if (await confirm({ title: 'Restore this backup?', body: `It replaces everything here with ${b.problems.length} problems, ${b.revisions.length} revisions and ${b.sessions.length} sessions from ${b.exportedAt.slice(0, 10)}.`, confirmLabel: 'Replace and restore', danger: true })) {
         restoreBackup(b); toast('Backup restored');
       }
-    } catch { toast('That file is not a DSA Revision backup (.json exported from Settings).', 'error'); }
+    } catch { toast('That file is not a RecodeX backup (.json exported from Settings).', 'error'); }
   };
   const reset = async () => {
     if (await confirm({ title: 'Delete everything and start over?', body: 'All problems, revisions and sessions are erased, and the import screen opens again. Export a backup first if you want to keep any of it.', confirmLabel: 'Delete everything', danger: true })) {
@@ -144,7 +144,7 @@ export default function Settings() {
         </Card>
 
         <Card>
-          <CardHeader title="Data" sub={<span className="inline-flex items-center gap-1.5">{d.backendKind === 'cloud' ? <><Database size={12} />Stored in your private Artifact database, synced across devices</> : <><HardDrive size={12} />Stored in this browser only</>}</span>} />
+          <CardHeader title="Data" sub={<span className="inline-flex items-center gap-1.5">{d.backendKind === 'cloud' ? <><Database size={12} />Stored in your account, synced across devices</> : <><HardDrive size={12} />Stored in this browser only</>}</span>} />
           <div className="px-4 sm:px-5 pb-5 flex flex-col gap-3">
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={backup}><Download size={15} />Download backup (.json)</Button>
@@ -162,7 +162,7 @@ export default function Settings() {
         </Card>
       </div>
       <Dialog open={!!fallback} onClose={() => setFallback(null)} title="Copy your backup" width="max-w-2xl" footer={<Button onClick={() => setFallback(null)}>Done</Button>}>
-        {fallback && <CopyBox text={fallback} label="Downloads are not available here. Copy this JSON into a file named backup.json." />}
+        {fallback && <CopyBox text={fallback} label="The download did not start. Copy this JSON into a file named backup.json." />}
       </Dialog>
       {csv && <CsvDialog mode={csv} onClose={() => setCsv(null)} />}
     </div>

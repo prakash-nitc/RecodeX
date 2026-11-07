@@ -318,13 +318,15 @@ export function startEmpty() {
   set({ needsImport: false });
 }
 
+/** Backups from the old "DSA Revision Manager" use the legacy app id and restore unchanged. */
+export const BACKUP_APP_IDS: string[] = ['recodex', 'dsa-revision-manager'];
 export interface Backup {
-  app: 'dsa-revision-manager'; version: 1; exportedAt: string;
+  app: 'recodex' | 'dsa-revision-manager'; version: 1; exportedAt: string;
   meta: Meta | null; patterns: Pattern[]; problems: Problem[]; revisions: Revision[]; sessions: Session[];
 }
 export function makeBackup(): Backup {
   return {
-    app: 'dsa-revision-manager', version: 1, exportedAt: nowIso(), meta: state.meta,
+    app: 'recodex', version: 1, exportedAt: nowIso(), meta: state.meta,
     patterns: Object.values(state.patterns), problems: Object.values(state.problems),
     revisions: Object.values(state.revisions), sessions: Object.values(state.sessions),
   };

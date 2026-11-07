@@ -1,4 +1,4 @@
-// Core domain types for the DSA Revision Manager.
+// Core domain types for RecodeX.
 // These mirror the relational schema in schema.sql (patterns 1—n problems 1—n revisions; sessions n—n problems).
 
 export type Rating = 'green' | 'yellow' | 'red';

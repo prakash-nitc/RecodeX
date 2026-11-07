@@ -63,7 +63,7 @@ export default function App() {
 function Shell() {
   const d = useData(); const s = settingsOf(d);
   const { route, go, addProblemDialog } = useApp();
-  const [collapsed, setCollapsed] = useState(lsGet('dsa-sidebar') === '1');
+  const [collapsed, setCollapsed] = useState(lsGet('recodex-sidebar') === '1');
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => { if (d.meta) applyTheme(s.theme); }, [s.theme, !!d.meta]);
   useEffect(() => setMobileOpen(false), [route]);
@@ -120,15 +120,15 @@ function Shell() {
     </nav>
   );
   const syncChip = (
-    <div className={cx('flex items-center gap-2 text-[11px] text-muted', collapsed && 'justify-center')} title={d.backendKind === 'cloud' ? 'Saved to your private Artifact database' : 'Saved in this browser only'}>
+    <div className={cx('flex items-center gap-2 text-[11px] text-muted', collapsed && 'justify-center')} title={d.backendKind === 'cloud' ? 'Synced to your account' : 'Saved in this browser only'}>
       {d.pending > 0 ? <Loader2 size={13} className="animate-spin text-accent" /> : d.backendKind === 'cloud' ? <Cloud size={13} className="text-ok" /> : <HardDrive size={13} className="text-warn" />}
       {!collapsed && <span>{d.pending > 0 ? `Saving ${d.pending}…` : d.backendKind === 'cloud' ? 'All changes saved' : 'Saved in this browser'}</span>}
     </div>
   );
   const brand = (
     <div className={cx('flex items-center gap-2.5', collapsed && 'justify-center')}>
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accentfg font-display font-extrabold text-sm">DR</div>
-      {!collapsed && <div className="min-w-0"><div className="font-display text-[15px] font-extrabold leading-tight text-fg">DSA Revision</div><div className="text-[11px] text-muted">Placement season</div></div>}
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accentfg font-display font-extrabold text-sm">RX</div>
+      {!collapsed && <div className="min-w-0 font-display text-[15px] font-extrabold leading-tight text-fg">RecodeX</div>}
     </div>
   );
 
@@ -141,7 +141,7 @@ function Shell() {
         <div className="mt-auto flex flex-col gap-3">
           {running && <button onClick={() => go('session')} className={cx('flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 text-xs font-semibold text-accent h-9', collapsed ? 'justify-center' : 'px-3')}><Play size={14} />{!collapsed && 'Resume session'}</button>}
           {syncChip}
-          <button onClick={() => { setCollapsed(!collapsed); lsSet('dsa-sidebar', collapsed ? '0' : '1'); }} className={cx('flex items-center gap-2 rounded-lg h-8 text-xs text-muted hover:text-fg hover:bg-surface2', collapsed ? 'justify-center' : 'px-3')} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+          <button onClick={() => { setCollapsed(!collapsed); lsSet('recodex-sidebar', collapsed ? '0' : '1'); }} className={cx('flex items-center gap-2 rounded-lg h-8 text-xs text-muted hover:text-fg hover:bg-surface2', collapsed ? 'justify-center' : 'px-3')} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
             {collapsed ? <PanelLeftOpen size={16} /> : <><PanelLeftClose size={16} />Collapse</>}
           </button>
         </div>
@@ -150,7 +150,7 @@ function Shell() {
       <header className="lg:hidden sticky z-30 flex items-center justify-between gap-2 border-b border-line bg-surface/95 backdrop-blur h-14 mobile-bar">
         <div className="flex items-center gap-2">
           <Button size="icon" variant="ghost" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Menu size={18} /></Button>
-          <span className="font-display font-extrabold text-fg">DSA Revision</span>
+          <span className="font-display font-extrabold text-fg">RecodeX</span>
         </div>
         <div className="flex items-center gap-2">{syncChip}<Button size="icon" variant="primary" aria-label="Add problem" onClick={() => addProblemDialog()}><Plus size={16} /></Button></div>
       </header>
@@ -170,10 +170,10 @@ function Shell() {
             <span>{d.error}</span><Button size="icon" variant="ghost" aria-label="Dismiss" onClick={clearError}><X size={14} /></Button>
           </div>
         )}
-        {d.backendKind === 'local' && lsGet('dsa-local-note') !== '1' && (
+        {d.backendKind === 'local' && lsGet('recodex-local-note') !== '1' && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-fg">
-            <span>Your data is saved in this browser only, because the synced database is not available in this view. Open the app from its claude.ai link while signed in to sync across devices, and download a backup from Settings now and then.</span>
-            <Button size="sm" variant="ghost" onClick={() => { lsSet('dsa-local-note', '1'); go(route); }}>Got it</Button>
+            <span>Your data is saved in this browser only. Download a backup from Settings now and then so you do not lose it.</span>
+            <Button size="sm" variant="ghost" onClick={() => { lsSet('recodex-local-note', '1'); go(route); }}>Got it</Button>
           </div>
         )}
         <div className="mx-auto max-w-[1400px]">{page}</div>
