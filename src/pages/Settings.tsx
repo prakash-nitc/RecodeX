@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Download, Upload, RotateCcw, Trash2, Plus, X, Monitor, Sun, Moon, Database, HardDrive } from 'lucide-react';
-import { useData, settingsOf, updateSettings, makeBackup, restoreBackup, resetToImport, Backup, BACKUP_APP_IDS } from '../lib/store';
+import { Download, Upload, RotateCcw, Trash2, Plus, X, Monitor, Sun, Moon, Database, HardDrive, LogOut, KeyRound } from 'lucide-react';
+import { useData, settingsOf, updateSettings, makeBackup, restoreBackup, resetToImport, Backup, BACKUP_APP_IDS, shutdown } from '../lib/store';
+import { supabase } from '../lib/supabase/client';
 import { intervalFor } from '../lib/engine';
 import { applyTheme } from '../lib/theme';
 import { today } from '../lib/dates';
@@ -18,6 +19,43 @@ function Num({ id, value, onChange, min = 0, max = 365, suffix }: { id: string; 
         onBlur={() => { const n = Math.round(Number(v)); if (Number.isFinite(n) && n >= min && n <= max) onChange(n); else setV(String(value)); }} />
       {suffix && <span className="text-sm text-muted">{suffix}</span>}
     </div>
+  );
+}
+
+function AccountCard() {
+  const d = useData(); const { toast, confirm } = useUi();
+  const [email, setEmail] = useState<string | null>(null);
+  const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  React.useEffect(() => { supabase?.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null)); }, []);
+  if (!supabase) return null;
+  const changePassword = async () => {
+    setBusy(true);
+    const { error } = await supabase!.auth.updateUser({ password: pw });
+    setBusy(false);
+    if (error) toast(error.message, 'error'); else { setPw(''); toast('Password updated'); }
+  };
+  const signOut = async () => {
+    const body = d.pending > 0
+      ? `${d.pending} change${d.pending === 1 ? ' is' : 's are'} not saved to your account yet and will be lost. Stay online until the sidebar shows "All changes saved" to keep them.`
+      : 'Your data stays in your account. This device forgets its saved copy.';
+    if (!(await confirm({ title: 'Sign out?', body, confirmLabel: 'Sign out', danger: d.pending > 0 }))) return;
+    await shutdown(true);
+    await supabase!.auth.signOut({ scope: 'local' });
+  };
+  return (
+    <Card>
+      <CardHeader title="Account" sub={email ? <>Signed in as <span className="font-semibold text-fg">{email}</span></> : 'Signed in'} />
+      <div className="px-4 sm:px-5 pb-5 flex flex-col gap-4">
+        <Field label="New password" htmlFor="st-pw" hint="At least 6 characters. Useful after signing in with a magic link.">
+          <div className="flex flex-wrap gap-2">
+            <Input id="st-pw" type="password" autoComplete="new-password" className="!w-64 max-w-full" value={pw} onChange={e => setPw(e.target.value)} />
+            <Button variant="outline" disabled={busy || pw.length < 6} onClick={changePassword}><KeyRound size={15} />Update password</Button>
+          </div>
+        </Field>
+        <div className="border-t border-line pt-3"><Button variant="ghost" onClick={signOut}><LogOut size={15} />Sign out</Button></div>
+      </div>
+    </Card>
   );
 }
 
@@ -56,6 +94,7 @@ export default function Settings() {
     <div className="max-w-4xl">
       <PageHeader title="Settings" sub="Changes save as you make them." />
       <div className="flex flex-col gap-4">
+        <AccountCard />
         <Card>
           <CardHeader title="Daily plan" sub="What goes into Today's Focus" />
           <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">

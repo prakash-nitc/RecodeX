@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   LayoutDashboard, Library, CalendarCheck, Shuffle, Shapes, GraduationCap, History as HistoryIcon, BarChart3, Settings as SettingsIcon,
-  PanelLeftClose, PanelLeftOpen, Menu, Plus, Cloud, HardDrive, Loader2, X, Play,
+  PanelLeftClose, PanelLeftOpen, Menu, Plus, Cloud, CloudOff, HardDrive, Loader2, X, Play,
 } from 'lucide-react';
 import { useData, settingsOf, clearError } from './lib/store';
 import { buildFocus } from './lib/engine';
@@ -76,7 +76,8 @@ function Shell() {
       <div className="flex min-h-[80vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <Spinner size={28} />
         <div className="font-display text-lg font-bold text-fg">Loading your revision data</div>
-        {d.status === 'slow' && <p className="max-w-sm text-sm text-muted">The database is taking longer than usual to answer. It keeps trying; check your connection if this stays.</p>}
+        {d.error ? <p className="max-w-md text-sm text-bad">{d.error}</p>
+          : d.status === 'slow' && <p className="max-w-sm text-sm text-muted">{d.offline ? 'You are offline and this device has no saved copy yet. Connect once to load your data.' : 'The database is taking longer than usual to answer. It keeps trying; check your connection if this stays.'}</p>}
       </div>
     );
   }
@@ -120,9 +121,9 @@ function Shell() {
     </nav>
   );
   const syncChip = (
-    <div className={cx('flex items-center gap-2 text-[11px] text-muted', collapsed && 'justify-center')} title={d.backendKind === 'cloud' ? 'Synced to your account' : 'Saved in this browser only'}>
-      {d.pending > 0 ? <Loader2 size={13} className="animate-spin text-accent" /> : d.backendKind === 'cloud' ? <Cloud size={13} className="text-ok" /> : <HardDrive size={13} className="text-warn" />}
-      {!collapsed && <span>{d.pending > 0 ? `Saving ${d.pending}…` : d.backendKind === 'cloud' ? 'All changes saved' : 'Saved in this browser'}</span>}
+    <div className={cx('flex items-center gap-2 text-[11px] text-muted', collapsed && 'justify-center')} title={d.backendKind === 'cloud' ? (d.offline ? 'Offline: changes are kept on this device and sent when you are back online' : 'Synced to your account') : 'Saved in this browser only'}>
+      {d.backendKind === 'cloud' && d.offline ? <CloudOff size={13} className="text-hot" /> : d.pending > 0 ? <Loader2 size={13} className="animate-spin text-accent" /> : d.backendKind === 'cloud' ? <Cloud size={13} className="text-ok" /> : <HardDrive size={13} className="text-warn" />}
+      {!collapsed && <span>{d.backendKind === 'cloud' && d.offline ? (d.pending > 0 ? `Offline · ${d.pending} waiting` : 'Offline') : d.pending > 0 ? `Saving ${d.pending}…` : d.backendKind === 'cloud' ? 'All changes saved' : 'Saved in this browser'}</span>}
     </div>
   );
   const brand = (
@@ -178,7 +179,7 @@ function Shell() {
         )}
         <div className="mx-auto max-w-[1400px]">{page}</div>
       </main>
-      {d.pending > 15 && (
+      {d.pending > 15 && !d.offline && (
         <div className="fixed z-[70] bottom-0 left-0 toast-pad pointer-events-none">
           <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-5 py-4 shadow-pop">
             <Spinner /><div><div className="font-semibold text-fg">Saving your problem bank</div><div className="text-xs text-muted tabular-nums">{d.pending} records left</div></div>
