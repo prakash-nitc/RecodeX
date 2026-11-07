@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'supabase/**/*.test.ts'],
     // Run tests in the user's time zone so calendar-day maths matches real use.
     env: { TZ: 'Asia/Kolkata' },
   },
