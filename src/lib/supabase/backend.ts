@@ -54,6 +54,7 @@ export class SupabaseBackend implements Backend {
   private touched = new Map<string, number>();
   private waiters: (() => void)[] = [];
   private backoff = 0;
+  private failures = 0;            // consecutive failed write requests that are being retried
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private slowTimer: ReturnType<typeof setTimeout> | null = null;
   private cacheTimer: ReturnType<typeof setTimeout> | null = null;
@@ -333,13 +334,18 @@ export class SupabaseBackend implements Backend {
     keys.forEach(k => this.inflight.delete(k));
     if (!error) {
       this.backoff = 0;
+      this.failures = 0;
       this.setOffline(false);
       return;
     }
+    console.warn('[RecodeX] write failed', b.table, b.op, status, error);
     if (this.stopped) { this.requeue(b.jobs); return; }
     const kind = classify(error, status);
     if (kind !== 'fatal') {
       if (kind === 'network') this.setOffline(true);
+      else if (++this.failures === 3) {
+        this.ev.onError(`Your changes are not reaching the server (${error?.message ?? 'error'}). They are kept on this device and retried; signing out and in again may help.`);
+      }
       this.requeue(b.jobs);
       this.scheduleRetry();
       return;

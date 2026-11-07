@@ -65,6 +65,6 @@ describe('mapping', () => {
   it('fills defaults for fields missing in old records', () => {
     const row = toRow('problems', { id: 'p-1', num: 1, name: 'n', patternId: 'pt' }, UID);
     expect(row).toMatchObject({ difficulty: 'Medium', priority: 'Medium', track: 'active', phase: 'Reconstruction', consecutive_green: 0, weakness: '', last_rating: null });
-    expect('created_at' in row).toBe(false); // column default fills it
+    expect(typeof row.created_at).toBe('string'); // every row in a bulk upsert has the same columns
   });
 });

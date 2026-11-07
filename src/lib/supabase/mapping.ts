@@ -60,7 +60,8 @@ export function toRow(table: Table, rec: any, userId: string): Record<string, un
     let v = rec?.[camel];
     if (v === undefined) {
       if (fallback === undefined) {
-        if (kind === 'ts') continue;           // let the column default (now()) fill it
+        // Bulk upserts send the same columns for every row, so fill a missing timestamp instead of omitting it.
+        if (kind === 'ts') { row[snake] = new Date().toISOString(); continue; }
         v = null;
       } else v = fallback;
     }
