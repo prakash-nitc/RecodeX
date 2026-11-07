@@ -88,7 +88,7 @@ export function CsvDialog({ mode, onClose }: { mode: 'import' | 'export'; onClos
             <div className="font-semibold text-fg">{parsed.rows.length} rows ready · {parsed.rows.filter(r => r.rating).length} with a rating</div>
             {parsed.rows.slice(0, 5).map((r, i) => <div key={i} className="text-xs text-muted mt-1 truncate">{r.name} · {r.pattern}{r.subPattern ? ` › ${r.subPattern}` : ''} · {r.difficulty}{r.rating ? ` · ${r.rating}` : ''}</div>)}
             {parsed.rows.length > 5 && <div className="text-xs text-muted mt-1">and {parsed.rows.length - 5} more</div>}
-            {parsed.errors.slice(0, 6).map((e, i) => <div key={i} className="text-xs text-hot mt-1">{e}</div>)}
+            {parsed.errors.slice(0, 6).map((e, i) => <div key={i} className="text-xs text-hot-ink mt-1">{e}</div>)}
           </div>
         )}
       </div>

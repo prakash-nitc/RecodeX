@@ -59,6 +59,12 @@ function AccountCard() {
   );
 }
 
+function NameInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [v, setV] = useState(value);
+  React.useEffect(() => setV(value), [value]);
+  return <Input id="st-name" className="!w-72 max-w-full" maxLength={40} placeholder="e.g. Prakash" value={v} onChange={e => setV(e.target.value)} onBlur={() => { if (v.trim() !== value) onChange(v.trim()); }} />;
+}
+
 export default function Settings() {
   const d = useData(); const s = settingsOf(d); const { toast, confirm } = useUi();
   const set = (patch: Partial<S>) => { updateSettings(patch); };
@@ -108,7 +114,7 @@ export default function Settings() {
               <div className="flex flex-wrap gap-1.5">
                 {patterns.filter(p => p.learning !== 'yet_to_learn').map(p => (
                   <button key={p.id} onClick={() => togglePlan(p.id)} aria-pressed={s.studyPlanPatternIds.includes(p.id)}
-                    className={cx('rounded-md border px-2 py-1 text-xs font-semibold', s.studyPlanPatternIds.includes(p.id) ? 'border-accent bg-accent/15 text-accent' : 'border-line text-muted hover:text-fg')}>{p.name}</button>
+                    className={cx('rounded-md border px-2 py-1 text-xs font-semibold', s.studyPlanPatternIds.includes(p.id) ? 'border-accent bg-accent/15 text-accent-ink' : 'border-line text-muted hover:text-fg')}>{p.name}</button>
                 ))}
               </div>
             </Field>
@@ -163,9 +169,12 @@ export default function Settings() {
         <Card>
           <CardHeader title="Appearance and calendar" />
           <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Display name" htmlFor="st-name" hint="Used in the dashboard greeting." className="md:col-span-2">
+              <NameInput value={s.displayName} onChange={v => set({ displayName: v })} />
+            </Field>
             <Field label="Theme">
               <Segmented ariaLabel="Theme" value={s.theme} onChange={v => { set({ theme: v }); applyTheme(v); }}
-                options={[{ value: 'system', label: <span className="inline-flex items-center gap-1"><Monitor size={13} />System</span> }, { value: 'light', label: <span className="inline-flex items-center gap-1"><Sun size={13} />Light</span> }, { value: 'dark', label: <span className="inline-flex items-center gap-1"><Moon size={13} />Dark</span> }]} />
+                options={[{ value: 'system', label: <span className="inline-flex items-center gap-1"><Monitor size={13} />System</span> }, { value: 'light', label: <span className="inline-flex items-center gap-1"><Sun size={13} />Dawn</span> }, { value: 'dark', label: <span className="inline-flex items-center gap-1"><Moon size={13} />Dusk</span> }]} />
             </Field>
             <Field label="Week starts on">
               <Segmented ariaLabel="Week start" value={s.weekStart} onChange={v => set({ weekStart: v })} options={[{ value: 1, label: 'Monday' }, { value: 0, label: 'Sunday' }]} />
@@ -195,7 +204,7 @@ export default function Settings() {
             </div>
             <p className="text-xs text-muted">A backup holds every problem, revision, session and setting. Restoring replaces what is here.</p>
             <div className="border-t border-line pt-3">
-              <Button variant="ghost" className="!text-bad hover:!bg-bad/10" onClick={reset}><Trash2 size={15} />Delete all data and re-run the import</Button>
+              <Button variant="ghost" className="!text-bad-ink hover:!bg-bad/10" onClick={reset}><Trash2 size={15} />Delete all data and re-run the import</Button>
             </div>
           </div>
         </Card>

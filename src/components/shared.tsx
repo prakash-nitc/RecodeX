@@ -60,9 +60,9 @@ export function initialRatingValue(p: Problem, rating?: Rating | null, timeMin =
 }
 
 export const RATING_BTN: Record<Rating, string> = {
-  green: 'border-ok/40 bg-ok/10 text-ok aria-pressed:bg-ok aria-pressed:text-white aria-pressed:border-ok',
-  yellow: 'border-warn/40 bg-warn/10 text-warn aria-pressed:bg-warn aria-pressed:text-black aria-pressed:border-warn',
-  red: 'border-bad/40 bg-bad/10 text-bad aria-pressed:bg-bad aria-pressed:text-white aria-pressed:border-bad',
+  green: 'border-ok/40 bg-ok/10 text-ok-ink aria-pressed:bg-ok aria-pressed:text-white aria-pressed:border-ok',
+  yellow: 'border-warn/40 bg-warn/10 text-warn-ink aria-pressed:bg-warn aria-pressed:text-black aria-pressed:border-warn',
+  red: 'border-bad/40 bg-bad/10 text-bad-ink aria-pressed:bg-bad aria-pressed:text-white aria-pressed:border-bad',
 };
 const RATING_SHORT: Record<Rating, string> = { green: 'Solved independently', yellow: 'Needed hints / partial', red: 'Could not solve' };
 
@@ -120,7 +120,7 @@ export function RatingForm({ problem, value, onChange, idPrefix }: { problem: Pr
       {pv && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3.5 py-3">
           <div className="flex items-center gap-2.5 text-sm">
-            <CalendarClock size={16} className="text-accent" />
+            <CalendarClock size={16} className="text-accent-ink" />
             <span className="text-muted">Next review</span>
             <span className="font-semibold text-fg">{fmt(value.nextOverride || pv.next, 'EEE, d MMM')}</span>
             {!value.nextOverride && <span className="text-xs text-muted">({pv.days}d · green streak {pv.streak})</span>}
@@ -154,7 +154,7 @@ function RatingDialog({ problemId, source, sessionId, initialRating, onClose, on
   return (
     <Dialog open onClose={onClose} title={`Record revision · ${p.name}`} sub={<span>#{p.num} · {d.patterns[p.patternId]?.name} · {p.difficulty}</span>} width="max-w-xl"
       footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!v.rating} onClick={save}>Save revision</Button></>}>
-      {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline"><ExternalLink size={14} />Open problem</a>}
+      {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-ink hover:underline"><ExternalLink size={14} />Open problem</a>}
       <RatingForm problem={p} value={v} onChange={setV} idPrefix="rd" />
     </Dialog>
   );
@@ -349,13 +349,13 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
           {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[13px] font-semibold text-fg hover:bg-surface2"><ExternalLink size={14} />Open problem</a>}
           <Button size="sm" variant="outline" onClick={() => editProblem(p.id)}><Pencil size={14} />Edit</Button>
           {latest && latest.prev && <Button size="sm" variant="ghost" onClick={undo}><Undo2 size={14} />Undo last</Button>}
-          <Button size="sm" variant="ghost" className="hover:!text-bad" onClick={del}><Trash2 size={14} />Delete</Button>
+          <Button size="sm" variant="ghost" className="hover:!text-bad-ink" onClick={del}><Trash2 size={14} />Delete</Button>
         </div>
       </div>
       <div className="px-5 py-4 flex flex-col gap-4">
         <Card className="px-4 py-1">
           <Row k="Last revised" v={p.lastRevised ? `${fmt(p.lastRevised)} (${relDay(p.lastRevised)})` : '—'} />
-          <Row k="Next review" v={p.nextReview ? <span className={st === 'Overdue' ? 'text-bad font-semibold' : ''}>{fmt(p.nextReview)} ({relDay(p.nextReview)})</span> : '—'} />
+          <Row k="Next review" v={p.nextReview ? <span className={st === 'Overdue' ? 'text-bad-ink font-semibold' : ''}>{fmt(p.nextReview)} ({relDay(p.nextReview)})</span> : '—'} />
           <Row k="Revision type" v={revisionTypeOf(p.lastRating)} />
           <Row k="Consecutive green" v={<span className="tabular-nums">{p.consecutiveGreen} / {s.masteryStreak} for mastery</span>} />
           <Row k="Total revisions" v={<span className="tabular-nums">{p.revisionCount}</span>} />
@@ -363,7 +363,7 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
         </Card>
         {p.weakness && (
           <div className="rounded-xl border border-hot/30 bg-hot/8 px-4 py-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-hot mb-1">Main weakness</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-hot-ink mb-1">Main weakness</div>
             <p className="text-sm text-fg leading-relaxed whitespace-pre-wrap">{p.weakness}</p>
           </div>
         )}
@@ -376,7 +376,7 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-display font-bold text-fg">Revision history</h3>
-            {trend && <Tag className={trend === 'Improving' ? '!bg-ok/15 !text-ok' : '!bg-bad/15 !text-bad'}>{trend}</Tag>}
+            {trend && <Tag className={trend === 'Improving' ? '!bg-ok/15 !text-ok-ink' : '!bg-bad/15 !text-bad-ink'}>{trend}</Tag>}
           </div>
           {seq.length > 0 && (
             <div className="flex items-center gap-1 mb-3 flex-wrap" aria-label="Rating sequence, oldest first">
@@ -400,7 +400,7 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
                       {r.independent !== null && <span>{r.independent ? 'Independent' : 'With help'}</span>}
                     </div>
                   </div>
-                  {r.mistake && <p className="text-sm text-fg mt-2 leading-relaxed"><span className="text-hot font-semibold">Mistake: </span>{r.mistake}</p>}
+                  {r.mistake && <p className="text-sm text-fg mt-2 leading-relaxed"><span className="text-hot-ink font-semibold">Mistake: </span>{r.mistake}</p>}
                   {r.notes && <p className="text-xs text-muted mt-1.5 leading-relaxed">{r.notes}</p>}
                   <div className="text-[11px] text-muted mt-1.5">Next review set to {fmt(r.nextReview)} · {r.source === 'session' ? 'mixed practice' : r.source === 'today' ? "today's revision" : r.source === 'import' ? 'imported' : 'quick rating'}</div>
                 </li>

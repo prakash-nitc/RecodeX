@@ -114,3 +114,25 @@ export function monthlySeries(revs: Revision[], months: number, t = today()) {
 }
 
 export function completedSessions(sessions: Session[]) { return sessions.filter(s => s.status === 'completed'); }
+
+/** Lifetime mastery: an active problem whose green streak has reached the mastery streak, whether or not it is due. */
+export function isMastered(p: Problem, s: Settings): boolean {
+  return p.track === 'active' && !!p.lastRating && p.consecutiveGreen >= s.masteryStreak;
+}
+
+export interface Camp { id: string; name: string; total: number; mastered: number; pct: number; r: number; y: number; overdue: number; reviewed: number }
+
+/** One camp per pattern, in pattern order, for the journey roadmap. */
+export function journeyCamps(patterns: Pattern[], problems: Problem[], s: Settings, t = today()): Camp[] {
+  const by = new Map<string, Problem[]>();
+  for (const p of problems) { const a = by.get(p.patternId) ?? []; a.push(p); by.set(p.patternId, a); }
+  return patterns.slice().sort((a, b) => a.order - b.order).map(pt => {
+    const ps = by.get(pt.id) ?? [];
+    const mastered = ps.filter(p => isMastered(p, s)).length;
+    return {
+      id: pt.id, name: pt.name, total: ps.length, mastered, pct: ps.length ? mastered / ps.length : 0,
+      r: ps.filter(p => p.lastRating === 'red').length, y: ps.filter(p => p.lastRating === 'yellow').length,
+      overdue: ps.filter(p => statusOf(p, s, t) === 'Overdue').length, reviewed: ps.filter(p => p.lastRating).length,
+    };
+  });
+}

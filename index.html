@@ -1,14 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>RecodeX</title>
+    <meta name="description" content="RecodeX: a calm, daily training ground for mastering data structures and algorithms with spaced repetition." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="description" content="RecodeX: spaced-repetition revision for data structures and algorithms problems." />
+    <meta name="theme-color" content="#F6F4FB" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0B1020" media="(prefers-color-scheme: dark)" />
+    <script>
+      // Apply the saved theme before first paint (Dawn is the default).
+      try {
+        var m = localStorage.getItem('recodex-theme') || 'light';
+        if (m === 'system') document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.setAttribute('data-theme', m);
+      } catch (e) {}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400..800&display=swap" />
   </head>
   <body>
     <div id="root"></div>

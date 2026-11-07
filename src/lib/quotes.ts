@@ -1,0 +1,76 @@
+// Curated quotes on learning, practice and persistence. Only quotes with a verifiable source are included;
+// widely misattributed lines (the many "Einstein said…" quotes, for example) are deliberately left out.
+import { diffDays } from './dates';
+
+export interface Quote { text: string; author: string; source?: string }
+
+export const QUOTES: Quote[] = [
+  { text: 'A journey of a thousand miles begins with a single step.', author: 'Laozi', source: 'Tao Te Ching, ch. 64' },
+  { text: 'We are what we repeatedly do. Excellence, then, is not an act, but a habit.', author: 'Will Durant', source: 'The Story of Philosophy' },
+  { text: 'Fall seven times, stand up eight.', author: 'Japanese proverb' },
+  { text: 'Repetition is the mother of learning.', author: 'Latin proverb' },
+  { text: 'Practice is the best of all instructors.', author: 'Publilius Syrus', source: 'Sententiae' },
+  { text: 'Little by little, one goes far.', author: 'Spanish proverb' },
+  { text: 'For the things we have to learn before we can do them, we learn by doing them.', author: 'Aristotle', source: 'Nicomachean Ethics' },
+  { text: 'The roots of education are bitter, but the fruit is sweet.', author: 'Aristotle', source: 'as quoted by Diogenes Laërtius' },
+  { text: 'He who has begun has half done. Dare to be wise.', author: 'Horace', source: 'Epistles' },
+  { text: 'Without haste, but without rest.', author: 'Johann Wolfgang von Goethe' },
+  { text: 'Knowing is not enough; we must apply. Willing is not enough; we must do.', author: 'Johann Wolfgang von Goethe' },
+  { text: 'Learning without thought is labour lost; thought without learning is perilous.', author: 'Confucius', source: 'Analects' },
+  { text: 'Is it not pleasant to learn with a constant perseverance and application?', author: 'Confucius', source: 'Analects' },
+  { text: 'If I have seen further it is by standing on the shoulders of Giants.', author: 'Isaac Newton', source: 'letter to Robert Hooke, 1675' },
+  { text: 'Divide each of the difficulties under examination into as many parts as possible, and as might be necessary for its adequate solution.', author: 'René Descartes', source: 'Discourse on the Method' },
+  { text: 'If you cannot solve the proposed problem, try to solve first some related problem.', author: 'George Pólya', source: 'How to Solve It' },
+  { text: 'With any considerable number of repetitions a suitable distribution of them over a space of time is decidedly more advantageous than the massing of them at a single time.', author: 'Hermann Ebbinghaus', source: 'Memory, 1885' },
+  { text: 'What I cannot create, I do not understand.', author: 'Richard Feynman' },
+  { text: 'The first principle is that you must not fool yourself, and you are the easiest person to fool.', author: 'Richard Feynman', source: 'Caltech commencement, 1974' },
+  { text: 'The important thing is not to stop questioning.', author: 'Albert Einstein', source: 'LIFE, 1955' },
+  { text: "In the beginner's mind there are many possibilities, but in the expert's there are few.", author: 'Shunryu Suzuki', source: "Zen Mind, Beginner's Mind" },
+  { text: 'Ever tried. Ever failed. No matter. Try again. Fail again. Fail better.', author: 'Samuel Beckett', source: 'Worstward Ho' },
+  { text: 'Experience is the name everyone gives to their mistakes.', author: 'Oscar Wilde', source: "Lady Windermere's Fan" },
+  { text: 'A man of genius makes no mistakes. His errors are volitional and are the portals of discovery.', author: 'James Joyce', source: 'Ulysses' },
+  { text: 'The master has failed more times than the beginner has even tried.', author: 'Stephen McCranie' },
+  { text: 'Learning is not attained by chance, it must be sought for with ardor and attended to with diligence.', author: 'Abigail Adams', source: 'letter to John Quincy Adams, 1780' },
+  { text: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.", author: 'Dr. Seuss', source: 'I Can Read with My Eyes Shut!' },
+  { text: 'Your mountain is waiting, so… get on your way!', author: 'Dr. Seuss', source: "Oh, the Places You'll Go!" },
+  { text: "Because it's there.", author: 'George Mallory', source: 'on climbing Everest, 1923' },
+  { text: 'The mountains are calling and I must go.', author: 'John Muir', source: 'letter, 1873' },
+  { text: 'Great things are done when men and mountains meet.', author: 'William Blake', source: 'Gnomic Verses' },
+  { text: 'Climb it so you can see the world, not so the world can see you.', author: 'David McCullough Jr.', source: 'commencement address, 2012' },
+  { text: 'Habits are the compound interest of self-improvement.', author: 'James Clear', source: 'Atomic Habits' },
+  { text: 'You do not rise to the level of your goals. You fall to the level of your systems.', author: 'James Clear', source: 'Atomic Habits' },
+  { text: 'Every action you take is a vote for the type of person you wish to become.', author: 'James Clear', source: 'Atomic Habits' },
+  { text: 'Genius is one per cent inspiration, ninety-nine per cent perspiration.', author: 'Thomas Edison' },
+  { text: "Hard work beats talent when talent doesn't work hard.", author: 'Tim Notke' },
+  { text: 'Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.', author: 'Antoine de Saint-Exupéry', source: 'Wind, Sand and Stars' },
+  { text: 'Simplicity is prerequisite for reliability.', author: 'Edsger W. Dijkstra' },
+  { text: 'Testing shows the presence, not the absence of bugs.', author: 'Edsger W. Dijkstra' },
+  { text: 'The competent programmer is fully aware of the strictly limited size of his own skull.', author: 'Edsger W. Dijkstra', source: 'The Humble Programmer, 1972' },
+  { text: 'Premature optimization is the root of all evil.', author: 'Donald Knuth' },
+  { text: 'An algorithm must be seen to be believed.', author: 'Donald Knuth', source: 'The Art of Computer Programming' },
+  { text: 'Programs must be written for people to read, and only incidentally for machines to execute.', author: 'Harold Abelson and Gerald Jay Sussman', source: 'Structure and Interpretation of Computer Programs' },
+  { text: 'The only way to learn a new programming language is by writing programs in it.', author: 'Brian Kernighan and Dennis Ritchie', source: 'The C Programming Language' },
+  { text: 'Controlling complexity is the essence of computer programming.', author: 'Brian Kernighan' },
+  { text: 'Everyone knows that debugging is twice as hard as writing a program in the first place.', author: 'Brian Kernighan', source: 'The Elements of Programming Style' },
+  { text: 'Bad programmers worry about the code. Good programmers worry about data structures and their relationships.', author: 'Linus Torvalds' },
+  { text: 'Talk is cheap. Show me the code.', author: 'Linus Torvalds' },
+  { text: "Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious.", author: 'Fred Brooks', source: 'The Mythical Man-Month' },
+  { text: "Data dominates. If you've chosen the right data structures and organized things well, the algorithms will almost always be self-evident.", author: 'Rob Pike', source: 'Notes on Programming in C' },
+  { text: 'Fancy algorithms are slow when n is small, and n is usually small.', author: 'Rob Pike', source: 'Notes on Programming in C' },
+  { text: 'When in doubt, use brute force.', author: 'Ken Thompson' },
+  { text: 'Simplicity does not precede complexity, but follows it.', author: 'Alan Perlis', source: 'Epigrams on Programming' },
+  { text: "A language that doesn't affect the way you think about programming is not worth knowing.", author: 'Alan Perlis', source: 'Epigrams on Programming' },
+  { text: 'It is easier to write an incorrect program than understand a correct one.', author: 'Alan Perlis', source: 'Epigrams on Programming' },
+  { text: 'The best way to predict the future is to invent it.', author: 'Alan Kay' },
+  { text: 'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.', author: 'Martin Fowler', source: 'Refactoring' },
+  { text: 'Make each program do one thing well.', author: 'Doug McIlroy' },
+  { text: 'Make it work, make it right, make it fast.', author: 'Kent Beck' },
+  { text: 'Real artists ship.', author: 'Steve Jobs' },
+  { text: 'The Road goes ever on and on.', author: 'J. R. R. Tolkien', source: 'The Hobbit' },
+];
+
+/** One quote per calendar day, chosen by date so every device shows the same one. */
+export function quoteForDay(day: string): Quote {
+  const n = diffDays(day, '2024-01-01');
+  return QUOTES[((n % QUOTES.length) + QUOTES.length) % QUOTES.length];
+}

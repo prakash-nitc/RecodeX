@@ -1,34 +1,69 @@
-/* Layout: fixed sidebar + fluid main column; dark navy workspace with a violet accent (per the reference design).
-   Tokens are RGB triplets so Tailwind can apply alpha. */
+/* RecodeX design tokens: "The Journey to Mastery".
+   Two themes from one token system: Dawn (light, default) and Dusk (dark).
+   Tokens are RGB triplets so Tailwind can apply alpha. Semantic colours have a fill shade and an -ink
+   shade for text (darker on Dawn so it passes WCAG AA; checked by src/lib/contrast.test.ts). */
 :root {
-  --bg: 244 245 251; --surface: 255 255 255; --surface2: 238 240 248; --line: 222 225 238;
-  --fg: 20 23 48; --muted: 92 99 132; --accent: 91 75 224; --accentfg: 255 255 255;
-  --ok: 22 150 74; --warn: 196 138 6; --bad: 214 40 40; --none: 120 126 150; --hot: 228 96 18; --shadow: 30 34 70;
+  /* Dawn */
+  --bg: 246 244 251; --surface: 255 255 255; --surface2: 241 238 249; --line: 230 226 240;
+  --fg: 26 29 58; --muted: 99 104 135;
+  --accent: 106 75 209; --accent-ink: 106 75 209; --accentfg: 255 255 255;
+  --ok: 53 201 138;   --ok-ink: 14 122 78;
+  --warn: 255 200 87; --warn-ink: 138 90 0;
+  --bad: 240 86 91;   --bad-ink: 192 38 44;
+  --hot: 255 150 61;  --hot-ink: 163 72 0;
+  --none: 139 144 173; --none-ink: 94 99 130;
+  --shadow: 46 34 110;
+  --sun-a: 255 150 61; --sun-b: 255 200 87;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: 10 13 28; --surface: 17 21 40; --surface2: 25 30 54; --line: 37 43 74;
-    --fg: 230 233 246; --muted: 140 148 182; --accent: 132 116 255; --accentfg: 255 255 255;
-    --ok: 46 204 113; --warn: 234 186 36; --bad: 244 80 80; --none: 120 128 160; --hot: 249 128 52; --shadow: 0 0 0;
+    /* Dusk */
+    --bg: 11 16 32; --surface: 23 27 56; --surface2: 31 36 72; --line: 38 43 82;
+    --fg: 236 238 248; --muted: 154 160 195;
+    --accent: 118 85 217; --accent-ink: 157 133 240; --accentfg: 255 255 255;
+    --ok: 53 201 138;   --ok-ink: 53 201 138;
+    --warn: 255 200 87; --warn-ink: 255 200 87;
+    --bad: 240 86 91;   --bad-ink: 245 122 126;
+    --hot: 255 150 61;  --hot-ink: 255 150 61;
+    --none: 139 144 173; --none-ink: 163 168 200;
+    --shadow: 0 0 0;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: 10 13 28; --surface: 17 21 40; --surface2: 25 30 54; --line: 37 43 74;
-  --fg: 230 233 246; --muted: 140 148 182; --accent: 132 116 255; --accentfg: 255 255 255;
-  --ok: 46 204 113; --warn: 234 186 36; --bad: 244 80 80; --none: 120 128 160; --hot: 249 128 52; --shadow: 0 0 0;
+  --bg: 11 16 32; --surface: 23 27 56; --surface2: 31 36 72; --line: 38 43 82;
+  --fg: 236 238 248; --muted: 154 160 195;
+  --accent: 118 85 217; --accent-ink: 157 133 240; --accentfg: 255 255 255;
+  --ok: 53 201 138;   --ok-ink: 53 201 138;
+  --warn: 255 200 87; --warn-ink: 255 200 87;
+  --bad: 240 86 91;   --bad-ink: 245 122 126;
+  --hot: 255 150 61;  --hot-ink: 255 150 61;
+  --none: 139 144 173; --none-ink: 163 168 200;
+  --shadow: 0 0 0;
   color-scheme: dark;
 }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html, body { height: 100%; }
-body { background: rgb(var(--bg)); color: rgb(var(--fg)); font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+body {
+  background: rgb(var(--bg)); color: rgb(var(--fg));
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
 #root { min-height: 100%; }
-.font-display { letter-spacing: -0.01em; }
+
+/* Display face: Fraunces. The heavier Tailwind weights are tuned down so headings stay calm. */
+.font-display { letter-spacing: -0.015em; font-optical-sizing: auto; }
+.font-display.font-extrabold { font-weight: 650; }
+.font-display.font-bold { font-weight: 600; }
 .text-balance { text-wrap: balance; }
-.tabular-nums { font-variant-numeric: tabular-nums; }
+/* Tabular numbers in every stat and table. */
+.tabular-nums, table, .stat-num { font-variant-numeric: tabular-nums lining-nums; }
+
 .page-gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 @media (min-width: 1024px) { .page-gutter { padding-left: 32px; padding-right: max(32px, env(safe-area-inset-right, 0px)); } }
 .mobile-bar { top: env(safe-area-inset-top, 0px); padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
@@ -40,10 +75,30 @@ body { background: rgb(var(--bg)); color: rgb(var(--fg)); font-family: "Manrope"
 .drawer-pad { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
 .drawer-left { padding-top: calc(16px + env(safe-area-inset-top, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 35; background: rgb(var(--surface)); }
-.select-caret { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23888fb0' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
+
+.select-caret { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%238B90AD' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
 select option { background: rgb(var(--surface)); color: rgb(var(--fg)); }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .recharts-wrapper, .recharts-surface { outline: none; }
-.recharts-text { font-family: "Manrope", system-ui, sans-serif; }
-:focus-visible { outline-color: rgb(var(--accent)); }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+.recharts-text { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
+
+/* The sunrise gradient: used only by the hero artwork, the lifetime mastery ring and the streak flame. */
+.sunrise-text { background: linear-gradient(90deg, rgb(var(--sun-a)), rgb(var(--sun-b))); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Visible keyboard focus everywhere. */
+:focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
+
+/* Thin, theme-aware scrollbars for horizontal trails and lists. */
+.scroll-thin { scrollbar-width: thin; scrollbar-color: rgb(var(--line)) transparent; }
+.scroll-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: rgb(var(--line)); border-radius: 8px; }
+
+/* Glass panel for content laid over the artwork. */
+.glass { background: rgb(var(--surface) / 0.82); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2); }
+
+@keyframes twinkle { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

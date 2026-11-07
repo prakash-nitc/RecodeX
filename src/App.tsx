@@ -9,6 +9,7 @@ import { applyTheme } from './lib/theme';
 import { today } from './lib/dates';
 import { UiProvider, Button, cx, Spinner } from './components/ui';
 import { AppProvider, useApp } from './components/shared';
+import { BrandLockup, BrandMark } from './components/Brand';
 import Dashboard from './pages/Dashboard';
 import Today from './pages/Today';
 import ProblemBank from './pages/ProblemBank';
@@ -73,10 +74,11 @@ function Shell() {
 
   if (d.status === 'booting' || d.status === 'slow') {
     return (
-      <div className="flex min-h-[80vh] flex-col items-center justify-center gap-3 px-6 text-center">
-        <Spinner size={28} />
-        <div className="font-display text-lg font-bold text-fg">Loading your revision data</div>
-        {d.error ? <p className="max-w-md text-sm text-bad">{d.error}</p>
+      <div className="flex min-h-[80vh] flex-col items-center justify-center gap-4 px-6 text-center">
+        <BrandMark size={44} className="animate-pulse" />
+        <Spinner size={22} />
+        <div className="font-display text-lg font-semibold text-fg">Loading your revision data</div>
+        {d.error ? <p className="max-w-md text-sm text-bad-ink">{d.error}</p>
           : d.status === 'slow' && <p className="max-w-sm text-sm text-muted">{d.offline ? 'You are offline and this device has no saved copy yet. Connect once to load your data.' : 'The database is taking longer than usual to answer. It keeps trying; check your connection if this stays.'}</p>}
       </div>
     );
@@ -103,85 +105,84 @@ function Shell() {
     return <Dashboard />;
   })();
 
-  const nav = (
+  const nav = (compact: boolean) => (
     <nav className="flex flex-col gap-0.5" aria-label="Main">
       {NAV.map(n => {
         const Icon = n.icon; const on = sec === n.id;
         const badge = n.id === 'today' && queue > 0 ? queue : n.id === 'learn' ? Object.values(d.patterns).filter(p => p.learning === 'yet_to_learn' || p.learning === 'learning').length || null : null;
         return (
-          <button key={n.id} onClick={() => go(n.id)} title={collapsed ? n.label : undefined} aria-current={on ? 'page' : undefined}
-            className={cx('group flex items-center gap-3 rounded-lg h-9 text-sm font-semibold transition-colors', collapsed ? 'justify-center px-0' : 'px-3',
-              on ? 'bg-accent/15 text-accent' : 'text-muted hover:text-fg hover:bg-surface2')}>
-            <Icon size={17} className="shrink-0" />
-            {!collapsed && <span className="flex-1 text-left truncate">{n.label}</span>}
-            {!collapsed && badge ? <span className={cx('rounded-md px-1.5 text-[11px] font-bold tabular-nums', n.id === 'today' ? 'bg-bad/15 text-bad' : 'bg-surface2 text-muted')}>{badge}</span> : null}
+          <button key={n.id} onClick={() => go(n.id)} title={compact ? n.label : undefined} aria-current={on ? 'page' : undefined}
+            className={cx('group relative flex items-center gap-3 rounded-xl h-10 text-sm font-semibold transition-colors', compact ? 'justify-center px-0' : 'px-3',
+              on ? 'bg-accent/12 text-accent-ink' : 'text-muted hover:text-fg hover:bg-surface2')}>
+            {on && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-accent" aria-hidden />}
+            <Icon size={18} className="shrink-0" />
+            {!compact && <span className="flex-1 text-left truncate">{n.label}</span>}
+            {!compact && badge ? <span className={cx('rounded-lg px-1.5 text-[11px] font-bold tabular-nums', n.id === 'today' ? 'bg-hot/20 text-hot-ink' : 'bg-surface2 text-muted')}>{badge}</span> : null}
+            {compact && badge && n.id === 'today' ? <span className="absolute top-1.5 right-2 h-2 w-2 rounded-full bg-hot" aria-hidden /> : null}
           </button>
         );
       })}
     </nav>
   );
-  const syncChip = (
-    <div className={cx('flex items-center gap-2 text-[11px] text-muted', collapsed && 'justify-center')} title={d.backendKind === 'cloud' ? (d.offline ? 'Offline: changes are kept on this device and sent when you are back online' : 'Synced to your account') : 'Saved in this browser only'}>
-      {d.backendKind === 'cloud' && d.offline ? <CloudOff size={13} className="text-hot" /> : d.pending > 0 ? <Loader2 size={13} className="animate-spin text-accent" /> : d.backendKind === 'cloud' ? <Cloud size={13} className="text-ok" /> : <HardDrive size={13} className="text-warn" />}
-      {!collapsed && <span>{d.backendKind === 'cloud' && d.offline ? (d.pending > 0 ? `Offline · ${d.pending} waiting` : 'Offline') : d.pending > 0 ? `Saving ${d.pending}…` : d.backendKind === 'cloud' ? 'All changes saved' : 'Saved in this browser'}</span>}
-    </div>
-  );
-  const brand = (
-    <div className={cx('flex items-center gap-2.5', collapsed && 'justify-center')}>
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accentfg font-display font-extrabold text-sm">RX</div>
-      {!collapsed && <div className="min-w-0 font-display text-[15px] font-extrabold leading-tight text-fg">RecodeX</div>}
+  const syncChip = (compact: boolean) => (
+    <div className={cx('flex items-center gap-2 text-[11px] text-muted', compact && 'justify-center')} title={d.backendKind === 'cloud' ? (d.offline ? 'Offline: changes are kept on this device and sent when you are back online' : 'Synced to your account') : 'Saved in this browser only'}>
+      {d.backendKind === 'cloud' && d.offline ? <CloudOff size={13} className="text-hot-ink" /> : d.pending > 0 ? <Loader2 size={13} className="animate-spin text-accent-ink" /> : d.backendKind === 'cloud' ? <Cloud size={13} className="text-ok-ink" /> : <HardDrive size={13} className="text-muted" />}
+      {!compact && <span>{d.backendKind === 'cloud' && d.offline ? (d.pending > 0 ? `Offline · ${d.pending} waiting` : 'Offline') : d.pending > 0 ? `Saving ${d.pending}…` : d.backendKind === 'cloud' ? 'All changes saved' : 'Saved in this browser'}</span>}
     </div>
   );
 
   return (
     <div className="min-h-full lg:flex">
-      <aside className={cx('hidden lg:flex sticky top-0 h-screen shrink-0 flex-col gap-5 border-r border-line bg-surface py-4 side-pad transition-[width]', collapsed ? 'w-[68px] px-2.5' : 'w-60 px-3')}>
-        {brand}
-        <Button variant="primary" size="md" className={collapsed ? '!px-0' : ''} onClick={() => addProblemDialog()} title="Add problem"><Plus size={16} />{!collapsed && 'Add problem'}</Button>
-        {nav}
-        <div className="mt-auto flex flex-col gap-3">
-          {running && <button onClick={() => go('session')} className={cx('flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 text-xs font-semibold text-accent h-9', collapsed ? 'justify-center' : 'px-3')}><Play size={14} />{!collapsed && 'Resume session'}</button>}
-          {syncChip}
-          <button onClick={() => { setCollapsed(!collapsed); lsSet('recodex-sidebar', collapsed ? '0' : '1'); }} className={cx('flex items-center gap-2 rounded-lg h-8 text-xs text-muted hover:text-fg hover:bg-surface2', collapsed ? 'justify-center' : 'px-3')} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+      <aside className={cx('hidden lg:flex sticky top-0 h-screen shrink-0 flex-col gap-6 border-r border-line bg-surface py-5 side-pad transition-[width] duration-200', collapsed ? 'w-[72px] px-3 items-center' : 'w-64 px-4')}>
+        <button onClick={() => go('dashboard')} className="text-left" aria-label="RecodeX dashboard"><BrandLockup collapsed={collapsed} /></button>
+        <Button variant="primary" size="md" className={cx('h-10', collapsed ? '!px-0 w-10' : 'w-full')} onClick={() => addProblemDialog()} title="Add problem"><Plus size={16} />{!collapsed && 'Add problem'}</Button>
+        <div className={cx(collapsed && 'w-full')}>{nav(collapsed)}</div>
+        <div className={cx('mt-auto flex flex-col gap-3', collapsed && 'w-full')}>
+          {running && <button onClick={() => go('session')} className={cx('flex items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 text-xs font-semibold text-accent-ink h-10', collapsed ? 'justify-center' : 'px-3')}><Play size={14} />{!collapsed && 'Resume session'}</button>}
+          {syncChip(collapsed)}
+          <button onClick={() => { setCollapsed(!collapsed); lsSet('recodex-sidebar', collapsed ? '0' : '1'); }} className={cx('flex items-center gap-2 rounded-xl h-8 text-xs text-muted hover:text-fg hover:bg-surface2', collapsed ? 'justify-center' : 'px-3')} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
             {collapsed ? <PanelLeftOpen size={16} /> : <><PanelLeftClose size={16} />Collapse</>}
           </button>
         </div>
       </aside>
 
-      <header className="lg:hidden sticky z-30 flex items-center justify-between gap-2 border-b border-line bg-surface/95 backdrop-blur h-14 mobile-bar">
-        <div className="flex items-center gap-2">
-          <Button size="icon" variant="ghost" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Menu size={18} /></Button>
-          <span className="font-display font-extrabold text-fg">RecodeX</span>
+      <header className="lg:hidden sticky z-30 flex items-center justify-between gap-2 border-b border-line bg-surface/90 backdrop-blur-md h-14 mobile-bar">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Button size="icon" variant="ghost" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Menu size={19} /></Button>
+          <button onClick={() => go('dashboard')} className="flex items-center gap-2" aria-label="RecodeX dashboard">
+            <BrandMark size={26} /><span className="font-display text-[17px] font-semibold text-fg">Recode<span className="text-accent-ink">X</span></span>
+          </button>
         </div>
-        <div className="flex items-center gap-2">{syncChip}<Button size="icon" variant="primary" aria-label="Add problem" onClick={() => addProblemDialog()}><Plus size={16} /></Button></div>
+        <div className="flex items-center gap-2">{syncChip(true)}<Button size="icon" variant="primary" className="h-9 w-9" aria-label="Add problem" onClick={() => addProblemDialog()}><Plus size={16} /></Button></div>
       </header>
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onMouseDown={e => { if (e.target === e.currentTarget) setMobileOpen(false); }}>
-          <div className="h-full w-72 max-w-[85%] bg-surface border-r border-line p-4 flex flex-col gap-5 drawer-left">
-            <div className="flex items-center justify-between">{brand}<Button size="icon" variant="ghost" aria-label="Close menu" onClick={() => setMobileOpen(false)}><X size={16} /></Button></div>
-            {nav}
+        <div className="lg:hidden fixed inset-0 z-40 bg-[rgb(11_16_32/0.5)] backdrop-blur-[2px]" onMouseDown={e => { if (e.target === e.currentTarget) setMobileOpen(false); }}>
+          <div className="h-full w-72 max-w-[85%] bg-surface border-r border-line p-4 flex flex-col gap-5 drawer-left animate-page-in overflow-y-auto">
+            <div className="flex items-center justify-between"><BrandLockup /><Button size="icon" variant="ghost" aria-label="Close menu" onClick={() => setMobileOpen(false)}><X size={16} /></Button></div>
+            {nav(false)}
             {running && <Button variant="outline" onClick={() => go('session')}><Play size={14} />Resume session</Button>}
+            <div className="mt-auto">{syncChip(false)}</div>
           </div>
         </div>
       )}
 
-      <main className="flex-1 min-w-0 page-gutter py-6 lg:py-8">
+      <main className="flex-1 min-w-0 page-gutter py-5 lg:py-8">
         {d.error && (
-          <div className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-bad/40 bg-bad/10 px-4 py-3 text-sm text-fg">
+          <div className="mb-4 flex items-start justify-between gap-3 rounded-2xl border border-bad/40 bg-bad/10 px-4 py-3 text-sm text-fg" role="alert">
             <span>{d.error}</span><Button size="icon" variant="ghost" aria-label="Dismiss" onClick={clearError}><X size={14} /></Button>
           </div>
         )}
         {d.backendKind === 'local' && lsGet('recodex-local-note') !== '1' && (
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-fg">
-            <span>Your data is saved in this browser only. Download a backup from Settings now and then so you do not lose it.</span>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-fg">
+            <span className="flex items-center gap-2"><HardDrive size={15} className="text-muted shrink-0" />Your data is saved in this browser only. Download a backup from Settings now and then so you do not lose it.</span>
             <Button size="sm" variant="ghost" onClick={() => { lsSet('recodex-local-note', '1'); go(route); }}>Got it</Button>
           </div>
         )}
-        <div className="mx-auto max-w-[1400px]">{page}</div>
+        <div key={route} className="mx-auto max-w-[1400px] animate-page-in">{page}</div>
       </main>
       {d.pending > 15 && !d.offline && (
         <div className="fixed z-[70] bottom-0 left-0 toast-pad pointer-events-none">
-          <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-5 py-4 shadow-pop">
+          <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface px-5 py-4 shadow-pop">
             <Spinner /><div><div className="font-semibold text-fg">Saving your problem bank</div><div className="text-xs text-muted tabular-nums">{d.pending} records left</div></div>
           </div>
         </div>

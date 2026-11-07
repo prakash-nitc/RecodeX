@@ -57,7 +57,7 @@ export default function History({ initialTab }: { initialTab?: 'revisions' | 'se
           <Card className="mb-3 flex flex-wrap items-center gap-4 px-4 py-3">
             <span className="text-sm text-muted"><b className="text-fg tabular-nums">{list.length}</b> revisions on <b className="text-fg tabular-nums">{new Set(list.map(r => r.problemId)).size}</b> problems</span>
             <div className="flex-1 min-w-[140px] max-w-xs"><GYRBar g={c.green} y={c.yellow} r={c.red} /></div>
-            <span className="text-xs text-muted tabular-nums"><span className="text-ok">{c.green}</span> / <span className="text-warn">{c.yellow}</span> / <span className="text-bad">{c.red}</span></span>
+            <span className="text-xs text-muted tabular-nums"><span className="text-ok-ink">{c.green}</span> / <span className="text-warn-ink">{c.yellow}</span> / <span className="text-bad-ink">{c.red}</span></span>
           </Card>
           <Card className="overflow-hidden">
             {list.length === 0 ? <Empty icon={<HistoryIcon size={26} />} title={anyFilter ? 'No revisions match these filters' : 'No revisions yet'} body="Rate a problem from the dashboard to create the first record." /> : (

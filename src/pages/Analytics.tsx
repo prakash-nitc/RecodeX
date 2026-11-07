@@ -93,7 +93,7 @@ export default function Analytics() {
             {(['green', 'yellow', 'red'] as const).map(r => (
               <div key={r} className="rounded-lg bg-surface2 px-3 py-2.5">
                 <div className="text-[11px] font-semibold text-muted capitalize">Total {r}</div>
-                <div className={cx('font-display text-2xl font-extrabold tabular-nums', r === 'green' ? 'text-ok' : r === 'yellow' ? 'text-warn' : 'text-bad')}>{c[r]}</div>
+                <div className={cx('font-display text-2xl font-extrabold tabular-nums', r === 'green' ? 'text-ok-ink' : r === 'yellow' ? 'text-warn-ink' : 'text-bad-ink')}>{c[r]}</div>
                 <div className="text-[11px] text-muted tabular-nums">{pct(c[r])}%</div>
               </div>
             ))}
@@ -119,17 +119,17 @@ export default function Analytics() {
 
       <h2 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Patterns</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
-        <Card className="p-4"><div className="flex items-center gap-2 mb-2"><Trophy size={16} className="text-ok" /><h3 className="font-bold text-fg text-sm">Strongest</h3></div><PatList rows={strongest} value={x => `${x.avg!.toFixed(2)} avg`} tone="bg-ok/15 text-ok" /></Card>
-        <Card className="p-4"><div className="flex items-center gap-2 mb-2"><TrendingDown size={16} className="text-bad" /><h3 className="font-bold text-fg text-sm">Weakest</h3></div><PatList rows={weakest} value={x => `${x.avg!.toFixed(2)} avg`} tone="bg-bad/12 text-bad" /></Card>
-        <Card className="p-4"><div className="flex items-center gap-2 mb-2"><Flame size={16} className="text-hot" /><h3 className="font-bold text-fg text-sm">Most overdue</h3></div><PatList rows={mostOverdue} value={x => `${x.overdue} overdue`} tone="bg-hot/15 text-hot" /></Card>
-        <Card className="p-4"><div className="flex items-center gap-2 mb-2"><TrendingDown size={16} className="text-bad" /><h3 className="font-bold text-fg text-sm">Highest Red share</h3></div><PatList rows={redPct} value={x => `${Math.round(x.redPct * 100)}% red`} tone="bg-bad/12 text-bad" /></Card>
+        <Card className="p-4"><div className="flex items-center gap-2 mb-2"><Trophy size={16} className="text-ok-ink" /><h3 className="font-bold text-fg text-sm">Strongest</h3></div><PatList rows={strongest} value={x => `${x.avg!.toFixed(2)} avg`} tone="bg-ok/15 text-ok-ink" /></Card>
+        <Card className="p-4"><div className="flex items-center gap-2 mb-2"><TrendingDown size={16} className="text-bad-ink" /><h3 className="font-bold text-fg text-sm">Weakest</h3></div><PatList rows={weakest} value={x => `${x.avg!.toFixed(2)} avg`} tone="bg-bad/12 text-bad-ink" /></Card>
+        <Card className="p-4"><div className="flex items-center gap-2 mb-2"><Flame size={16} className="text-hot-ink" /><h3 className="font-bold text-fg text-sm">Most overdue</h3></div><PatList rows={mostOverdue} value={x => `${x.overdue} overdue`} tone="bg-hot/15 text-hot-ink" /></Card>
+        <Card className="p-4"><div className="flex items-center gap-2 mb-2"><TrendingDown size={16} className="text-bad-ink" /><h3 className="font-bold text-fg text-sm">Highest Red share</h3></div><PatList rows={redPct} value={x => `${Math.round(x.redPct * 100)}% red`} tone="bg-bad/12 text-bad-ink" /></Card>
       </div>
       <Card className="mb-6">
         <CardHeader title="Pattern mastery" sub="Share of each pattern's problems by last rating (grey = not reviewed). Average uses Green 3, Yellow 2, Red 1." />
         <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-3">
           {pstats.map(x => (
             <button key={x.pattern.id} onClick={() => go(patternRoute(x.pattern.id))} className="grid grid-cols-[minmax(0,10rem)_1fr_3.5rem] items-center gap-3 text-left group">
-              <span className="text-sm text-fg truncate group-hover:text-accent">{x.pattern.name}</span>
+              <span className="text-sm text-fg truncate group-hover:text-accent-ink">{x.pattern.name}</span>
               <GYRBar g={x.g} y={x.y} r={x.r} n={x.notReviewed} height={10} />
               <span className="text-xs text-muted text-right tabular-nums">{x.avg !== null ? x.avg.toFixed(2) : '—'}</span>
             </button>
@@ -181,10 +181,10 @@ export default function Analytics() {
 
       <h2 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Revision effectiveness {range ? `· last ${range} days` : ''}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card className="p-4"><div className="flex items-center justify-between mb-2"><h3 className="flex items-center gap-2 font-bold text-fg text-sm"><Repeat size={15} className="text-bad" />Repeated Red</h3><span className="font-bold text-bad tabular-nums">{eff.repeatedRed.length}</span></div><ProbList ids={eff.repeatedRed} empty="No problem has been Red twice." /></Card>
-        <Card className="p-4"><div className="flex items-center justify-between mb-2"><h3 className="flex items-center gap-2 font-bold text-fg text-sm"><ArrowUpRight size={15} className="text-warn" />Red → Yellow</h3><span className="font-bold text-warn tabular-nums">{eff.redToYellow.length}</span></div><ProbList ids={eff.redToYellow} empty="None yet." /></Card>
-        <Card className="p-4"><div className="flex items-center justify-between mb-2"><h3 className="flex items-center gap-2 font-bold text-fg text-sm"><TrendingUp size={15} className="text-ok" />Yellow → Green</h3><span className="font-bold text-ok tabular-nums">{eff.yellowToGreen.length}</span></div><ProbList ids={eff.yellowToGreen} empty="None yet." /></Card>
-        <Card className="p-4"><div className="flex items-center justify-between mb-2"><h3 className="flex items-center gap-2 font-bold text-fg text-sm"><TrendingDown size={15} className="text-bad" />Regressed from Green</h3><span className="font-bold text-bad tabular-nums">{eff.regressed.length}</span></div><ProbList ids={eff.regressed} empty="No regressions." /></Card>
+        <Card className="p-4"><div className="flex items-center justify-between mb-2"><h3 className="flex items-center gap-2 font-bold text-fg text-sm"><Repeat size={15} className="text-bad-ink" />Repeated Red</h3><span className="font-bold text-bad-ink tabular-nums">{eff.repeatedRed.length}</span></div><ProbList ids={eff.repeatedRed} empty="No problem has been Red twice." /></Card>
+        <Card className="p-4"><div className="flex items-center justify-between mb-2"><h3 className="flex items-center gap-2 font-bold text-fg text-sm"><ArrowUpRight size={15} className="text-warn-ink" />Red → Yellow</h3><span className="font-bold text-warn-ink tabular-nums">{eff.redToYellow.length}</span></div><ProbList ids={eff.redToYellow} empty="None yet." /></Card>
+        <Card className="p-4"><div className="flex items-center justify-between mb-2"><h3 className="flex items-center gap-2 font-bold text-fg text-sm"><TrendingUp size={15} className="text-ok-ink" />Yellow → Green</h3><span className="font-bold text-ok-ink tabular-nums">{eff.yellowToGreen.length}</span></div><ProbList ids={eff.yellowToGreen} empty="None yet." /></Card>
+        <Card className="p-4"><div className="flex items-center justify-between mb-2"><h3 className="flex items-center gap-2 font-bold text-fg text-sm"><TrendingDown size={15} className="text-bad-ink" />Regressed from Green</h3><span className="font-bold text-bad-ink tabular-nums">{eff.regressed.length}</span></div><ProbList ids={eff.regressed} empty="No regressions." /></Card>
       </div>
       {allRevs.length === 0 && <Card className="mt-4"><Empty title="No revision records yet" body="Charts fill in as you record revisions." /></Card>}
     </div>

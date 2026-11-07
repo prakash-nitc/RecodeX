@@ -29,7 +29,7 @@ export function PatternCard({ st, onOpen }: { st: PatternStat; onOpen: () => voi
           <div className="text-xs text-muted mt-0.5">{p.subPatterns.length} sub-pattern{p.subPatterns.length === 1 ? '' : 's'} · last practiced {st.lastPracticed ? relDay(st.lastPracticed) : 'never'}</div>
         </div>
         {p.learning !== 'active' && <span className="shrink-0 rounded-md border border-dashed border-line px-1.5 py-0.5 text-[11px] font-semibold text-muted">{LEARN_LABEL[p.learning]}</span>}
-        {st.overdue > 0 && p.learning === 'active' && <span className="shrink-0 rounded-md bg-bad/12 px-1.5 py-0.5 text-[11px] font-semibold text-bad tabular-nums">{st.overdue} overdue</span>}
+        {st.overdue > 0 && p.learning === 'active' && <span className="shrink-0 rounded-md bg-bad/12 px-1.5 py-0.5 text-[11px] font-semibold text-bad-ink tabular-nums">{st.overdue} overdue</span>}
       </div>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-lg bg-surface2 py-1.5"><div className="font-bold text-fg tabular-nums">{st.total}</div><div className="text-[10px] text-muted">Total</div></div>
@@ -39,7 +39,7 @@ export function PatternCard({ st, onOpen }: { st: PatternStat; onOpen: () => voi
       <div>
         <GYRBar g={st.g} y={st.y} r={st.r} n={st.notReviewed} />
         <div className="flex items-center justify-between mt-1.5 text-[11px] text-muted">
-          <span className="tabular-nums"><span className="text-ok">{st.g}</span> / <span className="text-warn">{st.y}</span> / <span className="text-bad">{st.r}</span></span>
+          <span className="tabular-nums"><span className="text-ok-ink">{st.g}</span> / <span className="text-warn-ink">{st.y}</span> / <span className="text-bad-ink">{st.r}</span></span>
           <span className="tabular-nums">{Math.round(st.completion * 100)}% reviewed</span>
         </div>
       </div>
@@ -151,13 +151,13 @@ export function PatternDetail({ id }: { id: string }) {
           <Button size="icon" variant="ghost" aria-label="Move up" onClick={() => move(-1)}><ArrowUp size={15} /></Button>
           <Button size="icon" variant="ghost" aria-label="Move down" onClick={() => move(1)}><ArrowDown size={15} /></Button>
           <Button variant="outline" onClick={() => setEditing(true)}><Pencil size={14} />Edit</Button>
-          <Button variant="ghost" className="hover:!text-bad" onClick={del}><Trash2 size={14} /></Button>
+          <Button variant="ghost" className="hover:!text-bad-ink" onClick={del}><Trash2 size={14} /></Button>
           <Button variant="outline" onClick={mastery}><Play size={14} />Mastery session</Button>
           <Button variant="primary" onClick={() => addProblemDialog({ patternId: id, subPattern: sub, initial: pattern.learning === 'yet_to_learn' ? 'backlog' : 'not_reviewed' })}><Plus size={16} />Add problem</Button>
         </>} />
       {pattern.learning !== 'active' && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-line bg-surface px-4 py-3 text-sm">
-          <span className="flex items-center gap-2 text-fg"><GraduationCap size={16} className="text-accent" />{LEARN_LABEL[pattern.learning]}: {st.backlog} problem{st.backlog === 1 ? '' : 's'} are held out of the daily queue.</span>
+          <span className="flex items-center gap-2 text-fg"><GraduationCap size={16} className="text-accent-ink" />{LEARN_LABEL[pattern.learning]}: {st.backlog} problem{st.backlog === 1 ? '' : 's'} are held out of the daily queue.</span>
           <Button size="sm" variant="outline" onClick={() => go('learn')}>Open Yet to Learn</Button>
         </div>
       )}
@@ -165,7 +165,7 @@ export function PatternDetail({ id }: { id: string }) {
         {[['Total', st.total], ['Reviewed', st.reviewed], ['Not reviewed', st.notReviewed], ['Overdue', st.overdue]].map(([k, v]) => (
           <Card key={k as string} className={cx('px-4 py-3', k === 'Overdue' && (v as number) > 0 && 'border-bad/40')}>
             <div className="text-xs text-muted">{k}</div>
-            <div className={cx('font-display text-2xl font-extrabold tabular-nums', k === 'Overdue' && (v as number) > 0 ? 'text-bad' : 'text-fg')}>{v}</div>
+            <div className={cx('font-display text-2xl font-extrabold tabular-nums', k === 'Overdue' && (v as number) > 0 ? 'text-bad-ink' : 'text-fg')}>{v}</div>
           </Card>
         ))}
         <Card className="px-4 py-3 col-span-2 md:col-span-1">
@@ -194,9 +194,9 @@ export function PatternDetail({ id }: { id: string }) {
         <Card className="p-4 lg:col-span-2 min-w-0">
           <div className="text-sm font-bold text-fg mb-2">Sub-patterns</div>
           <div className="flex flex-wrap gap-1.5">
-            <button onClick={() => setSub('')} className={cx('rounded-md border px-2 py-1 text-xs font-semibold', !sub ? 'border-accent bg-accent/15 text-accent' : 'border-line text-muted hover:text-fg')}>All · {probs.length}</button>
+            <button onClick={() => setSub('')} className={cx('rounded-md border px-2 py-1 text-xs font-semibold', !sub ? 'border-accent bg-accent/15 text-accent-ink' : 'border-line text-muted hover:text-fg')}>All · {probs.length}</button>
             {subCounts.map(({ sp, n }) => (
-              <button key={sp} onClick={() => setSub(sub === sp ? '' : sp)} className={cx('rounded-md border px-2 py-1 text-xs font-semibold', sub === sp ? 'border-accent bg-accent/15 text-accent' : 'border-line text-muted hover:text-fg')}>{sp} · <span className="tabular-nums">{n}</span></button>
+              <button key={sp} onClick={() => setSub(sub === sp ? '' : sp)} className={cx('rounded-md border px-2 py-1 text-xs font-semibold', sub === sp ? 'border-accent bg-accent/15 text-accent-ink' : 'border-line text-muted hover:text-fg')}>{sp} · <span className="tabular-nums">{n}</span></button>
             ))}
             {subCounts.length === 0 && <span className="text-sm text-muted">No sub-patterns yet. Add them with Edit, or type one when adding a problem.</span>}
           </div>
@@ -228,8 +228,8 @@ export function PatternDetail({ id }: { id: string }) {
           {probs.filter(p => p.weakness || p.notes).length === 0 ? <Empty title="No notes yet" body="Mistakes you log while revising this pattern's problems collect here." /> : (
             <ul className="flex flex-col gap-3">{probs.filter(p => p.weakness || p.notes).map(p => (
               <li key={p.id} className="rounded-lg border border-line px-3.5 py-2.5">
-                <button onClick={() => openProblem(p.id)} className="text-sm font-semibold text-fg hover:text-accent">{p.name}</button>
-                {p.weakness && <p className="text-sm text-fg mt-1"><span className="text-hot font-semibold">Weakness: </span>{p.weakness}</p>}
+                <button onClick={() => openProblem(p.id)} className="text-sm font-semibold text-fg hover:text-accent-ink">{p.name}</button>
+                {p.weakness && <p className="text-sm text-fg mt-1"><span className="text-hot-ink font-semibold">Weakness: </span>{p.weakness}</p>}
                 {p.notes && <p className="text-xs text-muted mt-1 whitespace-pre-wrap">{p.notes}</p>}
               </li>
             ))}</ul>

@@ -106,7 +106,7 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
           <Button size="sm" variant="outline" onClick={doNotReviewed}>Mark not reviewed</Button>
           <Button size="sm" variant="outline" onClick={() => { activateProblems(ids); toast('Moved to active revision'); setSel(new Set()); }}>Activate</Button>
           <Button size="sm" variant="outline" onClick={() => { bulkUpdate(ids, p => p.lastRating ? {} : { track: 'backlog' }); toast('Never-reviewed ones moved to Yet to Learn'); setSel(new Set()); }}>To backlog</Button>
-          <Button size="sm" variant="ghost" className="hover:!text-bad" onClick={() => doDelete(ids)}><Trash2 size={14} />Delete</Button>
+          <Button size="sm" variant="ghost" className="hover:!text-bad-ink" onClick={() => doDelete(ids)}><Trash2 size={14} />Delete</Button>
           <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSel(new Set())}>Clear</Button>
         </div>
       )}
@@ -148,7 +148,7 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
                     <td className="px-2 py-2"><DiffPill d={p.difficulty} /></td>
                     <td className="px-2 py-2"><RatingPill r={p.lastRating} /></td>
                     <td className="px-2 py-2 text-muted tabular-nums whitespace-nowrap">{fmt(p.lastRevised, 'd MMM yyyy')}</td>
-                    <td className={cx('px-2 py-2 tabular-nums whitespace-nowrap', st === 'Overdue' ? 'text-bad font-semibold' : st === 'Due Today' ? 'text-hot font-semibold' : 'text-muted')}>{p.nextReview ? fmt(p.nextReview, 'd MMM yyyy') : '—'}</td>
+                    <td className={cx('px-2 py-2 tabular-nums whitespace-nowrap', st === 'Overdue' ? 'text-bad-ink font-semibold' : st === 'Due Today' ? 'text-hot-ink font-semibold' : 'text-muted')}>{p.nextReview ? fmt(p.nextReview, 'd MMM yyyy') : '—'}</td>
                     <td className="px-2 py-2"><PhasePill p={p.phase} /></td>
                     <td className="px-2 py-2"><StatusPill s={st} /></td>
                     <td className="px-2 py-2"><PriorityPill p={p.priority} /></td>
@@ -191,7 +191,7 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
 }
 
 function MenuItem({ icon, children, onClick, danger }: { icon: React.ReactNode; children: React.ReactNode; onClick: () => void; danger?: boolean }) {
-  return <button onClick={onClick} className={cx('flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-surface2', danger ? 'text-bad' : 'text-fg')}>{icon}{children}</button>;
+  return <button onClick={onClick} className={cx('flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-surface2', danger ? 'text-bad-ink' : 'text-fg')}>{icon}{children}</button>;
 }
 
 function BulkDialog({ kind, ids, onClose, onDone }: { kind: 'priority' | 'pattern' | 'reschedule'; ids: string[]; onClose: () => void; onDone: () => void }) {

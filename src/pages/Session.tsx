@@ -100,7 +100,7 @@ function Runner({ session }: { session: Session }) {
           <h2 className="font-display text-2xl font-extrabold text-fg mt-1 text-balance">{index + 1}. {p.name}</h2>
           <div className="flex flex-wrap items-center gap-1.5 mt-3"><PatternTag id={p.patternId} /><DiffPill d={p.difficulty} /><RatingPill r={p.lastRating} /><PhasePill p={form.phaseUsed} /></div>
           <div className="mt-5 rounded-xl border border-accent/30 bg-accent/8 px-4 py-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-accent">{form.phaseUsed}</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-accent-ink">{form.phaseUsed}</div>
             <p className="text-sm text-fg mt-1">{PHASE_HINT[form.phaseUsed]}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3 mt-5">
@@ -110,7 +110,7 @@ function Runner({ session }: { session: Session }) {
               </a>
             ) : <span className="text-sm text-muted">No link saved for this problem.</span>}
             <div className="flex items-center gap-2 rounded-lg border border-line bg-surface2 pl-3 pr-1 h-11">
-              <Timer size={16} className={running ? 'text-accent' : 'text-muted'} />
+              <Timer size={16} className={running ? 'text-accent-ink' : 'text-muted'} />
               <span className="font-mono text-lg font-bold text-fg tabular-nums w-[4.5ch]">{fmtDur(sec)}</span>
               <Button size="icon" variant="ghost" onClick={toggle} aria-label={running ? 'Pause timer' : 'Resume timer'}>{running ? <Pause size={16} /> : <Play size={16} />}</Button>
             </div>
@@ -121,7 +121,7 @@ function Runner({ session }: { session: Session }) {
                 <Button variant="ghost" size="sm" onClick={() => setPeek(true)}><Eye size={14} />Show last weakness and notes</Button>
               ) : (
                 <div className="rounded-xl border border-hot/30 bg-hot/8 px-4 py-3 text-sm">
-                  {p.weakness && <p className="text-fg"><span className="font-semibold text-hot">Last weakness: </span>{p.weakness}</p>}
+                  {p.weakness && <p className="text-fg"><span className="font-semibold text-hot-ink">Last weakness: </span>{p.weakness}</p>}
                   {p.notes && <p className="text-muted mt-1.5 whitespace-pre-wrap">{p.notes}</p>}
                 </div>
               )}
@@ -135,7 +135,7 @@ function Runner({ session }: { session: Session }) {
                 const r = resultOf(id); const q = d.problems[id];
                 return (
                   <span key={id} title={q?.name} className={cx('inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md border px-1.5 text-xs font-semibold tabular-nums',
-                    i === index ? 'border-accent bg-accent/15 text-accent' : r ? 'border-line bg-surface2 text-muted' : 'border-line text-muted')}>
+                    i === index ? 'border-accent bg-accent/15 text-accent-ink' : r ? 'border-line bg-surface2 text-muted' : 'border-line text-muted')}>
                     {r?.rating ? <RatingDot r={r.rating} size={7} /> : r ? '–' : null}{i + 1}
                   </span>
                 );
@@ -188,15 +188,15 @@ function Summary({ session }: { session: Session }) {
     <div>
       <PageHeader title={session.status === 'completed' ? 'Session complete' : 'Session ended early'} sub={`${session.title} · ${fmt(session.startedAt.slice(0, 10))}`}
         right={<><Button onClick={() => go('practice')}>New session</Button><Button variant="primary" onClick={() => go('dashboard')}>Back to dashboard</Button></>} />
-      {session.status !== 'completed' && <p className="-mt-2 mb-4 text-sm text-hot">This session was not finished, so it is not counted as a completed session. The ratings you saved are kept.</p>}
+      {session.status !== 'completed' && <p className="-mt-2 mb-4 text-sm text-hot-ink">This session was not finished, so it is not counted as a completed session. The ratings you saved are kept.</p>}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="px-4 py-3.5"><div className="text-xs text-muted">Attempted</div><div className="font-display text-2xl font-extrabold text-fg tabular-nums">{rated.length}<span className="text-base text-muted"> / {session.problemIds.length}</span></div></Card>
-        <Card className="px-4 py-3.5"><div className="text-xs text-muted">Accuracy (green)</div><div className="font-display text-2xl font-extrabold text-ok tabular-nums">{acc}%</div></Card>
+        <Card className="px-4 py-3.5"><div className="text-xs text-muted">Accuracy (green)</div><div className="font-display text-2xl font-extrabold text-ok-ink tabular-nums">{acc}%</div></Card>
         <Card className="px-4 py-3.5"><div className="text-xs text-muted">Completion time</div><div className="font-display text-2xl font-extrabold text-fg tabular-nums">{fmtDur(session.elapsedSec)}</div></Card>
         <Card className="px-4 py-3.5"><div className="text-xs text-muted">Patterns practiced</div><div className="font-display text-2xl font-extrabold text-fg tabular-nums">{patternsUsed.length}</div></Card>
       </div>
       <Card className="mt-4 p-5">
-        <div className="flex items-center gap-2 mb-3"><Trophy size={17} className="text-accent" /><h2 className="font-display font-bold text-fg">Rating distribution</h2></div>
+        <div className="flex items-center gap-2 mb-3"><Trophy size={17} className="text-accent-ink" /><h2 className="font-display font-bold text-fg">Rating distribution</h2></div>
         <GYRBar g={c.green} y={c.yellow} r={c.red} height={12} />
         <div className="flex flex-wrap gap-4 mt-3 text-sm">
           {(['green', 'yellow', 'red'] as Rating[]).map(r => <span key={r} className="flex items-center gap-2 text-muted capitalize"><RatingDot r={r} />{r} <b className="text-fg tabular-nums">{c[r]}</b></span>)}

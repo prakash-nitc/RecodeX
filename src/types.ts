@@ -142,6 +142,10 @@ export interface Settings {
   notifyOverdueBanner: boolean;
   notifyTargetReminder: boolean;
   recentDays: number;
+  /** Shown in the dashboard greeting. */
+  displayName: string;
+  /** Lifetime milestones reached: milestone id → local date (YYYY-MM-DD). Never removed. */
+  milestones: Record<string, string>;
 }
 
 export interface Meta {
@@ -166,9 +170,11 @@ export const DEFAULT_SETTINGS: Settings = {
   activationDelayDays: 1,
   defaultSessionSize: 10,
   defaultDifficulty: 'all',
-  theme: 'system',
+  theme: 'light',   // Dawn
   weekStart: 1,
   notifyOverdueBanner: true,
   notifyTargetReminder: true,
   recentDays: 2,
+  displayName: '',
+  milestones: {},
 };

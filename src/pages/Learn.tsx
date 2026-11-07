@@ -59,9 +59,9 @@ function Topic({ topic }: { topic: Pattern }) {
     <Card>
       <div className="flex flex-wrap items-start justify-between gap-3 px-4 sm:px-5 pt-4 pb-3">
         <div className="flex items-start gap-3 min-w-0">
-          <div className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', topic.learning === 'completed' ? 'bg-ok/12 text-ok' : topic.learning === 'learning' ? 'bg-accent/12 text-accent' : 'bg-surface2 text-muted')}><GraduationCap size={19} /></div>
+          <div className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', topic.learning === 'completed' ? 'bg-ok/12 text-ok-ink' : topic.learning === 'learning' ? 'bg-accent/12 text-accent-ink' : 'bg-surface2 text-muted')}><GraduationCap size={19} /></div>
           <div className="min-w-0">
-            <button onClick={() => go(patternRoute(topic.id))} className="font-display text-lg font-bold text-fg hover:text-accent">{topic.name}</button>
+            <button onClick={() => go(patternRoute(topic.id))} className="font-display text-lg font-bold text-fg hover:text-accent-ink">{topic.name}</button>
             <div className="text-xs text-muted">{probs.length} problems · {topic.subPatterns.join(' · ')}</div>
           </div>
         </div>
@@ -79,7 +79,7 @@ function Topic({ topic }: { topic: Pattern }) {
           </div>
         </div>
         <Progress value={probs.length ? learned.length / probs.length : 0} tone="ok" />
-        {topic.learning === 'completed' && backlog.length > 0 && <p className="text-xs text-hot mt-2">Marked learned, but {backlog.length} problems are still held back. Activate them to start spaced revision.</p>}
+        {topic.learning === 'completed' && backlog.length > 0 && <p className="text-xs text-hot-ink mt-2">Marked learned, but {backlog.length} problems are still held back. Activate them to start spaced revision.</p>}
       </div>
       {open && (
         <ul className="divide-y divide-line/70 border-t border-line/70">

@@ -14,8 +14,8 @@ const ICONS: Record<string, React.ReactNode> = {
   random: <Shuffle size={18} />, overdue: <AlertOctagon size={18} />, mastery: <Target size={18} />,
 };
 const TONE: Record<string, string> = {
-  daily: 'text-accent bg-accent/12', weakness: 'text-warn bg-warn/12', interview: 'text-accent bg-accent/12',
-  random: 'text-ok bg-ok/12', overdue: 'text-bad bg-bad/12', mastery: 'text-ok bg-ok/12',
+  daily: 'text-accent-ink bg-accent/12', weakness: 'text-warn-ink bg-warn/12', interview: 'text-accent-ink bg-accent/12',
+  random: 'text-ok-ink bg-ok/12', overdue: 'text-bad-ink bg-bad/12', mastery: 'text-ok-ink bg-ok/12',
 };
 
 export default function Practice({ preset: initialPreset }: { preset?: string }) {
@@ -139,7 +139,7 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
                     <div className="flex flex-wrap gap-1.5">
                       {activePatterns.map(p => (
                         <button key={p.id} onClick={() => togglePattern(p.id)} aria-pressed={cfg.patternIds.includes(p.id)}
-                          className={cx('rounded-md border px-2 py-1 text-xs font-semibold transition-colors', cfg.patternIds.includes(p.id) ? 'border-accent bg-accent/15 text-accent' : 'border-line text-muted hover:text-fg')}>{p.name}</button>
+                          className={cx('rounded-md border px-2 py-1 text-xs font-semibold transition-colors', cfg.patternIds.includes(p.id) ? 'border-accent bg-accent/15 text-accent-ink' : 'border-line text-muted hover:text-fg')}>{p.name}</button>
                       ))}
                     </div>
                   </Field>
@@ -148,7 +148,7 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
                   <div className="flex flex-wrap gap-1.5">
                     {PHASES.map(ph => (
                       <button key={ph} onClick={() => togglePhase(ph)} aria-pressed={cfg.phases.includes(ph)}
-                        className={cx('rounded-md border px-2 py-1 text-xs font-semibold transition-colors', cfg.phases.includes(ph) ? 'border-accent bg-accent/15 text-accent' : 'border-line text-muted hover:text-fg')}>{ph}</button>
+                        className={cx('rounded-md border px-2 py-1 text-xs font-semibold transition-colors', cfg.phases.includes(ph) ? 'border-accent bg-accent/15 text-accent-ink' : 'border-line text-muted hover:text-fg')}>{ph}</button>
                     ))}
                   </div>
                 </Field>
@@ -211,7 +211,7 @@ export function RecentSessions({ limit }: { limit?: number }) {
                 <tr key={s.id} className="border-b border-line/60 last:border-0 hover:bg-surface2/60 cursor-pointer" onClick={() => go(s.status === 'in_progress' ? 'session' : `summary-${s.id}`)}>
                   <td className="px-4 py-2.5 font-semibold text-fg">{s.title}</td>
                   <td className="px-2 py-2.5 text-muted whitespace-nowrap">{fmt(s.startedAt.slice(0, 10), 'd MMM yyyy')}</td>
-                  <td className="px-2 py-2.5"><span className={cx('rounded-md px-1.5 py-0.5 text-[11px] font-semibold', s.status === 'completed' ? 'bg-ok/15 text-ok' : s.status === 'in_progress' ? 'bg-accent/15 text-accent' : 'bg-surface2 text-muted')}>{s.status === 'completed' ? 'Completed' : s.status === 'in_progress' ? 'In progress' : 'Not finished'}</span></td>
+                  <td className="px-2 py-2.5"><span className={cx('rounded-md px-1.5 py-0.5 text-[11px] font-semibold', s.status === 'completed' ? 'bg-ok/15 text-ok-ink' : s.status === 'in_progress' ? 'bg-accent/15 text-accent-ink' : 'bg-surface2 text-muted')}>{s.status === 'completed' ? 'Completed' : s.status === 'in_progress' ? 'In progress' : 'Not finished'}</span></td>
                   <td className="px-2 py-2.5 tabular-nums text-muted">{rated.length} / {s.problemIds.length}</td>
                   <td className="px-2 py-2.5"><GYRBar g={g} y={y} r={r} /></td>
                   <td className="px-2 py-2.5 tabular-nums text-fg">{rated.length ? `${Math.round((g / rated.length) * 100)}%` : '—'}</td>
