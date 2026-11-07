@@ -1,0 +1,170 @@
+import React, { useState } from 'react';
+import { Download, Upload, RotateCcw, Trash2, Plus, X, Monitor, Sun, Moon, Database, HardDrive } from 'lucide-react';
+import { useData, settingsOf, updateSettings, makeBackup, restoreBackup, resetToImport, Backup } from '../lib/store';
+import { intervalFor } from '../lib/engine';
+import { applyTheme } from '../lib/theme';
+import { today } from '../lib/dates';
+import type { Settings as S, DiffChoice } from '../types';
+import { DEFAULT_SETTINGS } from '../types';
+import { Button, Card, CardHeader, Field, Input, PageHeader, Segmented, Toggle, Select, useUi, Dialog, cx } from '../components/ui';
+import { saveFile, CopyBox, readFileText, CsvDialog } from './CsvDialog';
+
+function Num({ id, value, onChange, min = 0, max = 365, suffix }: { id: string; value: number; onChange: (n: number) => void; min?: number; max?: number; suffix?: string }) {
+  const [v, setV] = useState(String(value));
+  React.useEffect(() => setV(String(value)), [value]);
+  return (
+    <div className="flex items-center gap-2">
+      <Input id={id} type="number" min={min} max={max} className="!w-24" value={v} onChange={e => setV(e.target.value)}
+        onBlur={() => { const n = Math.round(Number(v)); if (Number.isFinite(n) && n >= min && n <= max) onChange(n); else setV(String(value)); }} />
+      {suffix && <span className="text-sm text-muted">{suffix}</span>}
+    </div>
+  );
+}
+
+export default function Settings() {
+  const d = useData(); const s = settingsOf(d); const { toast, confirm } = useUi();
+  const set = (patch: Partial<S>) => { updateSettings(patch); };
+  const [fallback, setFallback] = useState<string | null>(null);
+  const [csv, setCsv] = useState<null | 'import' | 'export'>(null);
+  const patterns = Object.values(d.patterns).sort((a, b) => a.order - b.order);
+
+  const backup = async () => {
+    const json = JSON.stringify(makeBackup(), null, 1);
+    const r = await saveFile(`dsa-revision-backup-${today()}.json`, json, 'application/json');
+    if (r === 'saved') toast('Backup saved'); else if (r === 'fallback') setFallback(json);
+  };
+  const restore = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const b = JSON.parse(await readFileText(file)) as Backup;
+      if (b.app !== 'dsa-revision-manager' || !Array.isArray(b.problems)) throw new Error('not a backup');
+      if (await confirm({ title: 'Restore this backup?', body: `It replaces everything here with ${b.problems.length} problems, ${b.revisions.length} revisions and ${b.sessions.length} sessions from ${b.exportedAt.slice(0, 10)}.`, confirmLabel: 'Replace and restore', danger: true })) {
+        restoreBackup(b); toast('Backup restored');
+      }
+    } catch { toast('That file is not a DSA Revision backup (.json exported from Settings).', 'error'); }
+  };
+  const reset = async () => {
+    if (await confirm({ title: 'Delete everything and start over?', body: 'All problems, revisions and sessions are erased, and the import screen opens again. Export a backup first if you want to keep any of it.', confirmLabel: 'Delete everything', danger: true })) {
+      resetToImport(); toast('Data cleared');
+    }
+  };
+  const ladder = s.greenLadder;
+  const setLadder = (l: number[]) => set({ greenLadder: l.length ? l : [7] });
+  const togglePlan = (id: string) => set({ studyPlanPatternIds: s.studyPlanPatternIds.includes(id) ? s.studyPlanPatternIds.filter(x => x !== id) : [...s.studyPlanPatternIds, id] });
+
+  return (
+    <div className="max-w-4xl">
+      <PageHeader title="Settings" sub="Changes save as you make them." />
+      <div className="flex flex-col gap-4">
+        <Card>
+          <CardHeader title="Daily plan" sub="What goes into Today's Focus" />
+          <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Daily revision target" htmlFor="st-target"><Num id="st-target" value={s.dailyTarget} min={1} max={100} onChange={n => set({ dailyTarget: n })} suffix="problems / day" /></Field>
+            <Field label="New problems per day" htmlFor="st-new" hint="Never-reviewed problems added to the focus list from your study plan. 0 turns this off."><Num id="st-new" value={s.focusNewPerDay} min={0} max={20} onChange={n => set({ focusNewPerDay: n })} suffix="per day" /></Field>
+            <div className="md:col-span-2 -my-1">
+              <Toggle id="st-weak" checked={s.focusIncludeWeak} onChange={v => set({ focusIncludeWeak: v })} label="Include weak problems" hint="Red and Yellow problems scheduled later can fill the remaining slots." />
+              <Toggle id="st-high" checked={s.focusIncludeHigh} onChange={v => set({ focusIncludeHigh: v })} label="Include high-priority problems" />
+            </div>
+            <Field label={`Study plan patterns ${s.studyPlanPatternIds.length ? `(${s.studyPlanPatternIds.length})` : '(all active patterns)'}`} className="md:col-span-2" hint="New problems are picked from these patterns, in pattern order.">
+              <div className="flex flex-wrap gap-1.5">
+                {patterns.filter(p => p.learning !== 'yet_to_learn').map(p => (
+                  <button key={p.id} onClick={() => togglePlan(p.id)} aria-pressed={s.studyPlanPatternIds.includes(p.id)}
+                    className={cx('rounded-md border px-2 py-1 text-xs font-semibold', s.studyPlanPatternIds.includes(p.id) ? 'border-accent bg-accent/15 text-accent' : 'border-line text-muted hover:text-fg')}>{p.name}</button>
+                ))}
+              </div>
+            </Field>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="Spaced repetition" sub="How far ahead the next review is scheduled after each rating" />
+          <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Red → review again in" htmlFor="st-red"><Num id="st-red" value={s.redDays} min={1} onChange={n => set({ redDays: n })} suffix="days" /></Field>
+            <Field label="Yellow → review again in" htmlFor="st-yellow"><Num id="st-yellow" value={s.yellowDays} min={1} onChange={n => set({ yellowDays: n })} suffix="days" /></Field>
+            <Field label="Green ladder (consecutive greens)" className="md:col-span-2" hint="1st green uses the first step, 2nd green in a row the next, and so on. The last step repeats.">
+              <div className="flex flex-wrap items-center gap-2">
+                {ladder.map((n, i) => (
+                  <div key={i} className="flex items-center gap-1 rounded-lg border border-line bg-surface2 pl-2 pr-1 py-1">
+                    <span className="text-[11px] text-muted">#{i + 1}</span>
+                    <Num id={`st-ladder-${i}`} value={n} min={1} onChange={v => setLadder(ladder.map((x, j) => (j === i ? v : x)))} />
+                    {ladder.length > 1 && <Button size="icon" variant="ghost" aria-label="Remove step" onClick={() => setLadder(ladder.filter((_, j) => j !== i))}><X size={13} /></Button>}
+                    {i < ladder.length - 1 && <span className="text-muted">→</span>}
+                  </div>
+                ))}
+                <Button size="sm" variant="outline" onClick={() => setLadder([...ladder, (ladder[ladder.length - 1] ?? 30) * 2])}><Plus size={13} />Step</Button>
+              </div>
+            </Field>
+            <Field label="Mastered after" htmlFor="st-mastery" hint="Consecutive greens needed for the Mastered status."><Num id="st-mastery" value={s.masteryStreak} min={1} max={20} onChange={n => set({ masteryStreak: n })} suffix="greens in a row" /></Field>
+            <Field label="Solved-while-learning → first review in" htmlFor="st-act"><Num id="st-act" value={s.activationDelayDays} min={0} max={30} onChange={n => set({ activationDelayDays: n })} suffix="days after activation" /></Field>
+            <div className="md:col-span-2 -my-1">
+              <Toggle id="st-yreset" checked={s.yellowResetsStreak} onChange={v => set({ yellowResetsStreak: v })} label="Yellow resets the green streak" hint="Red always resets it. With this off, Yellow keeps the streak but never adds to it." />
+              <Toggle id="st-autopri" checked={s.autoPriority} onChange={v => set({ autoPriority: v })} label="Set priority from the rating" hint="Red → High, Yellow → Medium, Green → Low, as in your sheet." />
+            </div>
+            <div className="md:col-span-2 rounded-lg bg-surface2 px-3.5 py-2.5 text-xs text-muted">
+              Example: Red +{intervalFor('red', 0, s)}d · Yellow +{intervalFor('yellow', 0, s)}d · Green ×1 +{intervalFor('green', 1, s)}d · ×2 +{intervalFor('green', 2, s)}d · ×3 +{intervalFor('green', 3, s)}d · ×4 +{intervalFor('green', 4, s)}d.
+              Changes apply to future ratings; scheduled dates do not move.
+            </div>
+            <div className="md:col-span-2"><Button size="sm" variant="ghost" onClick={() => set({ redDays: DEFAULT_SETTINGS.redDays, yellowDays: DEFAULT_SETTINGS.yellowDays, greenLadder: DEFAULT_SETTINGS.greenLadder, masteryStreak: DEFAULT_SETTINGS.masteryStreak, yellowResetsStreak: true })}><RotateCcw size={13} />Restore default intervals (1 / 3 / 7 → 14 → 30 → 60)</Button></div>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="Practice sessions" />
+          <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Field label="Default session size" htmlFor="st-size"><Num id="st-size" value={s.defaultSessionSize} min={1} max={100} onChange={n => set({ defaultSessionSize: n })} suffix="problems" /></Field>
+            <Field label="Default difficulty" htmlFor="st-diff">
+              <Select id="st-diff" value={s.defaultDifficulty} onChange={e => set({ defaultDifficulty: e.target.value as DiffChoice })}>
+                <option value="all">Mixed</option><option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option><option value="easy-medium">Easy + Medium</option>
+              </Select>
+            </Field>
+            <Field label="'Recently revised' means within" htmlFor="st-recent"><Num id="st-recent" value={s.recentDays} min={1} max={30} onChange={n => set({ recentDays: n })} suffix="days" /></Field>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="Appearance and calendar" />
+          <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Theme">
+              <Segmented ariaLabel="Theme" value={s.theme} onChange={v => { set({ theme: v }); applyTheme(v); }}
+                options={[{ value: 'system', label: <span className="inline-flex items-center gap-1"><Monitor size={13} />System</span> }, { value: 'light', label: <span className="inline-flex items-center gap-1"><Sun size={13} />Light</span> }, { value: 'dark', label: <span className="inline-flex items-center gap-1"><Moon size={13} />Dark</span> }]} />
+            </Field>
+            <Field label="Week starts on">
+              <Segmented ariaLabel="Week start" value={s.weekStart} onChange={v => set({ weekStart: v })} options={[{ value: 1, label: 'Monday' }, { value: 0, label: 'Sunday' }]} />
+            </Field>
+            <p className="md:col-span-2 text-xs text-muted">Dates use your device's time zone ({Intl.DateTimeFormat().resolvedOptions().timeZone}). A problem becomes overdue at local midnight.</p>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="Reminders" sub="Shown inside the app. Browser notifications are not available on this page." />
+          <div className="px-4 sm:px-5 pb-4">
+            <Toggle id="st-n1" checked={s.notifyOverdueBanner} onChange={v => set({ notifyOverdueBanner: v })} label="Overdue banner on the dashboard" />
+            <Toggle id="st-n2" checked={s.notifyTargetReminder} onChange={v => set({ notifyTargetReminder: v })} label="Evening reminder when the daily target is not met" hint="Appears after 6 pm on the Today's Progress card." />
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="Data" sub={<span className="inline-flex items-center gap-1.5">{d.backendKind === 'cloud' ? <><Database size={12} />Stored in your private Artifact database, synced across devices</> : <><HardDrive size={12} />Stored in this browser only</>}</span>} />
+          <div className="px-4 sm:px-5 pb-5 flex flex-col gap-3">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={backup}><Download size={15} />Download backup (.json)</Button>
+              <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-line px-3.5 text-sm font-semibold text-fg hover:bg-surface2">
+                <Upload size={15} />Restore from backup<input type="file" accept=".json,application/json" className="sr-only" onChange={e => { restore(e.target.files?.[0]); e.target.value = ''; }} />
+              </label>
+              <Button variant="outline" onClick={() => setCsv('export')}><Download size={15} />Export CSV</Button>
+              <Button variant="outline" onClick={() => setCsv('import')}><Upload size={15} />Import CSV</Button>
+            </div>
+            <p className="text-xs text-muted">A backup holds every problem, revision, session and setting. Restoring replaces what is here.</p>
+            <div className="border-t border-line pt-3">
+              <Button variant="ghost" className="!text-bad hover:!bg-bad/10" onClick={reset}><Trash2 size={15} />Delete all data and re-run the import</Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+      <Dialog open={!!fallback} onClose={() => setFallback(null)} title="Copy your backup" width="max-w-2xl" footer={<Button onClick={() => setFallback(null)}>Done</Button>}>
+        {fallback && <CopyBox text={fallback} label="Downloads are not available here. Copy this JSON into a file named backup.json." />}
+      </Dialog>
+      {csv && <CsvDialog mode={csv} onClose={() => setCsv(null)} />}
+    </div>
+  );
+}

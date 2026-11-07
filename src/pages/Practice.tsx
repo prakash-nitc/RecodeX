@@ -1,0 +1,227 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { CalendarClock, Zap, MessagesSquare, Shuffle, AlertOctagon, Target, Play, RefreshCw, X, History, SlidersHorizontal } from 'lucide-react';
+import { useData, settingsOf, startSession } from '../lib/store';
+import { PRESETS, baseConfig, candidatePool, generateSession } from '../lib/engine';
+import type { SessionConfig, Preset, Phase, DiffChoice, Strategy } from '../types';
+import { PHASES } from '../types';
+import { fmt } from '../lib/dates';
+import { Button, Card, CardHeader, Checkbox, Field, Input, PageHeader, Segmented, Select, cx, DiffPill, RatingPill, Empty, GYRBar } from '../components/ui';
+import { useApp, PatternTag } from '../components/shared';
+import { fmtDur } from './Session';
+
+const ICONS: Record<string, React.ReactNode> = {
+  daily: <CalendarClock size={18} />, weakness: <Zap size={18} />, interview: <MessagesSquare size={18} />,
+  random: <Shuffle size={18} />, overdue: <AlertOctagon size={18} />, mastery: <Target size={18} />,
+};
+const TONE: Record<string, string> = {
+  daily: 'text-accent bg-accent/12', weakness: 'text-warn bg-warn/12', interview: 'text-accent bg-accent/12',
+  random: 'text-ok bg-ok/12', overdue: 'text-bad bg-bad/12', mastery: 'text-ok bg-ok/12',
+};
+
+export default function Practice({ preset: initialPreset }: { preset?: string }) {
+  const d = useData(); const s = settingsOf(d);
+  const { go, openProblem } = useApp();
+  const patterns = Object.values(d.patterns).sort((a, b) => a.order - b.order);
+  const activePatterns = patterns.filter(p => Object.values(d.problems).some(x => x.patternId === p.id && x.track === 'active'));
+  const [cfg, setCfg] = useState<SessionConfig>(() => baseConfig(s));
+  const [masteryPattern, setMasteryPattern] = useState(activePatterns[0]?.id ?? '');
+  const [customCount, setCustomCount] = useState('');
+  const [customPatterns, setCustomPatterns] = useState('');
+  const [preview, setPreview] = useState<string[] | null>(null);
+  const [tab, setTab] = useState<'create' | 'recent'>('create');
+
+  const pick = (key: Exclude<Preset, 'custom' | 'today'>) => {
+    const pr = PRESETS[key];
+    const next: SessionConfig = { ...baseConfig(s), ...pr.config, preset: key, count: pr.config.count ?? s.defaultSessionSize };
+    if (key === 'mastery') next.patternIds = masteryPattern ? [masteryPattern] : [];
+    setCfg(next); setPreview(null);
+  };
+  useEffect(() => { if (initialPreset && initialPreset in PRESETS) pick(initialPreset as any); }, [initialPreset]);
+  const up = (patch: Partial<SessionConfig>) => { setCfg(c => ({ ...c, ...patch })); setPreview(null); };
+
+  const problems = Object.values(d.problems);
+  const pool = useMemo(() => candidatePool(problems, cfg), [d.problems, cfg]);
+  const title = cfg.preset in PRESETS ? PRESETS[cfg.preset as keyof typeof PRESETS].title + (cfg.preset === 'mastery' && d.patterns[cfg.patternIds[0]] ? ` · ${d.patterns[cfg.patternIds[0]].name}` : '') : 'Custom Mixed Practice';
+
+  const generate = () => { const r = generateSession(problems, cfg); setPreview(r.ids); };
+  const start = (ids: string[]) => {
+    startSession({ kind: cfg.preset, title, config: cfg, problemIds: ids });
+    go('session');
+  };
+  const togglePattern = (id: string) => up({ patternIds: cfg.patternIds.includes(id) ? cfg.patternIds.filter(x => x !== id) : [...cfg.patternIds, id] });
+  const togglePhase = (ph: Phase) => up({ phases: cfg.phases.includes(ph) ? cfg.phases.filter(x => x !== ph) : [...cfg.phases, ph] });
+  const sessions = Object.values(d.sessions).filter(x => x.kind !== 'today').sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
+  const inProgress = Object.values(d.sessions).find(x => x.status === 'in_progress');
+  const countOpts = [5, 10, 15, 20];
+  const patOpts = [0, 2, 3, 5];
+
+  return (
+    <div>
+      <PageHeader title="Mixed Practice" sub="Practice problems from several patterns in one sitting, so you have to recognise the pattern yourself." />
+      {inProgress && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent/8 px-4 py-3">
+          <span className="text-sm text-fg"><b>{inProgress.title}</b> is in progress · {inProgress.results.length} of {inProgress.problemIds.length} done</span>
+          <Button size="sm" variant="primary" onClick={() => go('session')}><Play size={14} />Resume</Button>
+        </div>
+      )}
+      <div className="mb-4"><Segmented ariaLabel="Section" value={tab} onChange={setTab} options={[{ value: 'create', label: 'Create session' }, { value: 'recent', label: `Recent sessions (${sessions.length})` }]} /></div>
+
+      {tab === 'recent' ? <RecentSessions /> : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
+            {(Object.keys(PRESETS) as (keyof typeof PRESETS)[]).map(k => (
+              <button key={k} onClick={() => pick(k)} aria-pressed={cfg.preset === k}
+                className={cx('flex items-start gap-3 rounded-xl border bg-surface px-4 py-3.5 text-left transition-colors shadow-card', cfg.preset === k ? 'border-accent ring-2 ring-accent/30' : 'border-line hover:border-accent/50')}>
+                <div className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', TONE[k])}>{ICONS[k]}</div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-fg">{PRESETS[k].title}</div>
+                  <div className="text-xs text-muted mt-0.5">{PRESETS[k].blurb}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+            <Card className="xl:col-span-3 min-w-0">
+              <CardHeader icon={<SlidersHorizontal size={17} />} title="Session configuration" sub={cfg.preset === 'custom' ? 'Custom settings' : `Preset: ${PRESETS[cfg.preset as keyof typeof PRESETS]?.title}`} />
+              <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                {cfg.preset === 'mastery' && (
+                  <Field label="Pattern to master" htmlFor="pm-pattern" className="md:col-span-2">
+                    <Select id="pm-pattern" value={cfg.patternIds[0] ?? ''} onChange={e => { setMasteryPattern(e.target.value); setCfg(c => ({ ...c, patternIds: [e.target.value] })); setPreview(null); }}>
+                      {activePatterns.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </Select>
+                  </Field>
+                )}
+                <Field label="Number of problems">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Segmented ariaLabel="Number of problems" value={countOpts.includes(cfg.count) ? cfg.count : -1} onChange={v => { if (v > 0) up({ count: v }); }} options={[...countOpts.map(n => ({ value: n, label: String(n) })), { value: -1, label: 'Custom' }]} />
+                    <Input aria-label="Custom number of problems" type="number" min={1} max={100} className="!w-20" placeholder="#" value={countOpts.includes(cfg.count) ? customCount : String(cfg.count)}
+                      onChange={e => { setCustomCount(e.target.value); const n = Number(e.target.value); if (n > 0) up({ count: Math.min(100, n) }); }} />
+                  </div>
+                </Field>
+                <Field label="Difficulty">
+                  <Segmented ariaLabel="Difficulty" value={cfg.difficulty} onChange={(v: DiffChoice) => up({ difficulty: v })}
+                    options={[{ value: 'all', label: 'Mixed' }, { value: 'Easy', label: 'Easy' }, { value: 'Medium', label: 'Medium' }, { value: 'Hard', label: 'Hard' }, { value: 'easy-medium', label: 'Easy+Med' }]} />
+                </Field>
+                {cfg.preset !== 'mastery' && (
+                  <Field label="Number of patterns" hint="Patterns are chosen by the strategy, then problems alternate between them.">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Segmented ariaLabel="Number of patterns" value={patOpts.includes(cfg.patternCount) ? cfg.patternCount : -1} onChange={v => { if (v >= 0) up({ patternCount: v }); }} options={[{ value: 0, label: 'All' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 5, label: '5' }, { value: -1, label: 'Custom' }]} />
+                      <Input aria-label="Custom number of patterns" type="number" min={1} max={30} className="!w-20" placeholder="#" value={patOpts.includes(cfg.patternCount) ? customPatterns : String(cfg.patternCount)}
+                        onChange={e => { setCustomPatterns(e.target.value); const n = Number(e.target.value); if (n > 0) up({ patternCount: n }); }} />
+                    </div>
+                  </Field>
+                )}
+                <Field label="Selection strategy" htmlFor="pm-strategy">
+                  <Select id="pm-strategy" value={cfg.strategy} onChange={e => up({ strategy: e.target.value as Strategy })}>
+                    <option value="balanced">Balanced (weakness + overdue + variety)</option>
+                    <option value="weakest">Weakest first</option>
+                    <option value="overdue">Overdue first</option>
+                    <option value="random">Random</option>
+                  </Select>
+                </Field>
+                <Field label="Include" className="md:col-span-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Checkbox id="pm-solved" checked={cfg.includeSolved} onChange={v => up({ includeSolved: v })} label="Previously solved problems" />
+                    <Checkbox id="pm-new" checked={cfg.includeNew} onChange={v => up({ includeNew: v })} label="Never-reviewed problems" />
+                    <Checkbox id="pm-due" checked={cfg.onlyDue} onChange={v => up({ onlyDue: v, onlyOverdue: v ? false : cfg.onlyOverdue })} label="Only due or overdue" />
+                    <Checkbox id="pm-od" checked={cfg.onlyOverdue} onChange={v => up({ onlyOverdue: v, onlyDue: v ? false : cfg.onlyDue })} label="Only overdue" />
+                    <Checkbox id="pm-weak" checked={cfg.onlyWeak} onChange={v => up({ onlyWeak: v })} label="Only Red and Yellow" />
+                    <div className="flex items-center gap-2">
+                      <Checkbox id="pm-recent" checked={cfg.excludeRecentDays > 0} onChange={v => up({ excludeRecentDays: v ? s.recentDays : 0 })} label="Exclude revised in last" />
+                      <Input aria-label="Days" type="number" min={1} className="!w-16 h-8" value={cfg.excludeRecentDays || s.recentDays} onChange={e => up({ excludeRecentDays: Math.max(1, Number(e.target.value) || 1) })} />
+                      <span className="text-sm text-muted">days</span>
+                    </div>
+                  </div>
+                </Field>
+                {cfg.preset !== 'mastery' && (
+                  <Field label={`Only these patterns ${cfg.patternIds.length ? `(${cfg.patternIds.length})` : '(any)'}`} className="md:col-span-2">
+                    <div className="flex flex-wrap gap-1.5">
+                      {activePatterns.map(p => (
+                        <button key={p.id} onClick={() => togglePattern(p.id)} aria-pressed={cfg.patternIds.includes(p.id)}
+                          className={cx('rounded-md border px-2 py-1 text-xs font-semibold transition-colors', cfg.patternIds.includes(p.id) ? 'border-accent bg-accent/15 text-accent' : 'border-line text-muted hover:text-fg')}>{p.name}</button>
+                      ))}
+                    </div>
+                  </Field>
+                )}
+                <Field label={`Only these revision phases ${cfg.phases.length ? '' : '(any)'}`} className="md:col-span-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {PHASES.map(ph => (
+                      <button key={ph} onClick={() => togglePhase(ph)} aria-pressed={cfg.phases.includes(ph)}
+                        className={cx('rounded-md border px-2 py-1 text-xs font-semibold transition-colors', cfg.phases.includes(ph) ? 'border-accent bg-accent/15 text-accent' : 'border-line text-muted hover:text-fg')}>{ph}</button>
+                    ))}
+                  </div>
+                </Field>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 sm:px-5 py-3">
+                <span className="text-sm text-muted"><b className="text-fg tabular-nums">{pool.length}</b> eligible problems in <b className="text-fg tabular-nums">{new Set(pool.map(p => p.patternId)).size}</b> patterns</span>
+                <Button variant="primary" disabled={!pool.length} onClick={generate}>Generate session ({Math.min(cfg.count, pool.length)})</Button>
+              </div>
+            </Card>
+
+            <Card className="xl:col-span-2 min-w-0 flex flex-col">
+              <CardHeader title="Session preview" sub={preview ? `${preview.length} problems from ${new Set(preview.map(id => d.problems[id]?.patternId)).size} patterns` : 'Generate to see the problems before you start'}
+                right={preview && <Button size="sm" variant="ghost" onClick={generate}><RefreshCw size={14} />Reroll</Button>} />
+              {!preview ? (
+                <Empty title={pool.length ? 'Ready when you are' : 'No eligible problems'} body={pool.length ? 'Pick a preset or adjust the settings, then press Generate.' : 'Loosen the filters: include never-reviewed problems, or turn off "Only due".'} />
+              ) : preview.length === 0 ? <Empty title="Nothing matched" /> : (
+                <>
+                  <ol className="divide-y divide-line/70 border-t border-line/70">
+                    {preview.map((id, i) => {
+                      const p = d.problems[id]; if (!p) return null;
+                      return (
+                        <li key={id} className="flex items-center gap-3 px-4 sm:px-5 py-2">
+                          <span className="w-5 text-xs font-mono text-muted tabular-nums">{i + 1}</span>
+                          <button className="min-w-0 flex-1 text-left" onClick={() => openProblem(id)}>
+                            <div className="text-sm font-semibold text-fg truncate">{p.name}</div>
+                            <div className="flex flex-wrap gap-1.5 mt-1"><PatternTag id={p.patternId} /><DiffPill d={p.difficulty} /><RatingPill r={p.lastRating} /></div>
+                          </button>
+                          <Button size="icon" variant="ghost" aria-label="Remove from session" onClick={() => setPreview(preview.filter(x => x !== id))}><X size={14} /></Button>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  <div className="mt-auto px-4 sm:px-5 py-4"><Button variant="primary" size="lg" className="w-full" onClick={() => start(preview)}><Play size={16} />Start session ({preview.length})</Button></div>
+                </>
+              )}
+            </Card>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export function RecentSessions({ limit }: { limit?: number }) {
+  const d = useData(); const { go } = useApp();
+  const list = Object.values(d.sessions).sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1)).slice(0, limit ?? 100);
+  if (!list.length) return <Card><Empty icon={<History size={26} />} title="No sessions yet" body="Completed and unfinished sessions appear here with their results." /></Card>;
+  return (
+    <Card className="overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[720px]">
+          <thead><tr className="border-b border-line text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
+            <th className="px-4 py-2.5">Session</th><th className="px-2 py-2.5">Date</th><th className="px-2 py-2.5">Status</th><th className="px-2 py-2.5">Attempted</th><th className="px-2 py-2.5 w-40">Ratings</th><th className="px-2 py-2.5">Accuracy</th><th className="px-2 py-2.5 pr-4">Time</th>
+          </tr></thead>
+          <tbody>
+            {list.map(s => {
+              const rated = s.results.filter(r => r.rating);
+              const g = rated.filter(r => r.rating === 'green').length, y = rated.filter(r => r.rating === 'yellow').length, r = rated.filter(r => r.rating === 'red').length;
+              return (
+                <tr key={s.id} className="border-b border-line/60 last:border-0 hover:bg-surface2/60 cursor-pointer" onClick={() => go(s.status === 'in_progress' ? 'session' : `summary-${s.id}`)}>
+                  <td className="px-4 py-2.5 font-semibold text-fg">{s.title}</td>
+                  <td className="px-2 py-2.5 text-muted whitespace-nowrap">{fmt(s.startedAt.slice(0, 10), 'd MMM yyyy')}</td>
+                  <td className="px-2 py-2.5"><span className={cx('rounded-md px-1.5 py-0.5 text-[11px] font-semibold', s.status === 'completed' ? 'bg-ok/15 text-ok' : s.status === 'in_progress' ? 'bg-accent/15 text-accent' : 'bg-surface2 text-muted')}>{s.status === 'completed' ? 'Completed' : s.status === 'in_progress' ? 'In progress' : 'Not finished'}</span></td>
+                  <td className="px-2 py-2.5 tabular-nums text-muted">{rated.length} / {s.problemIds.length}</td>
+                  <td className="px-2 py-2.5"><GYRBar g={g} y={y} r={r} /></td>
+                  <td className="px-2 py-2.5 tabular-nums text-fg">{rated.length ? `${Math.round((g / rated.length) * 100)}%` : '—'}</td>
+                  <td className="px-2 py-2.5 pr-4 tabular-nums text-muted">{fmtDur(s.elapsedSec)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
