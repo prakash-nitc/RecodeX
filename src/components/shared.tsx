@@ -60,19 +60,20 @@ export function initialRatingValue(p: Problem, rating?: Rating | null, timeMin =
 }
 
 export const RATING_BTN: Record<Rating, string> = {
-  green: 'border-ok/40 bg-ok/10 text-ok-ink aria-pressed:bg-ok aria-pressed:text-white aria-pressed:border-ok',
-  yellow: 'border-warn/40 bg-warn/10 text-warn-ink aria-pressed:bg-warn aria-pressed:text-black aria-pressed:border-warn',
-  red: 'border-bad/40 bg-bad/10 text-bad-ink aria-pressed:bg-bad aria-pressed:text-white aria-pressed:border-bad',
+  green: 'border-ok/45 bg-ok/10 text-ok-ink hover:bg-ok/20 aria-pressed:bg-ok aria-pressed:text-[#06281A] aria-pressed:border-ok aria-pressed:shadow-[0_8px_20px_-8px_rgb(var(--ok)/0.7)]',
+  yellow: 'border-warn/50 bg-warn/12 text-warn-ink hover:bg-warn/25 aria-pressed:bg-warn aria-pressed:text-[#3A2700] aria-pressed:border-warn aria-pressed:shadow-[0_8px_20px_-8px_rgb(var(--warn)/0.7)]',
+  red: 'border-bad/45 bg-bad/10 text-bad-ink hover:bg-bad/20 aria-pressed:bg-bad aria-pressed:text-white aria-pressed:border-bad aria-pressed:shadow-[0_8px_20px_-8px_rgb(var(--bad)/0.7)]',
 };
 const RATING_SHORT: Record<Rating, string> = { green: 'Solved independently', yellow: 'Needed hints / partial', red: 'Could not solve' };
 
-export function RatingButtons({ value, onPick, compact }: { value: Rating | null; onPick: (r: Rating) => void; compact?: boolean }) {
+export function RatingButtons({ value, onPick, compact, keys }: { value: Rating | null; onPick: (r: Rating) => void; compact?: boolean; keys?: boolean }) {
   return (
     <div className="grid grid-cols-3 gap-2">
       {(['green', 'yellow', 'red'] as Rating[]).map(r => (
         <button key={r} aria-pressed={value === r} onClick={() => onPick(r)} title={RATING_MEANING[r]}
-          className={cx('rounded-xl border-2 px-2 text-center font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent', compact ? 'py-2 text-sm' : 'py-3', RATING_BTN[r])}>
-          <div className={compact ? '' : 'text-[15px]'}>{r[0].toUpperCase() + r.slice(1)}</div>
+          className={cx('relative rounded-2xl border-2 px-2 text-center font-semibold transition-[background-color,box-shadow,transform] duration-150 active:scale-[.97]', compact ? 'py-2 text-sm' : 'py-3.5', RATING_BTN[r])}>
+          {keys && <kbd aria-hidden className="absolute top-1.5 right-2 hidden sm:block font-mono text-[10px] opacity-60">{r === 'green' ? 1 : r === 'yellow' ? 2 : 3}</kbd>}
+          <div className={compact ? '' : 'text-base'}>{r[0].toUpperCase() + r.slice(1)}</div>
           {!compact && <div className="text-[11px] font-medium opacity-80 mt-0.5">{RATING_SHORT[r]}</div>}
         </button>
       ))}
@@ -80,14 +81,26 @@ export function RatingButtons({ value, onPick, compact }: { value: Rating | null
   );
 }
 
-export function RatingForm({ problem, value, onChange, idPrefix }: { problem: Problem; value: RatingFormValue; onChange: (v: RatingFormValue) => void; idPrefix: string }) {
+export function RatingForm({ problem, value, onChange, idPrefix, collapsible, keys }: { problem: Problem; value: RatingFormValue; onChange: (v: RatingFormValue) => void; idPrefix: string; collapsible?: boolean; keys?: boolean }) {
   const d = useData(); const s = settingsOf(d);
+  const [more, setMore] = useState(!collapsible);
   const pv = value.rating ? previewNext(problem, value.rating, s) : null;
   const set = (patch: Partial<RatingFormValue>) => onChange({ ...value, ...patch });
   return (
     <div className="flex flex-col gap-4">
-      <RatingButtons value={value.rating} onPick={r => set({ rating: r, independent: value.independent ?? (r === 'green') })} />
+      <RatingButtons keys={keys} value={value.rating} onPick={r => set({ rating: r, independent: value.independent ?? (r === 'green') })} />
       {value.rating && <p className="text-xs text-muted -mt-1">{RATING_MEANING[value.rating]}</p>}
+      {collapsible && (
+        <Field label="Main mistake or weakness" htmlFor={`${idPrefix}-mistake`} hint={problem.weakness ? <>Last time: <span className="text-fg/80">{problem.weakness.slice(0, 140)}{problem.weakness.length > 140 ? '…' : ''}</span></> : undefined}>
+          <Textarea id={`${idPrefix}-mistake`} rows={2} placeholder="e.g. off-by-one when shrinking the window" value={value.mistake} onChange={e => set({ mistake: e.target.value })} />
+        </Field>
+      )}
+      {collapsible && (
+        <button type="button" onClick={() => setMore(!more)} aria-expanded={more} className="-mt-1 self-start text-xs font-semibold text-accent-ink hover:underline">
+          {more ? 'Fewer details' : 'More details: time, independence, notes, phases, next date'}
+        </button>
+      )}
+      {more && <>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Time taken (min)" htmlFor={`${idPrefix}-time`}>
           <Input id={`${idPrefix}-time`} type="number" min={0} inputMode="numeric" placeholder="Optional" value={value.timeMin} onChange={e => set({ timeMin: e.target.value })} />
@@ -98,9 +111,11 @@ export function RatingForm({ problem, value, onChange, idPrefix }: { problem: Pr
             onChange={v => set({ independent: v === 'yes' })} />
         </Field>
       </div>
+      {!collapsible && (
       <Field label="Main mistake or weakness" htmlFor={`${idPrefix}-mistake`} hint={problem.weakness ? <>Last time: <span className="text-fg/80">{problem.weakness.slice(0, 140)}{problem.weakness.length > 140 ? '…' : ''}</span></> : undefined}>
         <Textarea id={`${idPrefix}-mistake`} rows={2} placeholder="e.g. off-by-one when shrinking the window" value={value.mistake} onChange={e => set({ mistake: e.target.value })} />
       </Field>
+      )}
       <Field label="Additional notes" htmlFor={`${idPrefix}-notes`}>
         <Textarea id={`${idPrefix}-notes`} rows={2} placeholder="Optional" value={value.notes} onChange={e => set({ notes: e.target.value })} />
       </Field>
@@ -117,8 +132,9 @@ export function RatingForm({ problem, value, onChange, idPrefix }: { problem: Pr
           </Select>
         </Field>
       </div>
+      </>}
       {pv && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3.5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface2/70 px-3.5 py-3">
           <div className="flex items-center gap-2.5 text-sm">
             <CalendarClock size={16} className="text-accent-ink" />
             <span className="text-muted">Next review</span>

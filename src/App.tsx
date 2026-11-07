@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LayoutDashboard, Library, CalendarCheck, Shuffle, Shapes, GraduationCap, History as HistoryIcon, BarChart3, Settings as SettingsIcon,
   PanelLeftClose, PanelLeftOpen, Menu, Plus, Cloud, CloudOff, HardDrive, Loader2, X, Play,
@@ -7,7 +7,7 @@ import { useData, settingsOf, clearError } from './lib/store';
 import { buildFocus } from './lib/engine';
 import { applyTheme } from './lib/theme';
 import { today } from './lib/dates';
-import { UiProvider, Button, cx, Spinner } from './components/ui';
+import { UiProvider, Button, cx, Spinner, useUi } from './components/ui';
 import { AppProvider, useApp } from './components/shared';
 import { BrandLockup, BrandMark } from './components/Brand';
 import Dashboard from './pages/Dashboard';
@@ -71,6 +71,16 @@ function Shell() {
   const t = today();
   const queue = useMemo(() => d.status === 'ready' ? buildFocus(Object.values(d.problems), d.patterns, s, t).filter(f => f.problem.lastRevised !== t).length : 0, [d.problems, d.patterns, d.status, d.meta]);
   const running = Object.values(d.sessions).find(x => x.status === 'in_progress');
+  const { toast } = useUi();
+
+  // Micro-interaction: a short note when today's target is reached.
+  const doneToday = useMemo(() => new Set(Object.values(d.revisions).filter(r => r.date === t).map(r => r.problemId)).size, [d.revisions, t]);
+  const prevDone = useRef<number | null>(null);
+  useEffect(() => {
+    if (d.status !== 'ready') return;
+    const prev = prevDone.current; prevDone.current = doneToday;
+    if (prev !== null && prev < s.dailyTarget && doneToday >= s.dailyTarget) toast(`Daily target reached: ${s.dailyTarget} problems revised today. Well climbed.`);
+  }, [doneToday, d.status]);
 
   if (d.status === 'booting' || d.status === 'slow') {
     return (
@@ -104,6 +114,16 @@ function Shell() {
     if (route.startsWith('summary-')) return <SessionPage summaryId={route.slice(8)} />;
     return <Dashboard />;
   })();
+
+  // Focus mode: a running session takes the whole screen, without the sidebar.
+  if (route === 'session' && running) {
+    return (
+      <div className="min-h-screen">
+        {d.error && <div className="mx-auto max-w-6xl px-4 pt-3"><div className="flex items-start justify-between gap-3 rounded-2xl border border-bad/40 bg-bad/10 px-4 py-3 text-sm text-fg" role="alert"><span>{d.error}</span><Button size="icon" variant="ghost" aria-label="Dismiss" onClick={clearError}><X size={14} /></Button></div></div>}
+        <div key={route} className="animate-page-in">{page}</div>
+      </div>
+    );
+  }
 
   const nav = (compact: boolean) => (
     <nav className="flex flex-col gap-0.5" aria-label="Main">
