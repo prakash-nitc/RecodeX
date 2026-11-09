@@ -1,14 +1,102 @@
 import React, { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, X, History as HistoryIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, History as HistoryIcon, ArrowRight, Calendar } from 'lucide-react';
 import { useData } from '../lib/store';
 import { fmt, today, addDays } from '../lib/dates';
-import { Button, Card, PageHeader, Select, Input, Segmented, RatingPill, PhasePill, Tag, Empty, GYRBar, SearchInput } from '../components/ui';
+import { Button, Card, PageHeader, Select, Input, Segmented, RatingPill, PhasePill, Tag, Empty, GYRBar, SearchInput, RatingDot, cx, SectionLabel } from '../components/ui';
 import { useApp } from '../components/shared';
 import { RecentSessions } from './Practice';
-import { countRatings } from '../lib/stats';
+import { countRatings, sequences } from '../lib/stats';
+import type { Revision, Rating } from '../types';
 
 const PAGE = 50;
 const SOURCE_LABEL = { quick: 'Quick rating', today: "Today's revision", session: 'Mixed practice', import: 'Imported' } as const;
+
+// ---------------------------------------------------------------------------
+// Rating change arrow (e.g. Red → Yellow → Green)
+
+function RatingChange({ prev, current }: { prev: Rating | null; current: Rating }) {
+  if (!prev || prev === current) return <RatingPill r={current} />;
+  return (
+    <span className="inline-flex items-center gap-1">
+      <RatingDot r={prev} size={8} />
+      <ArrowRight size={10} className="text-muted" />
+      <RatingPill r={current} />
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Day group in the timeline
+
+interface DayGroup { date: string; revisions: (Revision & { prevRating: Rating | null })[] }
+
+function DayCard({ group, isToday }: { group: DayGroup; isToday: boolean }) {
+  const d = useData(); const { openProblem } = useApp();
+  const c = countRatings(group.revisions);
+  return (
+    <div className="relative flex gap-4 sm:gap-5">
+      {/* Timeline dot and line */}
+      <div className="flex flex-col items-center shrink-0 w-3">
+        <div className={cx('h-3 w-3 rounded-full mt-5 shrink-0 ring-4 ring-bg', isToday ? 'bg-accent' : 'bg-line')} />
+        <div className="flex-1 w-0.5 bg-line/60" />
+      </div>
+
+      <div className="flex-1 min-w-0 pb-4">
+        {/* Date header */}
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          <h3 className="font-display text-sm font-bold text-fg">{fmt(group.date, 'EEEE, d MMMM yyyy')}</h3>
+          {isToday && <span className="rounded-lg bg-accent/12 px-1.5 py-0.5 text-[10px] font-bold text-accent-ink">Today</span>}
+          <span className="text-xs text-muted tabular-nums">{group.revisions.length} revision{group.revisions.length === 1 ? '' : 's'}</span>
+          <div className="flex items-center gap-1 text-[11px] text-muted tabular-nums ml-auto">
+            <span className="text-ok-ink">{c.green}</span> / <span className="text-warn-ink">{c.yellow}</span> / <span className="text-bad-ink">{c.red}</span>
+          </div>
+        </div>
+
+        {/* Revisions for this day */}
+        <Card className="overflow-hidden">
+          <ul className="divide-y divide-line/60">
+            {group.revisions.map(r => {
+              const p = d.problems[r.problemId];
+              if (!p) return null;
+              return (
+                <li key={r.id}>
+                  <button
+                    onClick={() => openProblem(p.id)}
+                    className="w-full flex flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-surface2/60 transition-colors"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-fg truncate">{p.name}</span>
+                        <span className="text-[11px] font-mono text-muted shrink-0">#{p.num}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-muted">
+                        <Tag>{d.patterns[p.patternId]?.name}</Tag>
+                        <PhasePill p={r.phase} />
+                        {r.timeMin !== null && <span className="tabular-nums">{r.timeMin}m</span>}
+                        <span>{SOURCE_LABEL[r.source]}</span>
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <RatingChange prev={r.prevRating} current={r.rating} />
+                    </div>
+                    {r.mistake && (
+                      <div className="w-full text-xs text-fg/80 mt-1 pl-0 line-clamp-2">
+                        <span className="text-hot-ink font-semibold">Mistake: </span>{r.mistake}
+                      </div>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main History page
 
 export default function History({ initialTab }: { initialTab?: 'revisions' | 'sessions' }) {
   const d = useData(); const { openProblem } = useApp();
@@ -21,6 +109,10 @@ export default function History({ initialTab }: { initialTab?: 'revisions' | 'se
   const [q, setQ] = useState('');
   const [page, setPage] = useState(0);
   const patterns = Object.values(d.patterns).sort((a, b) => a.order - b.order);
+
+  // Build per-problem revision sequences to find previous ratings
+  const seqs = useMemo(() => sequences(Object.values(d.revisions).filter(r => d.problems[r.problemId])), [d.revisions, d.problems]);
+
   const list = useMemo(() => {
     const qq = q.trim().toLowerCase();
     return Object.values(d.revisions).filter(r => {
@@ -28,15 +120,39 @@ export default function History({ initialTab }: { initialTab?: 'revisions' | 'se
       return (!from || r.date >= from) && (!to || r.date <= to) && (!pattern || p.patternId === pattern) && (!rating || r.rating === rating) && (!source || r.source === source) && (!qq || p.name.toLowerCase().includes(qq) || r.mistake.toLowerCase().includes(qq));
     }).sort((a, b) => (a.at < b.at ? 1 : -1));
   }, [d.revisions, d.problems, from, to, pattern, rating, source, q]);
+
+  // Add prevRating to each revision
+  const listWithPrev = useMemo(() => list.map(r => {
+    const seq = seqs.get(r.problemId) ?? [];
+    const idx = seq.findIndex(x => x.id === r.id);
+    const prevRating = idx > 0 ? seq[idx - 1].rating : null;
+    return { ...r, prevRating };
+  }), [list, seqs]);
+
+  // Group by day for timeline view
+  const dayGroups: DayGroup[] = useMemo(() => {
+    const rows = listWithPrev.slice(page * PAGE, page * PAGE + PAGE);
+    const groups: DayGroup[] = [];
+    let current: DayGroup | null = null;
+    for (const r of rows) {
+      if (!current || current.date !== r.date) {
+        current = { date: r.date, revisions: [] };
+        groups.push(current);
+      }
+      current.revisions.push(r);
+    }
+    return groups;
+  }, [listWithPrev, page]);
+
   const c = countRatings(list);
   const pages = Math.max(1, Math.ceil(list.length / PAGE));
-  const rows = list.slice(page * PAGE, page * PAGE + PAGE);
   const anyFilter = from || to || pattern || rating || source || q;
   const preset = (days: number) => { setFrom(addDays(today(), -days + 1)); setTo(today()); setPage(0); };
+  const t = today();
 
   return (
     <div>
-      <PageHeader title="Revision History" sub="Every revision is its own record. Nothing is overwritten." />
+      <PageHeader eyebrow={<span className="inline-flex items-center gap-1.5"><HistoryIcon size={13} />Timeline</span>} title="Revision History" sub="Every revision is its own record. Nothing is overwritten." />
       <div className="mb-4"><Segmented ariaLabel="Section" value={tab} onChange={setTab} options={[{ value: 'revisions', label: `Revisions (${Object.keys(d.revisions).length})` }, { value: 'sessions', label: `Sessions (${Object.keys(d.sessions).length})` }]} /></div>
       {tab === 'sessions' ? <RecentSessions /> : (
         <>
@@ -54,49 +170,36 @@ export default function History({ initialTab }: { initialTab?: 'revisions' | 'se
               {anyFilter && <Button variant="ghost" onClick={() => { setFrom(''); setTo(''); setPattern(''); setRating(''); setSource(''); setQ(''); setPage(0); }}><X size={14} />Clear</Button>}
             </div>
           </div>
-          <Card className="mb-3 flex flex-wrap items-center gap-4 px-4 py-3">
+
+          {/* Summary bar */}
+          <Card className="mb-4 flex flex-wrap items-center gap-4 px-4 py-3">
             <span className="text-sm text-muted"><b className="text-fg tabular-nums">{list.length}</b> revisions on <b className="text-fg tabular-nums">{new Set(list.map(r => r.problemId)).size}</b> problems</span>
             <div className="flex-1 min-w-[140px] max-w-xs"><GYRBar g={c.green} y={c.yellow} r={c.red} /></div>
             <span className="text-xs text-muted tabular-nums"><span className="text-ok-ink">{c.green}</span> / <span className="text-warn-ink">{c.yellow}</span> / <span className="text-bad-ink">{c.red}</span></span>
           </Card>
-          <Card className="overflow-hidden">
-            {list.length === 0 ? <Empty icon={<HistoryIcon size={26} />} title={anyFilter ? 'No revisions match these filters' : 'No revisions yet'} body="Rate a problem from the dashboard to create the first record." /> : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm min-w-[900px]">
-                    <thead><tr className="border-b border-line text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
-                      <th className="px-4 py-2.5">Date</th><th className="px-2 py-2.5">Problem</th><th className="px-2 py-2.5">Pattern</th><th className="px-2 py-2.5">Rating</th><th className="px-2 py-2.5">Phase</th><th className="px-2 py-2.5 text-right">Time</th><th className="px-2 py-2.5">Mistake</th><th className="px-2 py-2.5 pr-4">Notes</th>
-                    </tr></thead>
-                    <tbody>
-                      {rows.map(r => {
-                        const p = d.problems[r.problemId]!;
-                        return (
-                          <tr key={r.id} className="border-b border-line/60 last:border-0 hover:bg-surface2/60 cursor-pointer align-top" onClick={() => openProblem(p.id)}>
-                            <td className="px-4 py-2.5 whitespace-nowrap"><div className="text-fg tabular-nums">{fmt(r.date, 'd MMM yyyy')}</div><div className="text-[11px] text-muted">{SOURCE_LABEL[r.source]}</div></td>
-                            <td className="px-2 py-2.5 max-w-[240px]"><div className="font-semibold text-fg truncate">{p.name}</div><div className="text-[11px] text-muted font-mono">#{p.num}</div></td>
-                            <td className="px-2 py-2.5"><Tag>{d.patterns[p.patternId]?.name}</Tag></td>
-                            <td className="px-2 py-2.5"><RatingPill r={r.rating} /></td>
-                            <td className="px-2 py-2.5"><PhasePill p={r.phase} /></td>
-                            <td className="px-2 py-2.5 text-right tabular-nums text-muted">{r.timeMin !== null ? `${r.timeMin}m` : '—'}</td>
-                            <td className="px-2 py-2.5 max-w-[260px] text-fg"><span className="line-clamp-2">{r.mistake || <span className="text-muted">—</span>}</span></td>
-                            <td className="px-2 py-2.5 pr-4 max-w-[220px] text-muted"><span className="line-clamp-2">{r.notes || '—'}</span></td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+
+          {/* Timeline view grouped by day */}
+          {list.length === 0 ? (
+            <Card><Empty icon={<HistoryIcon size={26} />} title={anyFilter ? 'No revisions match these filters' : 'No revisions yet'} body="Rate a problem from the dashboard to create the first record." /></Card>
+          ) : (
+            <>
+              <div className="flex flex-col">
+                {dayGroups.map(group => (
+                  <DayCard key={group.date} group={group} isToday={group.date === t} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-xs text-muted mt-2">
+                <span className="tabular-nums">{page * PAGE + 1}–{Math.min(list.length, page * PAGE + PAGE)} of {list.length}</span>
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="ghost" disabled={page === 0} onClick={() => setPage(page - 1)} aria-label="Previous page"><ChevronLeft size={16} /></Button>
+                  <span className="tabular-nums">{page + 1} / {pages}</span>
+                  <Button size="icon" variant="ghost" disabled={page >= pages - 1} onClick={() => setPage(page + 1)} aria-label="Next page"><ChevronRight size={16} /></Button>
                 </div>
-                <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-xs text-muted">
-                  <span className="tabular-nums">{page * PAGE + 1}–{Math.min(list.length, page * PAGE + PAGE)} of {list.length}</span>
-                  <div className="flex items-center gap-1">
-                    <Button size="icon" variant="ghost" disabled={page === 0} onClick={() => setPage(page - 1)} aria-label="Previous page"><ChevronLeft size={16} /></Button>
-                    <span className="tabular-nums">{page + 1} / {pages}</span>
-                    <Button size="icon" variant="ghost" disabled={page >= pages - 1} onClick={() => setPage(page + 1)} aria-label="Next page"><ChevronRight size={16} /></Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </Card>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
