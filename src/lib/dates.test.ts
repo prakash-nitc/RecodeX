@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { addDays, diffDays, today, ymd, isValidYmd, relDay, weekStartOf } from './dates';
+import { addDays, diffDays, today, ymd, isValidYmd, relDay, weekStartOf, fmtTimestamp } from './dates';
 
 afterEach(() => vi.useRealTimers());
 
@@ -15,6 +15,10 @@ describe('calendar-day helpers (Asia/Kolkata)', () => {
     // 23:30 IST on 7 Nov.
     vi.setSystemTime(new Date('2026-11-07T18:00:00.000Z'));
     expect(today()).toBe('2026-11-07');
+  });
+
+  it('formats timestamps in the local calendar day', () => {
+    expect(fmtTimestamp('2026-11-07T20:00:00.000Z', 'd MMM yyyy')).toBe('8 Nov 2026');
   });
 
   it('addDays and diffDays work on whole calendar days', () => {

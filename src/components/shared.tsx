@@ -216,7 +216,7 @@ function ProblemFormDialog({ mode, id, prefill, onClose }: { mode: 'add' | 'edit
   const set = (patch: Partial<ProblemDraft>) => { setF(x => ({ ...x, ...patch })); setForceDup(false); };
   const dups = useMemo(() => f.name.trim().length > 2 || f.url.trim() ? findDuplicates(f.name, f.url, id) : [], [f.name, f.url, id, d.problems]);
   const pt = d.patterns[f.patternId];
-  const valid = f.name.trim() && (f.patternId || newPattern.trim());
+  const valid = !!f.name.trim() && (f.patternId === '__new' ? !!newPattern.trim() : !!f.patternId);
 
   const save = () => {
     let patternId = f.patternId;

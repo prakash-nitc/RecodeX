@@ -4,7 +4,7 @@ import { useData, settingsOf, updateSettings, makeBackup, restoreBackup, resetTo
 import { supabase } from '../lib/supabase/client';
 import { intervalFor } from '../lib/engine';
 import { applyTheme } from '../lib/theme';
-import { today } from '../lib/dates';
+import { today, fmtTimestamp } from '../lib/dates';
 import { usePwaInstall } from '../lib/pwa';
 import type { Settings as S, DiffChoice } from '../types';
 import { DEFAULT_SETTINGS } from '../types';
@@ -118,7 +118,7 @@ export default function Settings() {
     try {
       const b = JSON.parse(await readFileText(file)) as Backup;
       if (!BACKUP_APP_IDS.includes(b.app) || !Array.isArray(b.problems)) throw new Error('not a backup');
-      if (await confirm({ title: 'Restore this backup?', body: `It replaces everything here with ${b.problems.length} problems, ${b.revisions.length} revisions and ${b.sessions.length} sessions from ${b.exportedAt.slice(0, 10)}.`, confirmLabel: 'Replace and restore', danger: true })) {
+      if (await confirm({ title: 'Restore this backup?', body: `It replaces everything here with ${b.problems.length} problems, ${b.revisions.length} revisions and ${b.sessions.length} sessions from ${fmtTimestamp(b.exportedAt)}.`, confirmLabel: 'Replace and restore', danger: true })) {
         restoreBackup(b); toast('Backup restored');
       }
     } catch { toast('That file is not a RecodeX backup (.json exported from Settings).', 'error'); }

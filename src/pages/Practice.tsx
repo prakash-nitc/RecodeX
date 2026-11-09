@@ -4,7 +4,7 @@ import { useData, settingsOf, startSession } from '../lib/store';
 import { PRESETS, baseConfig, candidatePool, generateSession } from '../lib/engine';
 import type { SessionConfig, Preset, Phase, DiffChoice, Strategy } from '../types';
 import { PHASES } from '../types';
-import { fmt } from '../lib/dates';
+import { fmtTimestamp } from '../lib/dates';
 import { Button, Card, CardHeader, Checkbox, Field, Input, PageHeader, Segmented, Select, cx, DiffPill, RatingPill, Empty, GYRBar, Chip } from '../components/ui';
 import { useApp, PatternTag } from '../components/shared';
 import { MountainScene } from '../components/art/Mountains';
@@ -35,6 +35,8 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
   const [masteryPattern, setMasteryPattern] = useState(activePatterns[0]?.id ?? '');
   const [customCount, setCustomCount] = useState('');
   const [customPatterns, setCustomPatterns] = useState('');
+  const [editingCount, setEditingCount] = useState(false);
+  const [editingPatterns, setEditingPatterns] = useState(false);
   const [preview, setPreview] = useState<string[] | null>(null);
   const [tab, setTab] = useState<'create' | 'recent'>('create');
 
@@ -46,6 +48,18 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
   };
   useEffect(() => { if (initialPreset && initialPreset in PRESETS) pick(initialPreset as any); }, [initialPreset]);
   const up = (patch: Partial<SessionConfig>) => { setCfg(c => ({ ...c, ...patch })); setPreview(null); };
+  const finishCountEdit = () => {
+    setEditingCount(false);
+    if (!customCount.trim()) return;
+    const n = Number(customCount);
+    up({ count: Math.min(100, Math.max(1, Number.isFinite(n) ? Math.round(n) : 1)) });
+  };
+  const finishPatternEdit = () => {
+    setEditingPatterns(false);
+    if (!customPatterns.trim()) return;
+    const n = Number(customPatterns);
+    up({ patternCount: Math.min(30, Math.max(1, Number.isFinite(n) ? Math.round(n) : 1)) });
+  };
 
   const problems = Object.values(d.problems);
   const pool = useMemo(() => candidatePool(problems, cfg), [d.problems, cfg]);
@@ -110,9 +124,11 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
                 <Group icon={<Layers size={13} />} title="Size and difficulty">
                   <Field label="Number of problems">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Segmented ariaLabel="Number of problems" value={countOpts.includes(cfg.count) ? cfg.count : -1} onChange={v => { if (v > 0) up({ count: v }); }} options={[...countOpts.map(n => ({ value: n, label: String(n) })), { value: -1, label: 'Custom' }]} />
-                      <Input aria-label="Custom number of problems" type="number" min={1} max={100} className="!w-20" placeholder="#" value={countOpts.includes(cfg.count) ? customCount : String(cfg.count)}
-                        onChange={e => { setCustomCount(e.target.value); const n = Number(e.target.value); if (n > 0) up({ count: Math.min(100, n) }); }} />
+                      <Segmented ariaLabel="Number of problems" value={countOpts.includes(cfg.count) ? cfg.count : -1} onChange={v => { if (v > 0) up({ count: v }); else document.getElementById('pm-custom-count')?.focus(); }} options={[...countOpts.map(n => ({ value: n, label: String(n) })), { value: -1, label: 'Custom' }]} />
+                      <Input id="pm-custom-count" aria-label="Custom number of problems" type="number" min={1} max={100} className="!w-20" placeholder="#"
+                        value={editingCount ? customCount : countOpts.includes(cfg.count) ? '' : String(cfg.count)}
+                        onFocus={() => { setCustomCount(countOpts.includes(cfg.count) ? '' : String(cfg.count)); setEditingCount(true); }}
+                        onChange={e => setCustomCount(e.target.value)} onBlur={finishCountEdit} />
                     </div>
                   </Field>
                   <Field label="Difficulty">
@@ -124,9 +140,11 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
                   {cfg.preset !== 'mastery' && (
                     <Field label="Number of patterns" hint="Patterns are chosen by the strategy, then problems alternate between them.">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Segmented ariaLabel="Number of patterns" value={patOpts.includes(cfg.patternCount) ? cfg.patternCount : -1} onChange={v => { if (v >= 0) up({ patternCount: v }); }} options={[{ value: 0, label: 'All' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 5, label: '5' }, { value: -1, label: 'Custom' }]} />
-                        <Input aria-label="Custom number of patterns" type="number" min={1} max={30} className="!w-20" placeholder="#" value={patOpts.includes(cfg.patternCount) ? customPatterns : String(cfg.patternCount)}
-                          onChange={e => { setCustomPatterns(e.target.value); const n = Number(e.target.value); if (n > 0) up({ patternCount: n }); }} />
+                        <Segmented ariaLabel="Number of patterns" value={patOpts.includes(cfg.patternCount) ? cfg.patternCount : -1} onChange={v => { if (v >= 0) up({ patternCount: v }); else document.getElementById('pm-custom-patterns')?.focus(); }} options={[{ value: 0, label: 'All' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 5, label: '5' }, { value: -1, label: 'Custom' }]} />
+                        <Input id="pm-custom-patterns" aria-label="Custom number of patterns" type="number" min={1} max={30} className="!w-20" placeholder="#"
+                          value={editingPatterns ? customPatterns : patOpts.includes(cfg.patternCount) ? '' : String(cfg.patternCount)}
+                          onFocus={() => { setCustomPatterns(patOpts.includes(cfg.patternCount) ? '' : String(cfg.patternCount)); setEditingPatterns(true); }}
+                          onChange={e => setCustomPatterns(e.target.value)} onBlur={finishPatternEdit} />
                       </div>
                     </Field>
                   )}
@@ -231,7 +249,7 @@ export function RecentSessions({ limit }: { limit?: number }) {
               return (
                 <tr key={s.id} className="border-b border-line/60 last:border-0 hover:bg-surface2/60 cursor-pointer" onClick={() => go(s.status === 'in_progress' ? 'session' : `summary-${s.id}`)}>
                   <td className="px-4 py-2.5 font-semibold text-fg">{s.title}</td>
-                  <td className="px-2 py-2.5 text-muted whitespace-nowrap">{fmt(s.startedAt.slice(0, 10), 'd MMM yyyy')}</td>
+                  <td className="px-2 py-2.5 text-muted whitespace-nowrap">{fmtTimestamp(s.startedAt, 'd MMM yyyy')}</td>
                   <td className="px-2 py-2.5"><span className={cx('rounded-lg px-1.5 py-0.5 text-[11px] font-semibold', s.status === 'completed' ? 'bg-ok/15 text-ok-ink' : s.status === 'in_progress' ? 'bg-accent/12 text-accent-ink' : 'bg-surface2 text-muted')}>{s.status === 'completed' ? 'Completed' : s.status === 'in_progress' ? 'In progress' : 'Not finished'}</span></td>
                   <td className="px-2 py-2.5 tabular-nums text-muted">{rated.length} / {s.problemIds.length}</td>
                   <td className="px-2 py-2.5"><GYRBar g={g} y={y} r={r} /></td>

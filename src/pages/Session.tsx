@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, ExternalLink, Pause, Play, SkipForward, Eye, RotateCcw, CheckCircle2, X, Keyboard, Trophy, Clock, Shapes, Target } from 'lucide-react';
 import { useData, addSessionResult, finishSession, startSession } from '../lib/store';
 import { PHASE_HINT } from '../lib/engine';
-import { fmt } from '../lib/dates';
+import { fmt, fmtTimestamp } from '../lib/dates';
 import { Button, Card, Dialog, DiffPill, PhasePill, RatingPill, cx, Empty, GYRBar, PageHeader, RatingDot } from '../components/ui';
 import { useApp, RatingForm, initialRatingValue, submitRating, PatternTag, useTicker, RatingFormValue } from '../components/shared';
 import { MountainScene } from '../components/art/Mountains';
@@ -227,7 +227,7 @@ function Summary({ session }: { session: Session }) {
         <div className="relative flex h-full flex-col justify-end p-6 sm:p-8 text-white [text-shadow:0_1px_14px_rgb(0_0_0/0.4)]">
           <div className="flex items-center gap-2 text-sm font-semibold text-white/85">{done ? <><Trophy size={16} />Session complete</> : 'Session ended early'}</div>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl font-semibold tracking-tight text-balance">{done ? (acc >= 80 ? 'A clear view from up here.' : 'Another stretch of the trail behind you.') : 'Every step still counts.'}</h1>
-          <p className="mt-1 text-sm text-white/80">{session.title} · {fmt(session.startedAt.slice(0, 10))}</p>
+          <p className="mt-1 text-sm text-white/80">{session.title} · {fmtTimestamp(session.startedAt)}</p>
         </div>
       </section>
       <div className="flex flex-wrap items-center justify-between gap-2">

@@ -13,6 +13,11 @@ export function fmt(s: string | null | undefined, f = 'd MMM yyyy'): string {
   if (!s) return '—';
   try { return format(toDate(s), f); } catch { return s; }
 }
+/** Format an ISO timestamp in the viewer's local time zone. Use fmt() for date-only values. */
+export function fmtTimestamp(s: string | null | undefined, f = 'd MMM yyyy'): string {
+  if (!s) return '—';
+  try { return format(parseISO(s), f); } catch { return s; }
+}
 export function weekStartOf(s: string, weekStart: 0 | 1): string {
   return ymd(startOfWeek(toDate(s), { weekStartsOn: weekStart }));
 }
