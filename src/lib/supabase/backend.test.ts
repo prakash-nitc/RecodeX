@@ -16,6 +16,7 @@ class FakeDb {
   failNext = 0;
   failWith: Err = { status: 0, error: { message: 'TypeError: Failed to fetch' } };
   rejectRow: ((row: any) => boolean) | null = null;
+  duplicateUpserts = 0;
   writes: { table: string; op: 'upsert' | 'delete'; n: number }[] = [];
   now() { return new Date(Date.UTC(2026, 10, 7) + ++this.clock * 1000).toISOString(); }
   from(table: string) { return new FakeQuery(this, table); }
@@ -50,6 +51,15 @@ class FakeQuery {
       return { data: all.slice(this.rng[0], this.rng[1] + 1), error: null, status: 200 };
     }
     if (this.op === 'upsert') {
+      const conflictKeys = new Set<string>();
+      for (const r of this.rows) {
+        const key = this.table === 'user_meta' ? r.user_id : `${r.user_id}/${r.id}`;
+        if (conflictKeys.has(key)) {
+          db.duplicateUpserts++;
+          return { data: null, status: 400, error: { message: 'ON CONFLICT DO UPDATE command cannot affect row a second time', code: '21000' } };
+        }
+        conflictKeys.add(key);
+      }
       if (db.rejectRow && this.rows.some(db.rejectRow)) return { data: null, status: 400, error: { message: 'violates check constraint', code: '23514' } };
       db.writes.push({ table: this.table, op: 'upsert', n: this.rows.length });
       for (const r of this.rows) {
@@ -119,6 +129,7 @@ describe('SupabaseBackend', () => {
     await b.flushed();
     expect(db.tables.problems.size).toBe(1200);
     expect(db.tables.problems.get('p-7').name).toBe('v4');
+    expect(db.duplicateUpserts).toBe(0);
     const ups = db.writes.filter(w => w.table === 'problems' && w.op === 'upsert');
     expect(ups.length).toBeLessThanOrEqual(4);
     expect(Math.max(...ups.map(u => u.n))).toBeLessThanOrEqual(500);

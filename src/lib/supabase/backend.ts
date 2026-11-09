@@ -294,7 +294,10 @@ export class SupabaseBackend implements Backend {
       for (const entry of this.queue) {
         if (picked.length >= (op === 'del' ? DEL_CHUNK : CHUNK)) break;
         const [k, j] = entry;
-        if (entry === first || j.solo || j.col !== head.col || (j.data === null) !== (op === 'del') || this.inflight.has(k)) continue;
+        // Map iteration yields a fresh [key, value] tuple each time, so compare the key
+        // instead of tuple identity. Otherwise the head job is picked twice and Postgres
+        // rejects the upsert with SQLSTATE 21000 (one row affected twice).
+        if (k === first[0] || j.solo || j.col !== head.col || (j.data === null) !== (op === 'del') || this.inflight.has(k)) continue;
         picked.push(entry);
       }
     }
