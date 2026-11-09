@@ -11,6 +11,8 @@ export interface BackendEvents {
   onReady(hasMeta: boolean): void;
   onSlow(): void;
   onError(message: string): void;
+  /** A previously reported write-retry error recovered after the queue drained. */
+  onWriteRecovered?(): void;
   onPending(n: number): void;
   onOffline?(offline: boolean): void;
 }

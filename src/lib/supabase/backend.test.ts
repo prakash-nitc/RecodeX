@@ -72,7 +72,7 @@ let n = 0;
 function setup(db = new FakeDb(), uid = `user-${++n}`) {
   const mem: { meta: any } & Record<Col, Record<string, any>> = { meta: null, patterns: {}, problems: {}, revisions: {}, sessions: {} };
   const ev = {
-    ready: null as boolean | null, errors: [] as string[], offline: false, pending: 0,
+    ready: null as boolean | null, errors: [] as string[], offline: false, pending: 0, recovered: 0,
   };
   const events: BackendEvents = {
     onChanges(col, changes: Change[]) {
@@ -82,6 +82,7 @@ function setup(db = new FakeDb(), uid = `user-${++n}`) {
     onReady(h) { ev.ready = h; },
     onSlow() {},
     onError(m) { ev.errors.push(m); },
+    onWriteRecovered() { ev.recovered++; },
     onPending(p) { ev.pending = p; },
     onOffline(o) { ev.offline = o; },
   };
@@ -159,6 +160,18 @@ describe('SupabaseBackend', () => {
     expect(db.tables.problems.get('p-1')).toBeTruthy();
     expect(ev.offline).toBe(false);
     expect(ev.errors).toEqual([]);
+  });
+
+  it('reports when a retry error recovers after the write queue drains', async () => {
+    const { b, db, ev } = setup();
+    await until(() => ev.ready !== null);
+    db.failWith = { status: 403, error: { message: 'temporary authorization failure', code: '42501' } };
+    db.failNext = 3;
+    b.put('problems', 'p-retry', prob('p-retry'));
+    await until(() => ev.errors.length === 1, 10_000);
+    await b.flushed();
+    expect(db.tables.problems.has('p-retry')).toBe(true);
+    expect(ev.recovered).toBe(1);
   });
 
   it('resends a rejected chunk row by row so only the bad row is lost', async () => {

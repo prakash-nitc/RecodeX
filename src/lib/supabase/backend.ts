@@ -339,6 +339,7 @@ export class SupabaseBackend implements Backend {
       this.backoff = 0;
       this.failures = 0;
       this.setOffline(false);
+      if (this.count() === 0) this.ev.onWriteRecovered?.();
       return;
     }
     console.warn('[RecodeX] write failed', b.table, b.op, status, error);

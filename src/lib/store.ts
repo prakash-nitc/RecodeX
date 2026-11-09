@@ -5,7 +5,7 @@ import type {
   Meta, Pattern, Problem, Revision, Session, Settings, Rating, Phase, Priority, Difficulty, Track, SessionResult,
 } from '../types';
 import { DEFAULT_SETTINGS } from '../types';
-import { applyRevision, RevisionInput, suggestPhase, priorityFor } from './engine';
+import { applyRevision, RevisionInput, suggestPhase, priorityFor, intervalFor } from './engine';
 import { nowIso, today, addDays } from './dates';
 import { SEED, linkToUrl } from '../seed';
 
@@ -70,6 +70,9 @@ export function boot(b: Backend) {
     onReady: live((hasMeta: boolean) => set({ status: 'ready', needsImport: isEmptyAccount(hasMeta) })),
     onSlow: live(() => { if (state.status === 'booting') set({ status: 'slow' }); }),
     onError: live((msg: string) => set({ error: msg })),
+    onWriteRecovered: live(() => {
+      if (state.error?.startsWith('Your changes are not reaching the server (')) set({ error: null });
+    }),
     onPending: live((n: number) => { if (n !== state.pending) set({ pending: n }); }),
     onOffline: live((offline: boolean) => { if (offline !== state.offline) set({ offline }); }),
   });
@@ -391,10 +394,12 @@ export function importRows(rows: ImportRow[], mode: 'skip' | 'update'): { added:
       name: r.name, patternId: pt.id, subPattern: r.subPattern, difficulty: r.difficulty, url: r.url, priority: r.priority,
       track: r.track, notes: r.notes, weakness: r.weakness,
     };
-    if (r.rating) {
+    if (r.rating && r.lastRevised) {
+      const greenStreak = r.consecutiveGreen ?? (r.rating === 'green' ? 1 : 0);
       Object.assign(fields, {
-        lastRating: r.rating, lastRevised: r.lastRevised, nextReview: r.nextReview,
-        consecutiveGreen: r.consecutiveGreen ?? (r.rating === 'green' ? 1 : 0),
+        lastRating: r.rating, lastRevised: r.lastRevised,
+        nextReview: r.nextReview ?? addDays(r.lastRevised, intervalFor(r.rating, greenStreak, s)),
+        consecutiveGreen: greenStreak,
         revisionCount: Math.max(1, r.revisionCount ?? 1),
         phase: r.phase ?? suggestPhase(r.rating, r.rating === 'green' ? 1 : 0, null),
       });
@@ -410,7 +415,7 @@ export function importRows(rows: ImportRow[], mode: 'skip' | 'update'): { added:
       putDoc('revisions', {
         id: rid('r'), problemId: target.id, date: r.lastRevised, at: `${r.lastRevised}T12:00:00.000Z`, rating: r.rating,
         phase: target.phase, timeMin: null, independent: null, mistake: r.weakness, notes: 'Imported from CSV.',
-        sessionId: null, source: 'import', nextReview: r.nextReview ?? addDays(r.lastRevised, s.yellowDays), prev: null,
+        sessionId: null, source: 'import', nextReview: r.nextReview ?? addDays(r.lastRevised, intervalFor(r.rating, r.consecutiveGreen ?? (r.rating === 'green' ? 1 : 0), s)), prev: null,
       });
     }
   }
