@@ -21,6 +21,7 @@ import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import SessionPage from './pages/Session';
 import ImportReview from './pages/ImportReview';
+import { ReloadPrompt } from './components/ReloadPrompt';
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -207,6 +208,7 @@ function Shell() {
           </div>
         </div>
       )}
+      <ReloadPrompt />
     </div>
   );
 }

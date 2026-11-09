@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase/client';
 import { intervalFor } from '../lib/engine';
 import { applyTheme } from '../lib/theme';
 import { today } from '../lib/dates';
+import { usePwaInstall } from '../lib/pwa';
 import type { Settings as S, DiffChoice } from '../types';
 import { DEFAULT_SETTINGS } from '../types';
 import { Button, Card, CardHeader, Field, Input, PageHeader, Segmented, Toggle, Select, useUi, Dialog, cx, SectionLabel } from '../components/ui';
@@ -19,6 +20,40 @@ function Num({ id, value, onChange, min = 0, max = 365, suffix }: { id: string; 
         onBlur={() => { const n = Math.round(Number(v)); if (Number.isFinite(n) && n >= min && n <= max) onChange(n); else setV(String(value)); }} />
       {suffix && <span className="text-sm text-muted">{suffix}</span>}
     </div>
+  );
+}
+
+function InstallCard() {
+  const { canInstall, installed, install } = usePwaInstall();
+  const { toast } = useUi();
+  if (installed) return null;
+
+  const handleInstall = async () => {
+    const ok = await install();
+    if (ok) toast('RecodeX installed');
+  };
+
+  return (
+    <Card>
+      <CardHeader
+        title="Install app"
+        icon={<Smartphone size={18} />}
+        sub="Install RecodeX on your phone or desktop for quick access and offline use."
+      />
+      <div className="px-4 sm:px-5 pb-5 flex flex-col gap-2">
+        <div>
+          <Button variant="primary" onClick={handleInstall} disabled={!canInstall}>
+            <Download size={15} />
+            {canInstall ? 'Install RecodeX' : 'Install app'}
+          </Button>
+        </div>
+        {!canInstall && (
+          <p className="text-xs text-muted leading-relaxed">
+            To install manually, open your browser menu and choose "Install RecodeX" or "Add to Home screen".
+          </p>
+        )}
+      </div>
+    </Card>
   );
 }
 
@@ -101,6 +136,7 @@ export default function Settings() {
     <div className="max-w-4xl">
       <PageHeader eyebrow={<span className="inline-flex items-center gap-1.5"><Settings2 size={13} />Configuration</span>} title="Settings" sub="Changes save as you make them." />
       <div className="flex flex-col gap-4">
+        <InstallCard />
         <AccountCard />
 
         {/* Appearance */}
