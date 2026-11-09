@@ -124,6 +124,18 @@ describe('SupabaseBackend', () => {
     expect(ev.pending).toBe(0);
   });
 
+  it('uses the queued record id when its embedded id is stale', async () => {
+    const { b, db, ev } = setup();
+    await until(() => ev.ready !== null);
+    b.put('problems', 'p-1', prob('p-1', { name: 'First' }));
+    // This can happen when a caller reuses a record object after changing its key.
+    // Postgres must receive unique conflict keys for this bulk upsert.
+    b.put('problems', 'p-2', prob('p-1', { name: 'Second' }));
+    await b.flushed();
+    expect([...db.tables.problems.keys()].sort()).toEqual(['p-1', 'p-2']);
+    expect(db.tables.problems.get('p-2').name).toBe('Second');
+  });
+
   it('deletes in chunks and records deletions', async () => {
     const { b, db, ev } = setup();
     await until(() => ev.ready !== null);
