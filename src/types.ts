@@ -58,8 +58,12 @@ export interface ProblemSnapshot {
   consecutiveGreen: number;
   revisionCount: number;
   phase: Phase;
+  phaseManual: boolean;
   priority: Priority;
   weakness: string;
+  track: Track;                 // rating a backlog problem activates it; undo must put it back
+  learnedAt: string | null;
+  // Snapshots stored before these fields existed lack them; undo then keeps the current value.
 }
 
 export interface Revision {

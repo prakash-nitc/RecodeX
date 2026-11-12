@@ -68,8 +68,8 @@ export function priorityFor(rating: Rating): Priority {
 export function snapshotOf(p: Problem): ProblemSnapshot {
   return {
     lastRating: p.lastRating, lastRevised: p.lastRevised, nextReview: p.nextReview,
-    consecutiveGreen: p.consecutiveGreen, revisionCount: p.revisionCount, phase: p.phase,
-    priority: p.priority, weakness: p.weakness,
+    consecutiveGreen: p.consecutiveGreen, revisionCount: p.revisionCount, phase: p.phase, phaseManual: p.phaseManual,
+    priority: p.priority, weakness: p.weakness, track: p.track, learnedAt: p.learnedAt,
   };
 }
 

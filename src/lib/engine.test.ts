@@ -119,8 +119,15 @@ describe('applyRevision (the green ladder end to end)', () => {
     expect(revision.nextReview).toBe('2026-11-14');
     expect(revision.prev).toEqual({
       lastRating: 'yellow', lastRevised: null, nextReview: '2026-11-05', consecutiveGreen: 0, revisionCount: 0,
-      phase: 'Reconstruction', priority: 'Medium', weakness: 'off by one',
+      phase: 'Reconstruction', phaseManual: false, priority: 'Medium', weakness: 'off by one', track: 'active', learnedAt: null,
     });
+  });
+
+  it('snapshots the track so undoing the first rating of a backlog problem puts it back', () => {
+    const p = prob({ track: 'backlog', learnedAt: '2026-11-01' });
+    const { problem, revision } = applyRevision(p, rate('green', { date: T }), S, 'r');
+    expect(problem.track).toBe('active');
+    expect(revision.prev).toMatchObject({ track: 'backlog', learnedAt: '2026-11-01' });
   });
 
   it('keeps the old weakness when no mistake is given and replaces it when one is', () => {
