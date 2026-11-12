@@ -150,6 +150,17 @@ describe('applyRevision (the green ladder end to end)', () => {
 
   it('rating a backlog problem moves it to the active track', () => {
     const p = prob({ track: 'backlog' });
+  it('an explicit next phase replaces a pinned one, and choosing the suggested phase unpins it', () => {
+    const p = prob({ phase: 'Quick Recall', phaseManual: true });
+    // Red suggests Reconstruction. Choosing it explicitly must not be ignored in favour of the old pin.
+    const auto = applyRevision(p, rate('red', { date: T, nextPhase: 'Reconstruction' }), S, 'r1').problem;
+    expect(auto.phase).toBe('Reconstruction');
+    expect(auto.phaseManual).toBe(false);
+    const pinned = applyRevision(p, rate('red', { date: T, nextPhase: 'Recall/Repair' }), S, 'r2').problem;
+    expect(pinned.phase).toBe('Recall/Repair');
+    expect(pinned.phaseManual).toBe(true);
+  });
+
     expect(applyRevision(p, rate('yellow', { date: T }), S, 'r').problem.track).toBe('active');
   });
 

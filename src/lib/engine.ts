@@ -97,7 +97,10 @@ export function applyRevision(p: Problem, input: RevisionInput, s: Settings, id:
   const date = input.date ?? today();
   const pv = previewNext(p, input.rating, s, date);
   const next = input.nextOverride || pv.next;
-  const manualPhase = input.nextPhase && input.nextPhase !== pv.phase ? input.nextPhase : null;
+  // An explicit next phase always wins. Picking the suggested one means "auto" and unpins the phase;
+  // without a choice, a pinned phase stays and an unpinned one follows the suggestion.
+  const phase = input.nextPhase ?? (p.phaseManual ? p.phase : pv.phase);
+  const phaseManual = input.nextPhase ? input.nextPhase !== pv.phase : p.phaseManual;
   const revision: Revision = {
     id, problemId: p.id, date, at: nowIso(), rating: input.rating, phase: input.phaseUsed,
     timeMin: input.timeMin, independent: input.independent, mistake: input.mistake.trim(), notes: input.notes.trim(),
@@ -110,8 +113,8 @@ export function applyRevision(p: Problem, input: RevisionInput, s: Settings, id:
     nextReview: next,
     consecutiveGreen: pv.streak,
     revisionCount: p.revisionCount + 1,
-    phase: manualPhase ?? (p.phaseManual ? p.phase : pv.phase),
-    phaseManual: manualPhase ? true : p.phaseManual,
+    phase,
+    phaseManual,
     priority: s.autoPriority ? priorityFor(input.rating) : p.priority,
     weakness: input.mistake.trim() ? input.mistake.trim() : p.weakness,
     track: 'active',
