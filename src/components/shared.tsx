@@ -219,12 +219,13 @@ function ProblemFormDialog({ mode, id, prefill, onClose }: { mode: 'add' | 'edit
   const valid = !!f.name.trim() && (f.patternId === '__new' ? !!newPattern.trim() : !!f.patternId);
 
   const save = () => {
+    // Ask about duplicates before creating anything, or "Add anyway" would create the new pattern twice.
+    if (dups.length && !forceDup && mode === 'add') { setForceDup(true); return; }
     let patternId = f.patternId;
     if (f.patternId === '__new') {
       if (!newPattern.trim()) return;
       patternId = addPattern(newPattern.trim()).id;
     }
-    if (dups.length && !forceDup && mode === 'add') { setForceDup(true); return; }
     if (mode === 'add') {
       const p = addProblem({ name: f.name, patternId, subPattern: f.subPattern, difficulty: f.difficulty, url: f.url, priority: f.priority, track: f.initial === 'backlog' ? 'backlog' : 'active', notes: f.notes, weakness: f.weakness, initial: f.initial });
       toast(`Added #${p.num} ${p.name}`);
