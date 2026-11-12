@@ -23,32 +23,24 @@ test.describe('Smoke test', () => {
     // 3. Mixed session to summary
     await go(page, 'practice');
     await expect(page.getByRole('heading', { name: 'Mixed Practice', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Generate session' }).click();
-    await page.getByRole('button', { name: 'Start session' }).click();
+    await page.getByRole('button', { name: /Generate session/ }).click();
+    await page.getByRole('button', { name: /Enter the arena/ }).click();
 
-    // Session runner
+    // Focus mode: rate every problem Green with the keyboard (1 = Green, Enter = save) until the summary
     await expect(page.getByRole('button', { name: 'Exit focus mode' })).toBeVisible();
-    // Complete or skip problems in the session until summary
-    while (await page.getByRole('button', { name: 'Exit focus mode' }).isVisible().catch(() => false)) {
-      const isCompleteVisible = await page.getByText('Session complete').isVisible().catch(() => false);
-      if (isCompleteVisible) break;
-
-      const skipBtn = page.getByRole('button', { name: 'Skip' });
-      const rateBtn = page.getByRole('button', { name: 'Rate green' });
-      if (await rateBtn.isVisible()) {
-        await rateBtn.click();
-        await page.getByRole('button', { name: 'Save revision' }).click();
-      } else if (await skipBtn.isVisible()) {
-        await skipBtn.click();
-      } else {
-        break;
-      }
-      await page.waitForTimeout(200);
+    const counter = await page.getByText(/Problem 1 of \d+/).textContent();
+    const total = Number(/of (\d+)/.exec(counter ?? '')?.[1] ?? 0);
+    expect(total).toBeGreaterThan(0);
+    for (let i = 0; i < total; i++) {
+      await expect(page.getByText(`Problem ${i + 1} of ${total}`)).toBeVisible();
+      await page.keyboard.press('1');
+      await page.keyboard.press('Enter');
     }
 
     // Check summary
-    await expect(page.getByText(/Session complete|Practice summary/i)).toBeVisible();
-    await page.getByRole('button', { name: /Leave|Done/i }).first().click();
+    await expect(page.getByText('Session complete')).toBeVisible();
+    await page.getByRole('button', { name: 'Back to dashboard' }).click();
+    await expect(page.getByText('Lifetime mastery')).toBeVisible();
 
     // 4. Open Analytics
     await go(page, 'analytics');
