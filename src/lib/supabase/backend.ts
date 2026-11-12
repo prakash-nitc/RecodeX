@@ -329,7 +329,11 @@ export class SupabaseBackend implements Backend {
         // The queue key is the identity used for coalescing and in-flight ordering. Keep it
         // authoritative: a stale/malformed embedded data.id must not turn two distinct jobs
         // into duplicate (user_id, id) rows in one Postgres upsert.
-        const rows = b.jobs.map(j => ({ ...toRow(b.table, j.data, this.uid), id: j.id }));
+        // user_meta is keyed by user_id alone and has no id column; PostgREST rejects unknown keys (PGRST204).
+        const rows = b.jobs.map(j => {
+          const row = toRow(b.table, j.data, this.uid);
+          return b.table === 'user_meta' ? row : { ...row, id: j.id };
+        });
         ({ error, status } = await this.sb.from(b.table).upsert(rows, { onConflict: b.table === 'user_meta' ? 'user_id' : 'user_id,id' }));
       } else {
         ({ error, status } = await this.sb.from(b.table).delete().eq('user_id', this.uid).in('id', b.jobs.map(j => j.id)));

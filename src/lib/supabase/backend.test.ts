@@ -8,6 +8,8 @@ import type { BackendEvents, Change, Col } from '../backend';
 // A tiny in-memory stand-in for the parts of supabase-js the backend uses.
 
 type Err = { status: number; error: { message: string; code?: string } };
+// user_meta has no id column (see supabase/migrations); PostgREST rejects a body with an unknown key.
+const META_COLS = new Set(['user_id', 'settings', 'next_num', 'imported_at', 'schema_version']);
 class FakeDb {
   tables: Record<string, Map<string, any>> = {
     user_meta: new Map(), patterns: new Map(), problems: new Map(), revisions: new Map(), practice_sessions: new Map(), deletions: new Map(),
@@ -51,6 +53,10 @@ class FakeQuery {
       return { data: all.slice(this.rng[0], this.rng[1] + 1), error: null, status: 200 };
     }
     if (this.op === 'upsert') {
+      if (this.table === 'user_meta') {
+        const bad = this.rows.flatMap(r => Object.keys(r).filter(k => !META_COLS.has(k)));
+        if (bad.length) return { data: null, status: 400, error: { message: `Could not find the '${bad[0]}' column of 'user_meta' in the schema cache`, code: 'PGRST204' } };
+      }
       const conflictKeys = new Set<string>();
       for (const r of this.rows) {
         const key = this.table === 'user_meta' ? r.user_id : `${r.user_id}/${r.id}`;
@@ -183,6 +189,15 @@ describe('SupabaseBackend', () => {
     await b.flushed();
     expect(db.tables.problems.has('p-retry')).toBe(true);
     expect(ev.recovered).toBe(1);
+  }, 15_000); // three retries with 1s → 2s → 4s backoff take longer than the default 5s
+
+  it('writes user_meta without an id column (the table is keyed by user_id alone)', async () => {
+    const { b, db, ev } = setup();
+    await until(() => ev.ready !== null);
+    b.putMeta({ settings: { dailyTarget: 12 }, nextNum: 102, importedAt: null, schemaVersion: 1 });
+    await b.flushed();
+    expect(ev.errors).toEqual([]);
+    expect(db.tables.user_meta.get('meta')).toMatchObject({ next_num: 102, settings: { dailyTarget: 12 } });
   });
 
   it('resends a rejected chunk row by row so only the bad row is lost', async () => {
