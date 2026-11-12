@@ -236,7 +236,8 @@ function ProblemFormDialog({ mode, id, prefill, onClose }: { mode: 'add' | 'edit
       };
       if (f.phase === 'auto') { patch.phaseManual = false; patch.phase = suggestPhase(existing.lastRating, existing.consecutiveGreen, null); }
       else { patch.phaseManual = true; patch.phase = f.phase; }
-      if (existing.lastRating && f.nextReview && f.nextReview !== existing.nextReview) patch.nextReview = f.nextReview;
+      // A rated problem always keeps a date; a never-rated one may have its first attempt scheduled or cleared.
+      if (f.nextReview !== (existing.nextReview ?? '') && (f.nextReview || !existing.lastRating)) patch.nextReview = f.nextReview || null;
       updateProblem(existing.id, patch);
       toast('Changes saved');
     }
@@ -298,8 +299,8 @@ function ProblemFormDialog({ mode, id, prefill, onClose }: { mode: 'add' | 'edit
                 {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
               </Select>
             </Field>
-            <Field label="Next review" htmlFor="pf-next" hint={existing.lastRating ? undefined : 'Available after the first revision'}>
-              <Input id="pf-next" type="date" disabled={!existing.lastRating} value={f.nextReview} onChange={e => set({ nextReview: e.target.value })} />
+            <Field label="Next review" htmlFor="pf-next" hint={existing.lastRating ? undefined : 'Not rated yet: a date here schedules the first attempt.'}>
+              <Input id="pf-next" type="date" value={f.nextReview} onChange={e => set({ nextReview: e.target.value })} />
             </Field>
             <Field label="Main weakness" htmlFor="pf-weak" className="sm:col-span-2">
               <Textarea id="pf-weak" rows={2} value={f.weakness} onChange={e => set({ weakness: e.target.value })} />

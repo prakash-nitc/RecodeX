@@ -99,7 +99,7 @@ export default function Dashboard() {
   const weekTotal = week.reduce((a, x) => a + x.total, 0);
   const weekPct = Math.min(100, Math.round((weekTotal / (target * 7)) * 100));
   const weekC = countRatings(counts.weekRevs);
-  const upcoming = Array.from({ length: 7 }, (_, i) => addDays(t, i + 1)).map(day => ({ day, n: problems.filter(p => p.track === 'active' && p.nextReview === day && p.lastRating).length }));
+  const upcoming = Array.from({ length: 7 }, (_, i) => addDays(t, i + 1)).map(day => ({ day, n: problems.filter(p => p.track === 'active' && p.nextReview === day).length }));
   const quote = quoteForDay(t);
   const hour = new Date().getHours();
   const name = s.displayName.trim();

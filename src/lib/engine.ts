@@ -20,16 +20,19 @@ export const PHASE_HINT: Record<Phase, string> = {
 
 export function statusOf(p: Problem, s: Settings, t = today()): Status {
   if (p.track === 'backlog') return 'Yet to Learn';
-  if (!p.lastRating || !p.nextReview) return 'Not Reviewed';
+  if (!p.nextReview) return 'Not Reviewed';
   const d = diffDays(p.nextReview, t);
+  // A never-rated problem can still have a date: a first attempt scheduled by "due today", by
+  // activation after learning, or by a bulk reschedule. It becomes due like any other review.
   if (d < 0) return 'Overdue';
   if (d === 0) return 'Due Today';
+  if (!p.lastRating) return 'Not Reviewed';
   if (p.consecutiveGreen >= s.masteryStreak) return 'Mastered';
   return 'Scheduled';
 }
 
 export function overdueDays(p: Problem, t = today()): number {
-  if (!p.nextReview || p.track !== 'active' || !p.lastRating) return 0;
+  if (!p.nextReview || p.track !== 'active') return 0;
   return Math.max(0, diffDays(t, p.nextReview));
 }
 
@@ -140,10 +143,10 @@ export function buildFocus(problems: Problem[], patterns: Record<string, Pattern
   const byPri = (a: Problem, b: Problem) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
   const ratingWeak = (p: Problem) => (p.lastRating ? RATING_SCORE[p.lastRating] : 2);
 
-  active.filter(p => p.lastRating && p.nextReview && p.nextReview < t)
+  active.filter(p => p.nextReview && p.nextReview < t)
     .sort((a, b) => (a.nextReview! < b.nextReview! ? -1 : a.nextReview! > b.nextReview! ? 1 : 0) || byPri(a, b) || ratingWeak(a) - ratingWeak(b))
     .forEach(p => push(p, 'Overdue'));
-  active.filter(p => p.lastRating && p.nextReview === t).sort(byPri).forEach(p => push(p, 'Due today'));
+  active.filter(p => p.nextReview === t).sort(byPri).forEach(p => push(p, 'Due today'));
   if (s.focusIncludeHigh)
     active.filter(p => p.priority === 'High' && !revisedToday(p) && p.lastRating).sort((a, b) => ratingWeak(a) - ratingWeak(b)).forEach(p => push(p, 'High priority'));
   if (s.focusIncludeWeak)
@@ -152,7 +155,7 @@ export function buildFocus(problems: Problem[], patterns: Record<string, Pattern
       .forEach(p => push(p, 'Weak'));
   if (s.focusNewPerDay > 0) {
     const plan = new Set(s.studyPlanPatternIds);
-    const fresh = active.filter(p => !p.lastRating && (plan.size === 0 || plan.has(p.patternId)))
+    const fresh = active.filter(p => !p.lastRating && !seen.has(p.id) && (plan.size === 0 || plan.has(p.patternId)))
       .sort((a, b) => (patterns[a.patternId].order - patterns[b.patternId].order) || a.num - b.num);
     fresh.slice(0, s.focusNewPerDay).forEach(p => push(p, 'New'));
   }
@@ -195,8 +198,8 @@ export function candidatePool(problems: Problem[], c: SessionConfig, t = today()
     if (reviewed && !c.includeSolved) return false;
     if (!reviewed && !c.includeNew) return false;
     if (c.excludeRecentDays > 0 && p.lastRevised && diffDays(t, p.lastRevised) < c.excludeRecentDays) return false;
-    if (c.onlyOverdue && !(reviewed && p.nextReview && p.nextReview < t)) return false;
-    if (c.onlyDue && !(reviewed && p.nextReview && p.nextReview <= t)) return false;
+    if (c.onlyOverdue && !(p.nextReview && p.nextReview < t)) return false;
+    if (c.onlyDue && !(p.nextReview && p.nextReview <= t)) return false;
     if (c.onlyWeak && !(p.lastRating === 'red' || p.lastRating === 'yellow')) return false;
     return true;
   });

@@ -150,13 +150,6 @@ describe('applyRevision (the green ladder end to end)', () => {
     expect(applyRevision(p, rate('red', { date: T }), S, 'r').problem.phase).toBe('Quick Recall');
   });
 
-  it('leaves priority alone when autoPriority is off', () => {
-    const p = prob({ priority: 'Low' });
-    expect(applyRevision(p, rate('red', { date: T }), { ...S, autoPriority: false }, 'r').problem.priority).toBe('Low');
-  });
-
-  it('rating a backlog problem moves it to the active track', () => {
-    const p = prob({ track: 'backlog' });
   it('an explicit next phase replaces a pinned one, and choosing the suggested phase unpins it', () => {
     const p = prob({ phase: 'Quick Recall', phaseManual: true });
     // Red suggests Reconstruction. Choosing it explicitly must not be ignored in favour of the old pin.
@@ -168,6 +161,13 @@ describe('applyRevision (the green ladder end to end)', () => {
     expect(pinned.phaseManual).toBe(true);
   });
 
+  it('leaves priority alone when autoPriority is off', () => {
+    const p = prob({ priority: 'Low' });
+    expect(applyRevision(p, rate('red', { date: T }), { ...S, autoPriority: false }, 'r').problem.priority).toBe('Low');
+  });
+
+  it('rating a backlog problem moves it to the active track', () => {
+    const p = prob({ track: 'backlog' });
     expect(applyRevision(p, rate('yellow', { date: T }), S, 'r').problem.track).toBe('active');
   });
 
@@ -193,10 +193,16 @@ describe('applyRevision (the green ladder end to end)', () => {
 });
 
 describe('status and overdue detection', () => {
-  it('backlog → Yet to Learn, unrated → Not Reviewed', () => {
+  it('backlog → Yet to Learn, unrated without a date → Not Reviewed', () => {
     expect(statusOf(prob({ track: 'backlog', lastRating: 'red', nextReview: '2026-01-01' }), S, T)).toBe('Yet to Learn');
     expect(statusOf(prob(), S, T)).toBe('Not Reviewed');
-    expect(statusOf(prob({ nextReview: T }), S, T)).toBe('Not Reviewed'); // due date but never rated
+  });
+
+  it('a scheduled first attempt (no rating yet) becomes due and overdue like any review', () => {
+    expect(statusOf(prob({ nextReview: '2026-11-20' }), S, T)).toBe('Not Reviewed'); // still waiting for its day
+    expect(statusOf(prob({ nextReview: T }), S, T)).toBe('Due Today');
+    expect(statusOf(prob({ nextReview: '2026-11-01' }), S, T)).toBe('Overdue');
+    expect(statusOf(prob({ nextReview: '2026-11-01', consecutiveGreen: 9 }), S, T)).toBe('Overdue'); // never Mastered without a rating
   });
 
   it('past → Overdue, today → Due Today, future → Scheduled', () => {
@@ -211,11 +217,12 @@ describe('status and overdue detection', () => {
     expect(statusOf(prob({ lastRating: 'green', nextReview: '2026-11-01', consecutiveGreen: 6 }), S, T)).toBe('Overdue');
   });
 
-  it('overdueDays counts calendar days and ignores unrated or backlog problems', () => {
+  it('overdueDays counts calendar days, counts a missed first attempt, and ignores backlog problems', () => {
     expect(overdueDays(prob({ lastRating: 'yellow', nextReview: '2026-10-31' }), T)).toBe(7);
     expect(overdueDays(prob({ lastRating: 'yellow', nextReview: T }), T)).toBe(0);
     expect(overdueDays(prob({ lastRating: 'yellow', nextReview: '2026-11-20' }), T)).toBe(0);
-    expect(overdueDays(prob({ nextReview: '2026-10-31' }), T)).toBe(0);
+    expect(overdueDays(prob({ nextReview: '2026-10-31' }), T)).toBe(7);
+    expect(overdueDays(prob(), T)).toBe(0);
     expect(overdueDays(prob({ lastRating: 'red', nextReview: '2026-10-31', track: 'backlog' }), T)).toBe(0);
   });
 
@@ -279,6 +286,18 @@ describe("Today's Focus", () => {
   it('never lists a problem twice', () => {
     const p = prob({ lastRating: 'red', nextReview: '2026-11-01', priority: 'High' });
     expect(buildFocus([p], pats, S, T)).toHaveLength(1);
+  });
+
+  it('lists a scheduled first attempt as due or overdue, and does not spend a "new" slot on it', () => {
+    const dueFirst = prob({ patternId: 'pt-a', num: 1, nextReview: T });
+    const missedFirst = prob({ patternId: 'pt-a', num: 2, nextReview: '2026-11-04' });
+    const newA = prob({ patternId: 'pt-a', num: 3 });
+    const newB = prob({ patternId: 'pt-a', num: 4 });
+    const f = buildFocus([newB, newA, dueFirst, missedFirst], pats, S, T);
+    expect(f.map(x => [x.problem.id, x.reason])).toEqual([
+      [missedFirst.id, 'Overdue'], [dueFirst.id, 'Due today'], [newA.id, 'New'], [newB.id, 'New'],
+    ]);
+    expect(f[0].overdue).toBe(3);
   });
 
   it('skips backlog problems and problems whose pattern is missing', () => {
@@ -371,19 +390,20 @@ describe('session generation', () => {
     const due = prob({ lastRating: 'green', nextReview: T, difficulty: 'Easy' });
     const later = prob({ lastRating: 'green', nextReview: '2026-12-01', lastRevised: '2026-11-06' });
     const fresh = prob({ patternId: 'pt-b' });
+    const firstDue = prob({ patternId: 'pt-b', nextReview: '2026-11-03' }); // first attempt scheduled, never rated
     const backlog = prob({ track: 'backlog' });
-    const all = [overdue, due, later, fresh, backlog];
+    const all = [overdue, due, later, fresh, firstDue, backlog];
     const ids = (c: Partial<SessionConfig>) => candidatePool(all, cfg(c), T).map(p => p.id);
-    expect(ids({})).toEqual([overdue.id, due.id, later.id, fresh.id]);
+    expect(ids({})).toEqual([overdue.id, due.id, later.id, fresh.id, firstDue.id]);
     expect(ids({ includeNew: false })).toEqual([overdue.id, due.id, later.id]);
-    expect(ids({ includeSolved: false })).toEqual([fresh.id]);
-    expect(ids({ onlyDue: true })).toEqual([overdue.id, due.id]);
-    expect(ids({ onlyOverdue: true })).toEqual([overdue.id]);
+    expect(ids({ includeSolved: false })).toEqual([fresh.id, firstDue.id]);
+    expect(ids({ onlyDue: true })).toEqual([overdue.id, due.id, firstDue.id]);
+    expect(ids({ onlyOverdue: true })).toEqual([overdue.id, firstDue.id]);
     expect(ids({ onlyWeak: true })).toEqual([overdue.id]);
-    expect(ids({ difficulty: 'easy-medium' })).toEqual([due.id, later.id, fresh.id]);
+    expect(ids({ difficulty: 'easy-medium' })).toEqual([due.id, later.id, fresh.id, firstDue.id]);
     expect(ids({ difficulty: 'Easy' })).toEqual([due.id]);
-    expect(ids({ patternIds: ['pt-b'] })).toEqual([fresh.id]);
-    expect(ids({ excludeRecentDays: 2 })).toEqual([overdue.id, due.id, fresh.id]);
+    expect(ids({ patternIds: ['pt-b'] })).toEqual([fresh.id, firstDue.id]);
+    expect(ids({ excludeRecentDays: 2 })).toEqual([overdue.id, due.id, fresh.id, firstDue.id]);
     expect(ids({ phases: ['Quick Recall'] })).toEqual([]);
   });
 });
