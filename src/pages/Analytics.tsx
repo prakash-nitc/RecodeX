@@ -9,23 +9,7 @@ import { usePalette, chartTheme } from '../lib/theme';
 import { Card, CardHeader, PageHeader, Segmented, Stat, cx, GYRBar, Empty, Ring, Flame, Progress } from '../components/ui';
 import { useApp } from '../components/shared';
 import { patternRoute } from './Patterns';
-import type { Settings } from '../types';
-
-// ---------------------------------------------------------------------------
-// Milestone definitions
-const MILESTONES: { id: string; label: string; test: (ctx: MCtx) => boolean }[] = [
-  { id: 'first-mastered', label: 'First problem mastered', test: c => c.mastered >= 1 },
-  { id: 'mastered-50', label: '50 problems mastered', test: c => c.mastered >= 50 },
-  { id: 'mastered-100', label: '100 problems mastered', test: c => c.mastered >= 100 },
-  { id: 'mastered-250', label: '250 problems mastered', test: c => c.mastered >= 250 },
-  { id: 'mastered-500', label: '500 problems mastered', test: c => c.mastered >= 500 },
-  { id: 'mastered-1000', label: '1,000 problems mastered', test: c => c.mastered >= 1000 },
-  { id: 'streak-7', label: '7-day streak', test: c => c.longest >= 7 },
-  { id: 'streak-30', label: '30-day streak', test: c => c.longest >= 30 },
-  { id: 'streak-100', label: '100-day streak', test: c => c.longest >= 100 },
-  { id: 'streak-365', label: '365-day streak', test: c => c.longest >= 365 },
-];
-interface MCtx { mastered: number; longest: number; patternMastery: Map<string, boolean> }
+import { MILESTONES } from '../lib/milestones';
 
 function MilestonesList({ milestones }: { milestones: Record<string, string>; }) {
   const reached = MILESTONES.filter(m => milestones[m.id]);

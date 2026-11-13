@@ -7,6 +7,8 @@ import type {
 import { DEFAULT_SETTINGS } from '../types';
 import { applyRevision, RevisionInput, suggestPhase, priorityFor, intervalFor } from './engine';
 import { nowIso, today, addDays } from './dates';
+import { isMastered, streaks } from './stats';
+import { awardMilestones } from './milestones';
 import { SEED, linkToUrl } from '../seed';
 
 export interface DataState {
@@ -213,7 +215,19 @@ export function recordRevision(problemId: string, input: RevisionInput): Revisio
   if (!problem.learnedAt && p.track === 'backlog') problem.learnedAt = revision.date;
   putDoc('revisions', revision);
   putDoc('problems', problem);
+  checkMilestones(revision.date);
   return revision;
+}
+
+/** Awards any lifetime milestone the latest revision reached. Milestones are never taken away. */
+function checkMilestones(date: string) {
+  const s = settingsOf();
+  const ctx = {
+    mastered: Object.values(state.problems).filter(p => isMastered(p, s)).length,
+    longest: streaks(Object.values(state.revisions), date).longest,
+  };
+  const next = awardMilestones(s.milestones ?? {}, ctx, date);
+  if (next) updateSettings({ milestones: next });
 }
 
 export function latestRevisionOf(problemId: string): Revision | null {
