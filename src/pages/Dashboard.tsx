@@ -1,11 +1,10 @@
 import React, { useMemo } from 'react';
 import { Target, Play, ArrowRight, CheckCircle2, CalendarDays, Shuffle, Zap, Plus, AlertTriangle, Mountain, BarChart3, Flag } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { ColumnChart, RATING_SERIES } from '../components/charts';
 import { useData, settingsOf, startSession } from '../lib/store';
 import { buildFocus, statusOf, FocusItem, FocusReason } from '../lib/engine';
 import { today, fmt, weekday, addDays } from '../lib/dates';
 import { streaks, weekDays, countRatings, revisionsByDay, isMastered, journeyCamps, patternStats } from '../lib/stats';
-import { usePalette, chartTheme } from '../lib/theme';
 import { quoteForDay } from '../lib/quotes';
 import { Card, CardHeader, Button, Progress, DiffPill, RatingDot, cx, Empty, LinkButton, Ring, Flame, GYRBar } from '../components/ui';
 import { useApp, QuickRate, PatternTag } from '../components/shared';
@@ -62,7 +61,7 @@ function greeting(h: number) {
 }
 
 export default function Dashboard() {
-  const d = useData(); const pal = usePalette(); const ct = chartTheme(pal);
+  const d = useData();
   const { go, openProblem, addProblemDialog } = useApp();
   const { problems, revs, focus, todayRevs, doneIds, s, t } = useToday();
 
@@ -253,18 +252,9 @@ export default function Dashboard() {
           <CardHeader icon={<BarChart3 size={18} />} title="This week" sub={`${fmt(counts.ws[0], 'd MMM')} – ${fmt(counts.ws[6], 'd MMM')} · ${counts.weekDistinct} problems revised, ${weekTotal} revisions`}
             right={<div className="text-right"><div className="font-display text-lg font-semibold text-fg tabular-nums">{weekPct}%</div><div className="text-[11px] text-muted">of {target * 7} weekly target</div></div>} />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-4 sm:px-5 pb-5">
-            <div className="md:col-span-3 h-44 min-w-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={week} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
-                  <CartesianGrid {...ct.grid} />
-                  <XAxis dataKey="day" {...ct.axis} tick={{ ...ct.axis.tick, fontSize: 12 }} />
-                  <YAxis allowDecimals={false} {...ct.axis} />
-                  <Tooltip {...ct.tooltip} />
-                  <Bar isAnimationActive={false} dataKey="green" stackId="a" fill={pal.ok} name="Green" />
-                  <Bar isAnimationActive={false} dataKey="yellow" stackId="a" fill={pal.warn} name="Yellow" />
-                  <Bar isAnimationActive={false} dataKey="red" stackId="a" fill={pal.bad} name="Red" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="md:col-span-3 h-52 min-w-0">
+              <ColumnChart ariaLabel="Revisions this week by day and rating" series={RATING_SERIES} highlight={t}
+                data={week.map(w => ({ key: w.date, label: w.day, title: fmt(w.date, 'EEE, d MMM'), values: { green: w.green, yellow: w.yellow, red: w.red } }))} />
             </div>
             <div className="flex md:flex-col gap-3 justify-center">
               <div className="flex-1 md:flex-none flex items-center gap-3 rounded-xl bg-surface2/70 px-3 py-3">

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LayoutDashboard, Library, CalendarCheck, Shuffle, Shapes, GraduationCap, History as HistoryIcon, BarChart3, Settings as SettingsIcon,
   PanelLeftClose, PanelLeftOpen, Menu, Plus, Cloud, CloudOff, HardDrive, Loader2, X, Play,
@@ -6,7 +6,7 @@ import {
 import { useData, settingsOf, clearError } from './lib/store';
 import { buildFocus } from './lib/engine';
 import { applyTheme } from './lib/theme';
-import { today } from './lib/dates';
+import { useLocalDay } from './lib/day';
 import { UiProvider, Button, cx, Spinner, useUi } from './components/ui';
 import { AppProvider, useApp } from './components/shared';
 import { BrandLockup, BrandMark } from './components/Brand';
@@ -15,12 +15,15 @@ import Today from './pages/Today';
 import ProblemBank from './pages/ProblemBank';
 import Practice from './pages/Practice';
 import Patterns, { PatternDetail } from './pages/Patterns';
-import Learn from './pages/Learn';
-import History from './pages/History';
-import Analytics from './pages/Analytics';
-import Settings from './pages/Settings';
 import SessionPage from './pages/Session';
-import ImportReview from './pages/ImportReview';
+
+// Pages visited occasionally load on demand. The service worker precaches every chunk, so they still work offline.
+const Learn = lazy(() => import('./pages/Learn'));
+const History = lazy(() => import('./pages/History'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const Settings = lazy(() => import('./pages/Settings'));
+const ImportReview = lazy(() => import('./pages/ImportReview'));
+const PageFallback = () => <div className="flex min-h-[40vh] items-center justify-center"><Spinner size={22} /></div>;
 import { ReloadPrompt } from './components/ReloadPrompt';
 
 const NAV = [
@@ -69,8 +72,8 @@ function Shell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => { if (d.meta) applyTheme(s.theme); }, [s.theme, !!d.meta]);
   useEffect(() => setMobileOpen(false), [route]);
-  const t = today();
-  const queue = useMemo(() => d.status === 'ready' ? buildFocus(Object.values(d.problems), d.patterns, s, t).filter(f => f.problem.lastRevised !== t).length : 0, [d.problems, d.patterns, d.status, d.meta]);
+  const t = useLocalDay();
+  const queue = useMemo(() => d.status === 'ready' ? buildFocus(Object.values(d.problems), d.patterns, s, t).filter(f => f.problem.lastRevised !== t).length : 0, [d.problems, d.patterns, d.status, d.meta, t]);
   const running = Object.values(d.sessions).find(x => x.status === 'in_progress');
   const { toast } = useUi();
 
@@ -94,7 +97,7 @@ function Shell() {
       </div>
     );
   }
-  if (d.needsImport) return <div className="px-4 py-8 sm:px-8 page-gutter"><ImportReview /></div>;
+  if (d.needsImport) return <div className="px-4 py-8 sm:px-8 page-gutter"><Suspense fallback={<PageFallback />}><ImportReview /></Suspense></div>;
 
   const sec = section(route);
   const page = (() => {
@@ -199,7 +202,7 @@ function Shell() {
             <Button size="sm" variant="ghost" onClick={() => { lsSet('recodex-local-note', '1'); go(route); }}>Got it</Button>
           </div>
         )}
-        <div key={route} className="mx-auto max-w-[1400px] animate-page-in">{page}</div>
+        <div key={`${route}|${t}`} className="mx-auto max-w-[1400px] animate-page-in"><Suspense fallback={<PageFallback />}>{page}</Suspense></div>
       </main>
       {d.pending > 15 && !d.offline && (
         <div className="fixed z-[70] bottom-0 left-0 toast-pad pointer-events-none">

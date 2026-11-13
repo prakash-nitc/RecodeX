@@ -1,11 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { TrendingUp, TrendingDown, Repeat, ArrowUpRight, Trophy, Layers, CheckCircle2, CircleDashed, Activity, Award, Sparkles, Target, Calendar } from 'lucide-react';
-import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart } from 'recharts';
+import { ColumnChart, RATING_SERIES } from '../components/charts';
 import { useData, settingsOf } from '../lib/store';
 import { statusOf } from '../lib/engine';
 import { patternStats, streaks, countRatings, weeklySeries, monthlySeries, effectiveness, revisionsByDay, isMastered } from '../lib/stats';
 import { today, addDays, fmt, weekStartOf, diffDays } from '../lib/dates';
-import { usePalette, chartTheme } from '../lib/theme';
 import { Card, CardHeader, PageHeader, Segmented, Stat, cx, GYRBar, Empty, Ring, Flame, Progress } from '../components/ui';
 import { useApp } from '../components/shared';
 import { patternRoute } from './Patterns';
@@ -39,7 +38,7 @@ function MilestonesList({ milestones }: { milestones: Record<string, string>; })
 // ---------------------------------------------------------------------------
 // 52-week heatmap
 
-function Heatmap({ revs, weekStart, t, pal }: { revs: import('../types').Revision[]; weekStart: 0 | 1; t: string; pal: ReturnType<typeof usePalette> }) {
+function Heatmap({ revs, weekStart, t }: { revs: import('../types').Revision[]; weekStart: 0 | 1; t: string }) {
   const { heat, heatMax, weeks } = useMemo(() => {
     const byDay = revisionsByDay(revs);
     const start = addDays(weekStartOf(t, weekStart), -7 * 51);
@@ -110,7 +109,7 @@ function Heatmap({ revs, weekStart, t, pal }: { revs: import('../types').Revisio
 // Main Analytics page
 
 export default function Analytics() {
-  const d = useData(); const s = settingsOf(d); const pal = usePalette();
+  const d = useData(); const s = settingsOf(d);
   const { openProblem, go } = useApp();
   const [range, setRange] = useState<7 | 30 | 90 | 365 | 0>(0);
   const t = today();
@@ -139,7 +138,6 @@ export default function Analytics() {
   const weekly = useMemo(() => weeklySeries(allRevs, 12, s.weekStart, t).map(w => ({ ...w, label: fmt(w.week, 'd MMM') })), [d.revisions, s.weekStart]);
   const monthly = useMemo(() => monthlySeries(allRevs, 6, t).map(m => ({ ...m, label: fmt(`${m.month}-01`, 'MMM') })), [d.revisions]);
   const st = streaks(allRevs, t);
-  const ct = chartTheme(pal);
 
   const pstats = useMemo(() => patternStats(Object.values(d.patterns).sort((a, b) => a.order - b.order), problems, revs, s, t), [d.patterns, d.problems, d.revisions, range, d.meta]);
   const rated = pstats.filter(x => x.reviewed >= 2 && x.avg !== null);
@@ -150,7 +148,6 @@ export default function Analytics() {
   const redPct = pstats.filter(x => x.redRevs > 0).sort((a, b) => b.redPct - a.redPct || b.redRevs - a.redRevs).slice(0, 5);
   const eff = useMemo(() => effectiveness(revs), [revs]);
 
-  const tip = { contentStyle: { background: pal.surface, border: `1px solid ${pal.line}`, borderRadius: 12, color: pal.fg, fontSize: 12, boxShadow: '0 12px 28px -12px rgba(0,0,0,.25)' }, labelStyle: { color: pal.muted, fontWeight: 600, marginBottom: 2 }, cursor: { fill: pal.surface2 } };
   const thisWeek = weekly[weekly.length - 1]?.total ?? 0;
   const thisMonth = monthly[monthly.length - 1]?.total ?? 0;
   const todayCount = allRevs.filter(r => r.date === t).length;
@@ -221,19 +218,11 @@ export default function Analytics() {
           </div>
         </Card>
         <Card className="xl:col-span-2 min-w-0">
-          <CardHeader title="Green percentage over time" sub="Weekly revisions (bars) and the share rated Green (line), last 12 weeks" />
-          <div className="h-56 px-2 pb-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={weekly} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
-                <CartesianGrid {...ct.grid} />
-                <XAxis dataKey="label" {...ct.axis} interval="preserveStartEnd" />
-                <YAxis yAxisId="n" allowDecimals={false} {...ct.axis} />
-                <YAxis yAxisId="p" orientation="right" domain={[0, 100]} tickFormatter={v => `${v}%`} {...ct.axis} width={40} />
-                <Tooltip {...tip} formatter={(v: any, k: any) => (k === 'Green %' ? `${v}%` : v)} />
-                <Bar isAnimationActive={false} yAxisId="n" dataKey="total" name="Revisions" fill={pal.accent} fillOpacity={0.35} radius={[4, 4, 0, 0]} />
-                <Line yAxisId="p" dataKey="greenPct" name="Green %" stroke={pal.ok} strokeWidth={2.5} dot={{ r: 3, fill: pal.ok, strokeWidth: 0 }} connectNulls isAnimationActive={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
+          <CardHeader title="Weekly revisions by rating" sub={`Last 12 weeks · the green share is in each week's tooltip${weekly[weekly.length - 1]?.greenPct != null ? ` · this week ${weekly[weekly.length - 1].greenPct}% green` : ''}`} />
+          <div className="h-60 px-4 sm:px-5 pb-4">
+            <ColumnChart ariaLabel="Revisions per week by rating, last 12 weeks" series={RATING_SERIES} height={196}
+              data={weekly.map(w => ({ key: w.week, label: w.label, title: `Week of ${fmt(w.week, 'd MMM')}`, values: { green: w.green, yellow: w.yellow, red: w.red } }))}
+              note={c => { const pct = weekly.find(w => w.week === c.key)?.greenPct; return pct == null ? null : `${pct}% green`; }} />
           </div>
         </Card>
       </div>
@@ -244,20 +233,13 @@ export default function Analytics() {
         <Card className="xl:col-span-3 p-4 sm:p-5 min-w-0">
           <h3 className="font-display font-bold text-fg mb-0.5">Daily revisions</h3>
           <p className="text-xs text-muted mb-3">Each square is a day. Darker means more revisions (max {useMemo(() => { const byDay = revisionsByDay(allRevs); const start = addDays(weekStartOf(t, s.weekStart), -7 * 51); return Math.max(1, ...Array.from({ length: 52 * 7 }, (_, i) => { const day = addDays(start, i); return day > t ? 0 : (byDay.get(day)?.length ?? 0); })); }, [d.revisions, s.weekStart])}).</p>
-          <Heatmap revs={allRevs} weekStart={s.weekStart} t={t} pal={pal} />
+          <Heatmap revs={allRevs} weekStart={s.weekStart} t={t} />
         </Card>
         <Card className="xl:col-span-2 min-w-0">
           <CardHeader title="Monthly revisions" sub="Last 6 months" />
-          <div className="h-48 px-2 pb-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthly} margin={{ top: 6, right: 8, left: -22, bottom: 0 }}>
-                <CartesianGrid {...ct.grid} />
-                <XAxis dataKey="label" {...ct.axis} />
-                <YAxis allowDecimals={false} {...ct.axis} />
-                <Tooltip {...tip} />
-                <Bar isAnimationActive={false} dataKey="total" name="Revisions" fill={pal.accent} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="h-48 px-4 sm:px-5 pb-4">
+            <ColumnChart ariaLabel="Revisions per month, last 6 months" series={[{ key: 'total', label: 'Revisions', color: 'rgb(var(--accent))' }]} height={168}
+              data={monthly.map(m => ({ key: m.month, label: m.label, title: fmt(`${m.month}-01`, 'MMMM yyyy'), values: { total: m.total } }))} />
           </div>
         </Card>
       </div>
