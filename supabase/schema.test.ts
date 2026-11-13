@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { PGlite } from '@electric-sql/pglite';
-import { toRow } from '../src/lib/supabase/mapping';
+import { toRow, type Table } from '../src/lib/supabase/mapping';
+import { upsertRows } from '../src/lib/supabase/backend';
 import { DEFAULT_SETTINGS } from '../src/types';
 
 const A = '11111111-1111-1111-1111-111111111111';
@@ -74,6 +75,20 @@ describe('Supabase schema', () => {
     const [p] = await as(A, `select next_review::text, last_revised::text, synced_at from public.problems where id = 'p-101'`);
     expect(p).toMatchObject({ next_review: '2026-11-13', last_revised: '2026-11-06' });
     expect(p.synced_at).toBeTruthy();
+  });
+
+  it('the write path sends only columns the tables actually have', async () => {
+    // Guards against a key that PostgREST would reject (e.g. an id on user_meta, which has none).
+    const tables: Table[] = ['user_meta', 'patterns', 'problems', 'revisions', 'practice_sessions'];
+    for (const table of tables) {
+      const cols = (await db.query<{ column_name: string }>(
+        `select column_name from information_schema.columns where table_schema = 'public' and table_name = $1`, [table],
+      )).rows.map(r => r.column_name);
+      // An empty record exercises every fallback, so every column the mapping knows is present.
+      const [row] = upsertRows(table, [{ id: 'x-1', data: {} }], A);
+      for (const key of Object.keys(row)) expect(cols, `${table}.${key}`).toContain(key);
+      if (table !== 'user_meta') expect(row.id).toBe('x-1');
+    }
   });
 
   it('lets a user see and change only their own rows', async () => {

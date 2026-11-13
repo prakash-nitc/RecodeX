@@ -43,6 +43,19 @@ function classify(error: any, status?: number): Failure {
   return 'fatal';
 }
 
+/**
+ * Rows for one bulk upsert. The queue key is the row identity (a stale embedded data.id must not
+ * produce duplicate conflict keys), except for user_meta, which is keyed by user_id and has no id
+ * column: PostgREST rejects a body with an unknown key (PGRST204). supabase/schema.test.ts checks
+ * these rows against the real columns.
+ */
+export function upsertRows(table: Table, jobs: { id: string; data: any }[], uid: string): Record<string, unknown>[] {
+  return jobs.map(j => {
+    const row = toRow(table, j.data, uid);
+    return table === 'user_meta' ? row : { ...row, id: j.id };
+  });
+}
+
 export class SupabaseBackend implements Backend {
   kind = 'cloud' as const;
   private ev!: BackendEvents;
@@ -329,11 +342,7 @@ export class SupabaseBackend implements Backend {
         // The queue key is the identity used for coalescing and in-flight ordering. Keep it
         // authoritative: a stale/malformed embedded data.id must not turn two distinct jobs
         // into duplicate (user_id, id) rows in one Postgres upsert.
-        // user_meta is keyed by user_id alone and has no id column; PostgREST rejects unknown keys (PGRST204).
-        const rows = b.jobs.map(j => {
-          const row = toRow(b.table, j.data, this.uid);
-          return b.table === 'user_meta' ? row : { ...row, id: j.id };
-        });
+        const rows = upsertRows(b.table, b.jobs, this.uid);
         ({ error, status } = await this.sb.from(b.table).upsert(rows, { onConflict: b.table === 'user_meta' ? 'user_id' : 'user_id,id' }));
       } else {
         ({ error, status } = await this.sb.from(b.table).delete().eq('user_id', this.uid).in('id', b.jobs.map(j => j.id)));
