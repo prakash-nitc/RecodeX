@@ -2,7 +2,7 @@
 import type {
   Problem, Rating, Phase, Settings, Status, Revision, SessionConfig, Pattern, Priority, ProblemSnapshot, Preset,
 } from '../types';
-import { addDays, diffDays, today, nowIso } from './dates';
+import { addDays, diffDays, today, nowIso, fmt, relDay } from './dates';
 
 export const RATING_SCORE: Record<Rating, number> = { green: 3, yellow: 2, red: 1 };
 export const PRIORITY_RANK: Record<Priority, number> = { High: 0, Medium: 1, Low: 2 };
@@ -130,7 +130,23 @@ export function applyRevision(p: Problem, input: RevisionInput, s: Settings, id:
 // Today's Focus
 
 export type FocusReason = 'Overdue' | 'Due today' | 'High priority' | 'Weak' | 'New';
-export interface FocusItem { problem: Problem; reason: FocusReason; overdue: number; }
+export interface FocusItem { problem: Problem; reason: FocusReason; overdue: number; why: string; }
+
+/** One line that says which rule put a problem in today's list, e.g. "Red on 9 Nov · 1-day interval · due 10 Nov". */
+export function focusWhy(p: Problem, reason: FocusReason, patterns: Record<string, Pattern>, t: string): string {
+  const day = (d: string) => fmt(d, 'd MMM');
+  const rel = (d: string) => relDay(d, t).toLowerCase();
+  if (reason === 'New') return `Next unreviewed problem in ${patterns[p.patternId]?.name ?? 'your study plan'}`;
+  if (!p.lastRating) return p.nextReview ? `First attempt scheduled for ${day(p.nextReview)}` : 'Not reviewed yet';
+  const label = `${RATING_LABEL[p.lastRating]}${p.lastRating === 'green' && p.consecutiveGreen > 1 ? ` ×${p.consecutiveGreen}` : ''}`;
+  const rated = p.lastRevised ? `${label} on ${day(p.lastRevised)}` : `Last rated ${label}`;
+  if (reason === 'Overdue' || reason === 'Due today') {
+    const gap = p.lastRevised && p.nextReview ? diffDays(p.nextReview, p.lastRevised) : null;
+    return `${rated}${gap ? ` · ${gap}-day interval` : ''} · due ${p.nextReview ? (reason === 'Due today' ? 'today' : day(p.nextReview)) : '—'}`;
+  }
+  const next = p.nextReview ? ` · next review ${rel(p.nextReview)}` : '';
+  return reason === 'High priority' ? `Marked High · ${rated}${next}` : `${rated}${next} · revising early is fine`;
+}
 
 export function buildFocus(problems: Problem[], patterns: Record<string, Pattern>, s: Settings, t = today()) {
   const active = problems.filter(p => p.track === 'active' && patterns[p.patternId]);
@@ -138,7 +154,8 @@ export function buildFocus(problems: Problem[], patterns: Record<string, Pattern
   const seen = new Set<string>();
   const out: FocusItem[] = [];
   const push = (p: Problem, reason: FocusReason) => {
-    if (seen.has(p.id)) return; seen.add(p.id); out.push({ problem: p, reason, overdue: overdueDays(p, t) });
+    if (seen.has(p.id)) return; seen.add(p.id);
+    out.push({ problem: p, reason, overdue: overdueDays(p, t), why: focusWhy(p, reason, patterns, t) });
   };
   const byPri = (a: Problem, b: Problem) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
   const ratingWeak = (p: Problem) => (p.lastRating ? RATING_SCORE[p.lastRating] : 2);

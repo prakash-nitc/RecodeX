@@ -283,6 +283,20 @@ describe("Today's Focus", () => {
     expect(buildFocus([a, b, c], pats, S, T).map(x => x.problem.id)).toEqual([b.id, c.id, a.id]);
   });
 
+  it('says why each problem is listed', () => {
+    const od = prob({ lastRating: 'red', lastRevised: '2026-11-02', nextReview: '2026-11-03' });
+    const due = prob({ lastRating: 'green', consecutiveGreen: 2, lastRevised: '2026-10-24', nextReview: T });
+    const first = prob({ nextReview: '2026-11-05' });
+    const weak = prob({ lastRating: 'yellow', lastRevised: '2026-11-06', nextReview: '2026-11-09', priority: 'Low' });
+    const fresh = prob({ patternId: 'pt-b' });
+    const why = Object.fromEntries(buildFocus([od, due, first, weak, fresh], pats, S, T).map(x => [x.problem.id, x.why]));
+    expect(why[od.id]).toBe('Red on 2 Nov · 1-day interval · due 3 Nov');
+    expect(why[due.id]).toBe('Green ×2 on 24 Oct · 14-day interval · due today');
+    expect(why[first.id]).toBe('First attempt scheduled for 5 Nov');
+    expect(why[weak.id]).toBe('Yellow on 6 Nov · next review in 2d · revising early is fine');
+    expect(why[fresh.id]).toBe('Next unreviewed problem in pt-b');
+  });
+
   it('never lists a problem twice', () => {
     const p = prob({ lastRating: 'red', nextReview: '2026-11-01', priority: 'High' });
     expect(buildFocus([p], pats, S, T)).toHaveLength(1);

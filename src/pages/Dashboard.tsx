@@ -30,6 +30,7 @@ export function FocusRow({ item, onOpen }: { item: FocusItem; onOpen: (id: strin
       <button className="min-w-0 flex-1 text-left" onClick={() => onOpen(p.id)}>
         <div className="text-sm font-semibold text-fg truncate group-hover:text-accent-ink transition-colors">{p.name}</div>
         <div className="flex flex-wrap items-center gap-1.5 mt-1"><PatternTag id={p.patternId} /><DiffPill d={p.difficulty} /><ReasonChip item={item} /></div>
+        <div className="mt-1 text-[11px] text-muted truncate" title={item.why}>{item.why}</div>
       </button>
       <div className="hidden sm:block"><LinkButton url={p.url} size="icon" /></div>
       <QuickRate id={p.id} source="today" />
