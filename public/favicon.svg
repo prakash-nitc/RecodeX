@@ -1,13 +1,25 @@
 <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bm" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="rx-bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#7A5CE0" />
-      <stop offset="100%" stop-color="#4F34B0" />
+      <stop offset="100%" stop-color="#3F2896" />
+    </linearGradient>
+    <linearGradient id="rx-sun" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#FF963D" />
+      <stop offset="100%" stop-color="#FFD27A" />
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="16" fill="url(#bm)" />
-  <circle cx="45" cy="17" r="4.5" fill="#FFFFFF" fill-opacity="0.9" />
-  <path d="M9 47 L24 25 L31 34 L40 19 L55 47 Z" fill="#FFFFFF" fill-opacity="0.96" />
-  <path d="M40 19 L45.5 28.5 L41.5 27 L38.5 30.5 L35.5 26.5 Z" fill="#4F34B0" fill-opacity="0.28" />
-  <path d="M17 47 C 24 42, 27 40, 33 41 S 42 38, 46 34" fill="none" stroke="#4F34B0" stroke-opacity="0.45" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 4.2" />
+  <rect id="bg" width="64" height="64" rx="15" fill="url(#rx-bg)" />
+  <g id="art">
+    <!-- code brackets: < … > -->
+    <path d="M12.5 24 L6 33 L12.5 42" fill="none" stroke="#FFFFFF" stroke-opacity="0.92" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M51.5 24 L58 33 L51.5 42" fill="none" stroke="#FFFFFF" stroke-opacity="0.92" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- sunrise between the peaks: mastery -->
+    <circle cx="37" cy="21.5" r="5.6" fill="url(#rx-sun)" />
+    <!-- the second, smaller peak -->
+    <path d="M33 46 L41.5 31 L49.5 46 Z" fill="#C9BDF3" stroke="#C9BDF3" stroke-width="2.2" stroke-linejoin="round" />
+    <!-- the summit, with its shaded face -->
+    <path d="M28 21.5 L42 46 L14.5 46 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round" />
+    <path d="M28 21.5 L42 46 L33 46 L29.8 34 Z" fill="#3F2896" fill-opacity="0.14" />
+  </g>
 </svg>

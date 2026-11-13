@@ -1,22 +1,11 @@
-// RecodeX brand mark: a summit with the trail to it, on the accent. Also the source of the PWA icons.
-import React, { useId } from 'react';
+// RecodeX brand mark: a mountain range between code brackets, < ▲ >, with the sunrise of mastery.
+// public/icon.svg is the full app icon (its review trail climbs the summit: Red → Yellow → Green,
+// stops widening like review intervals); public/favicon.svg drops the trail for small sizes and is
+// what the app shows. Edit those files, then run `npm run icons` to rebuild the PNGs.
+import React from 'react';
 
 export function BrandMark({ size = 32, className }: { size?: number; className?: string }) {
-  const id = useId().replace(/:/g, '');
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" className={className} aria-hidden>
-      <defs>
-        <linearGradient id={`bm-${id}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7A5CE0" /><stop offset="100%" stopColor="#4F34B0" />
-        </linearGradient>
-      </defs>
-      <rect width="64" height="64" rx="16" fill={`url(#bm-${id})`} />
-      <circle cx="45" cy="17" r="4.5" fill="#FFFFFF" fillOpacity="0.9" />
-      <path d="M9 47 L24 25 L31 34 L40 19 L55 47 Z" fill="#FFFFFF" fillOpacity="0.96" />
-      <path d="M40 19 L45.5 28.5 L41.5 27 L38.5 30.5 L35.5 26.5 Z" fill="#4F34B0" fillOpacity="0.28" />
-      <path d="M17 47 C 24 42, 27 40, 33 41 S 42 38, 46 34" fill="none" stroke="#4F34B0" strokeOpacity="0.45" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="1 4.2" />
-    </svg>
-  );
+  return <img src="/favicon.svg" width={size} height={size} alt="" aria-hidden draggable={false} className={className} />;
 }
 
 export function BrandLockup({ collapsed }: { collapsed?: boolean }) {
