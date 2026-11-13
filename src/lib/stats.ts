@@ -136,3 +136,44 @@ export function journeyCamps(patterns: Pattern[], problems: Problem[], s: Settin
     };
   });
 }
+
+export interface WeekDigest {
+  improved: string[];   // a revision this week rated better than the one before it (Red→Yellow/Green, Yellow→Green)
+  slipped: string[];    // a revision this week rated worse than the one before it
+  mastered: string[];   // reached the mastery streak with a Green this week
+  nearMastery: string[]; // one more Green to mastery, due within the next 7 days, soonest first
+  toughest: { patternId: string; red: number } | null; // the pattern with the most Reds this week
+}
+
+/** What changed this week (from the week's first day up to t): problem ids, newest change first. */
+export function weekDigest(revs: Revision[], problems: Record<string, Problem>, s: Settings, weekStart: 0 | 1, t = today()): WeekDigest {
+  const from = weekStartOf(t, weekStart);
+  const inWeek = (r: Revision) => r.date >= from && r.date <= t;
+  const improved = new Map<string, string>(), slipped = new Map<string, string>(), mastered = new Map<string, string>();
+  for (const [pid, seq] of sequences(revs)) {
+    if (!problems[pid]) continue;
+    let streak = 0;
+    seq.forEach((r, i) => {
+      streak = r.rating === 'green' ? streak + 1 : r.rating === 'red' || s.yellowResetsStreak ? 0 : streak;
+      if (!inWeek(r)) return;
+      const prev = seq[i - 1]?.rating;
+      if (prev && RATING_SCORE[r.rating] > RATING_SCORE[prev]) improved.set(pid, r.at);
+      if (prev && RATING_SCORE[r.rating] < RATING_SCORE[prev]) slipped.set(pid, r.at);
+      // The import revision stands for an unknown history, so trust its snapshot over counting.
+      const before = r.prev?.consecutiveGreen ?? streak - 1;
+      if (r.rating === 'green' && before + 1 === s.masteryStreak) mastered.set(pid, r.at);
+    });
+  }
+  const newest = (m: Map<string, string>) => [...m].sort((a, b) => (a[1] < b[1] ? 1 : -1)).map(([id]) => id);
+  const horizon = addDays(t, 7);
+  const nearMastery = Object.values(problems)
+    .filter(p => p.track === 'active' && p.lastRating === 'green' && p.consecutiveGreen === s.masteryStreak - 1 && p.nextReview && p.nextReview <= horizon)
+    .sort((a, b) => (a.nextReview! < b.nextReview! ? -1 : a.nextReview! > b.nextReview! ? 1 : a.num - b.num))
+    .map(p => p.id);
+  const reds = new Map<string, number>();
+  for (const r of revs) if (inWeek(r) && r.rating === 'red' && problems[r.problemId]) {
+    const pt = problems[r.problemId].patternId; reds.set(pt, (reds.get(pt) ?? 0) + 1);
+  }
+  const top = [...reds].sort((a, b) => b[1] - a[1])[0];
+  return { improved: newest(improved), slipped: newest(slipped), mastered: newest(mastered), nearMastery, toughest: top ? { patternId: top[0], red: top[1] } : null };
+}

@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
-import { Target, Play, ArrowRight, CheckCircle2, CalendarDays, Shuffle, Zap, Plus, AlertTriangle, Mountain, BarChart3, Flag } from 'lucide-react';
+import { Target, Play, ArrowRight, CheckCircle2, CalendarDays, Shuffle, Zap, Plus, AlertTriangle, Mountain, BarChart3, Flag, Trophy, TrendingUp, TrendingDown, Sparkles } from 'lucide-react';
 import { ColumnChart, RATING_SERIES } from '../components/charts';
 import { useData, settingsOf, startSession } from '../lib/store';
 import { buildFocus, statusOf, FocusItem, FocusReason } from '../lib/engine';
 import { today, fmt, weekday, addDays } from '../lib/dates';
-import { streaks, weekDays, countRatings, revisionsByDay, isMastered, journeyCamps, patternStats } from '../lib/stats';
+import { streaks, weekDays, countRatings, revisionsByDay, isMastered, journeyCamps, patternStats, weekDigest } from '../lib/stats';
 import { quoteForDay } from '../lib/quotes';
 import { Card, CardHeader, Button, Progress, DiffPill, RatingDot, cx, Empty, LinkButton, Ring, Flame, GYRBar } from '../components/ui';
 import { useApp, QuickRate, PatternTag } from '../components/shared';
@@ -53,6 +53,48 @@ export function useToday() {
 export function startTodayRun(items: FocusItem[], go: (r: string) => void) {
   startSession({ kind: 'today', title: "Today's Revision", config: null, problemIds: items.map(i => i.problem.id) });
   go('session');
+}
+
+/** This week in review: what improved, slipped, got mastered, and what is one Green from mastery. */
+function WeekReview({ t }: { t: string }) {
+  const d = useData(); const s = settingsOf(d);
+  const { openProblem, go } = useApp();
+  const dg = useMemo(() => weekDigest(Object.values(d.revisions), d.problems, s, s.weekStart, t), [d.revisions, d.problems, d.meta, t]);
+  const groups: { key: string; title: string; hint: string; ids: string[]; icon: React.ReactNode; tone: string }[] = [
+    { key: 'mastered', title: 'Mastered', hint: `reached ${s.masteryStreak} greens in a row`, ids: dg.mastered, icon: <Trophy size={15} />, tone: 'text-ok-ink bg-ok/12' },
+    { key: 'improved', title: 'Improved', hint: 'rated better than last time', ids: dg.improved, icon: <TrendingUp size={15} />, tone: 'text-ok-ink bg-ok/12' },
+    { key: 'slipped', title: 'Slipped', hint: 'rated worse than last time', ids: dg.slipped, icon: <TrendingDown size={15} />, tone: 'text-bad-ink bg-bad/10' },
+    { key: 'near', title: 'One Green from mastery', hint: 'due in the next 7 days', ids: dg.nearMastery, icon: <Flag size={15} />, tone: 'text-accent-ink bg-accent/12' },
+  ];
+  const quiet = groups.every(g => !g.ids.length) && !dg.toughest;
+  return (
+    <Card className="min-w-0">
+      <CardHeader icon={<Sparkles size={18} />} title="Week in review"
+        sub={dg.toughest ? <>Toughest pattern this week: <button className="font-semibold text-fg hover:text-accent-ink" onClick={() => go(patternRoute(dg.toughest!.patternId))}>{d.patterns[dg.toughest.patternId]?.name}</button> · {dg.toughest.red} Red</> : 'Changes since the start of the week'} />
+      {quiet ? <p className="px-4 sm:px-5 pb-5 text-sm text-muted">Nothing has moved yet this week. Every rating you record shows up here.</p> : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 px-4 sm:px-5 pb-5">
+          {groups.map(g => (
+            <section key={g.key} className="rounded-2xl border border-line bg-surface2/40 p-3.5 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className={cx('flex h-7 w-7 shrink-0 items-center justify-center rounded-lg', g.tone)}>{g.icon}</span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-fg">{g.title} <span className="tabular-nums text-muted">· {g.ids.length}</span></div>
+                  <div className="text-[11px] text-muted truncate">{g.hint}</div>
+                </div>
+              </div>
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {g.ids.slice(0, 3).map(id => d.problems[id] && (
+                  <button key={id} onClick={() => openProblem(id)} className="max-w-full truncate rounded-lg border border-line bg-surface px-2 py-1 text-xs text-fg hover:border-accent/50">{d.problems[id].name}</button>
+                ))}
+                {g.ids.length > 3 && <span className="self-center text-[11px] text-muted">+{g.ids.length - 3} more</span>}
+                {!g.ids.length && <span className="text-xs text-muted">None yet</span>}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
 }
 
 function greeting(h: number) {
@@ -307,6 +349,8 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      <WeekReview t={t} />
 
       {/* Pattern mastery */}
       <Card className="min-w-0">
