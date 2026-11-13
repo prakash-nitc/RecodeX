@@ -114,7 +114,6 @@ export default function Dashboard() {
     const weekRevs = revs.filter(r => r.date >= ws[0] && r.date <= ws[6]);
     return {
       total: problems.length, due: st.filter(x => x === 'Due Today').length, overdue: st.filter(x => x === 'Overdue').length,
-      high: problems.filter(p => p.priority === 'High' && p.track === 'active').length,
       reviewed: problems.filter(p => p.lastRating).length,
       mastered: problems.filter(p => isMastered(p, s)).length,
       weekDistinct: new Set(weekRevs.map(r => r.problemId)).size, weekRevs, ws,
@@ -326,7 +325,7 @@ export default function Dashboard() {
             {[
               { icon: <Shuffle size={17} />, label: 'Mixed Practice', sub: 'Recognise the pattern yourself', run: () => go('practice') },
               { icon: <Zap size={17} />, label: 'Weakness Challenge', sub: 'Red and Yellow problems first', run: () => go('practice-weakness') },
-              { icon: <Plus size={17} />, label: 'Add Problem', sub: `${counts.high} high priority in the bank`, run: () => addProblemDialog() },
+              { icon: <Plus size={17} />, label: 'Add Problem', sub: `${counts.total} problems in the bank`, run: () => addProblemDialog() },
             ].map(a => (
               <button key={a.label} onClick={a.run} className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface2 transition-colors">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/12 text-accent-ink">{a.icon}</span>

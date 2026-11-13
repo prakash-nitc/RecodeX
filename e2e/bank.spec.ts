@@ -42,14 +42,17 @@ test.describe('Problem Bank', () => {
     await expect(page.getByRole('button', { name: 'Record revision' })).toBeVisible();
     await page.keyboard.press('Escape');
 
-    // Bulk priority
+    // Bulk reschedule. Priority follows the rating by default, so it has no bulk action.
     await page.locator('tbody tr').nth(1).getByRole('checkbox').check();
     await page.locator('tbody tr').nth(2).getByRole('checkbox').check();
     await expect(page.getByText('2 selected')).toBeVisible();
-    await page.getByRole('button', { name: 'Priority', exact: true }).click();
-    await page.getByRole('radio', { name: 'Low' }).click();
+    await expect(page.getByRole('button', { name: 'Priority', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Reschedule', exact: true }).click();
+    await page.getByLabel('Next review date').fill('2030-01-15');
     await page.getByRole('button', { name: 'Apply' }).click();
     await expect(page.getByText('Updated 2 problems')).toBeVisible();
+    data = await stored(page);
+    expect(Object.values<any>(data.problems).filter(p => p.nextReview === '2030-01-15')).toHaveLength(2);
 
     // CSV export downloads a file
     await page.getByRole('button', { name: 'Export CSV' }).click();
@@ -63,6 +66,22 @@ test.describe('Problem Bank', () => {
     await expect(page.getByText(/1 added/)).toBeVisible();
     data = await stored(page);
     expect(Object.keys(data.problems).length).toBe(196);
+
+    // Hand-set priorities: turning autoPriority off brings the priority controls back
+    await go(page, 'prefs');
+    await page.getByRole('switch', { name: /Set priority from the rating/ }).click();
+    await go(page, 'bank');
+    const firstRow = page.locator('tbody tr').first();
+    const target = (await firstRow.locator('td').nth(1).textContent())!.trim(); // the problem number
+    const before = Object.values<any>((await stored(page)).problems).find(p => String(p.num) === target).priority;
+    const pick = before === 'High' ? 'Low' : 'High';
+    await firstRow.getByRole('checkbox').check();
+    await page.getByRole('button', { name: 'Priority', exact: true }).click();
+    await page.getByRole('radio', { name: pick }).click();
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect(page.getByText('Updated 1 problem')).toBeVisible();
+    data = await stored(page);
+    expect(Object.values<any>(data.problems).find(p => String(p.num) === target).priority).toBe(pick);
     expect(errors).toEqual([]);
   });
 

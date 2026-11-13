@@ -37,7 +37,7 @@ export function applyFilters(problems: Problem[], f: Filters, statusFn: (p: Prob
 }
 
 export function FilterBar({ f, setF, hidePattern }: { f: Filters; setF: (f: Filters) => void; hidePattern?: boolean }) {
-  const d = useData();
+  const d = useData(); const manualPri = !settingsOf(d).autoPriority; // with autoPriority, priority only mirrors the rating
   const patterns = Object.values(d.patterns).sort((a, b) => a.order - b.order);
   const up = (patch: Partial<Filters>) => setF({ ...f, ...patch });
   const active = Object.entries(f).filter(([k, v]) => k !== 'sort' && k !== 'q' && v && !(hidePattern && k === 'pattern')).length;
@@ -52,7 +52,7 @@ export function FilterBar({ f, setF, hidePattern }: { f: Filters; setF: (f: Filt
         <div className="flex items-center gap-1.5">
           <ArrowUpDown size={14} className="text-muted" />
           <Select aria-label="Sort" value={f.sort} onChange={e => up({ sort: e.target.value as Filters['sort'] })}>
-            <option value="next">Next review ↑</option><option value="priority">Priority</option><option value="last">Last revised ↓</option><option value="num">Problem ID</option><option value="name">Name</option>
+            <option value="next">Next review ↑</option>{(manualPri || f.sort === 'priority') && <option value="priority">Priority</option>}<option value="last">Last revised ↓</option><option value="num">Problem ID</option><option value="name">Name</option>
           </Select>
         </div>
       </div>
@@ -61,7 +61,7 @@ export function FilterBar({ f, setF, hidePattern }: { f: Filters; setF: (f: Filt
           {!hidePattern && <Select aria-label="Pattern" value={f.pattern} onChange={e => up({ pattern: e.target.value })}><option value="">Pattern: All</option>{patterns.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</Select>}
           <Select aria-label="Difficulty" value={f.difficulty} onChange={e => up({ difficulty: e.target.value })}><option value="">Difficulty: All</option>{DIFFICULTIES.map(x => <option key={x}>{x}</option>)}</Select>
           <Select aria-label="Rating" value={f.rating} onChange={e => up({ rating: e.target.value })}><option value="">Rating: All</option><option value="green">Green</option><option value="yellow">Yellow</option><option value="red">Red</option><option value="none">Not reviewed</option></Select>
-          <Select aria-label="Priority" value={f.priority} onChange={e => up({ priority: e.target.value })}><option value="">Priority: All</option>{PRIORITIES.map(x => <option key={x}>{x}</option>)}</Select>
+          {(manualPri || f.priority) && <Select aria-label="Priority" value={f.priority} onChange={e => up({ priority: e.target.value })}><option value="">Priority: All</option>{PRIORITIES.map(x => <option key={x}>{x}</option>)}</Select>}
           <Select aria-label="Phase" value={f.phase} onChange={e => up({ phase: e.target.value })}><option value="">Phase: All</option>{PHASES.map(x => <option key={x}>{x}</option>)}</Select>
           <Select aria-label="Status" value={f.status} onChange={e => up({ status: e.target.value })}><option value="">Status: All</option>{STATUSES.map(x => <option key={x}>{x}</option>)}</Select>
           {active > 0 && <Button variant="ghost" className="h-10" onClick={() => setF({ ...EMPTY_FILTERS, q: f.q, sort: f.sort, pattern: hidePattern ? f.pattern : '' })}><X size={14} />Clear {active}</Button>}
@@ -84,7 +84,7 @@ function NextCell({ p, st, t }: { p: Problem; st: Status; t: string }) {
 const PAGE_SIZES = [50, 100, 200];
 
 export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emptyText?: string }) {
-  const d = useData(); const s = settingsOf(d);
+  const d = useData(); const s = settingsOf(d); const manualPri = !s.autoPriority;
   const { openProblem, editProblem, rate } = useApp();
   const { confirm, toast } = useUi();
   const [sel, setSel] = useState<Set<string>>(new Set());
@@ -133,7 +133,7 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
       {sel.size > 0 && (
         <div className="sticky top-14 lg:top-2 z-20 mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-accent/40 bg-surface px-3 py-2 shadow-lift animate-page-in">
           <span className="text-sm font-semibold text-fg tabular-nums mr-1">{sel.size} selected</span>
-          <Button size="sm" variant="outline" onClick={() => setBulk('priority')}>Priority</Button>
+          {manualPri && <Button size="sm" variant="outline" onClick={() => setBulk('priority')}>Priority</Button>}
           <Button size="sm" variant="outline" onClick={() => setBulk('pattern')}>Pattern</Button>
           <Button size="sm" variant="outline" onClick={() => setBulk('reschedule')}>Reschedule</Button>
           <Button size="sm" variant="outline" onClick={doNotReviewed}>Mark not reviewed</Button>
@@ -158,7 +158,7 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
                 <th className="px-2 py-2.5">Next review</th>
                 <th className="px-2 py-2.5 hidden 2xl:table-cell">Phase</th>
                 <th className="px-2 py-2.5 hidden lg:table-cell">Status</th>
-                <th className="px-2 py-2.5 hidden 2xl:table-cell">Priority</th>
+                {manualPri && <th className="px-2 py-2.5 hidden 2xl:table-cell">Priority</th>}
                 <th className="px-2 py-2.5 text-right hidden xl:table-cell">Revs</th>
                 <th className="px-2 py-2.5 text-right pr-3"><span className="sr-only">Rate and actions</span></th>
               </tr>
@@ -183,7 +183,7 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
                     <td className="px-2 py-2"><NextCell p={p} st={st} t={t} /></td>
                     <td className="px-2 py-2 hidden 2xl:table-cell"><PhasePill p={p.phase} /></td>
                     <td className="px-2 py-2 hidden lg:table-cell"><StatusPill s={st} /></td>
-                    <td className="px-2 py-2 hidden 2xl:table-cell"><PriorityPill p={p.priority} /></td>
+                    {manualPri && <td className="px-2 py-2 hidden 2xl:table-cell"><PriorityPill p={p.priority} /></td>}
                     <td className="px-2 py-2 text-right tabular-nums text-muted hidden xl:table-cell">{p.revisionCount}</td>
                     <td className="px-2 py-2 pr-3" onClick={e => e.stopPropagation()}>{actions(p)}</td>
                   </tr>

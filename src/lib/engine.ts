@@ -164,7 +164,8 @@ export function buildFocus(problems: Problem[], patterns: Record<string, Pattern
     .sort((a, b) => (a.nextReview! < b.nextReview! ? -1 : a.nextReview! > b.nextReview! ? 1 : 0) || byPri(a, b) || ratingWeak(a) - ratingWeak(b))
     .forEach(p => push(p, 'Overdue'));
   active.filter(p => p.nextReview === t).sort(byPri).forEach(p => push(p, 'Due today'));
-  if (s.focusIncludeHigh)
+  // With autoPriority, High just means "last rated Red", which the Weak group already lists.
+  if (s.focusIncludeHigh && !s.autoPriority)
     active.filter(p => p.priority === 'High' && !revisedToday(p) && p.lastRating).sort((a, b) => ratingWeak(a) - ratingWeak(b)).forEach(p => push(p, 'High priority'));
   if (s.focusIncludeWeak)
     active.filter(p => (p.lastRating === 'red' || p.lastRating === 'yellow') && !revisedToday(p))

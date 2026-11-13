@@ -281,9 +281,11 @@ function ProblemFormDialog({ mode, id, prefill, onClose }: { mode: 'add' | 'edit
         <Field label="Difficulty">
           <Segmented ariaLabel="Difficulty" value={f.difficulty} onChange={v => set({ difficulty: v })} options={DIFFICULTIES.map(x => ({ value: x, label: x }))} />
         </Field>
-        <Field label="Priority">
-          <Segmented ariaLabel="Priority" value={f.priority} onChange={v => set({ priority: v })} options={PRIORITIES.map(x => ({ value: x, label: x }))} />
-        </Field>
+        {!settingsOf(d).autoPriority && (
+          <Field label="Priority">
+            <Segmented ariaLabel="Priority" value={f.priority} onChange={v => set({ priority: v })} options={PRIORITIES.map(x => ({ value: x, label: x }))} />
+          </Field>
+        )}
         <Field label={mode === 'add' ? 'Initial status' : 'Track'} htmlFor="pf-initial" className="sm:col-span-2">
           <Select id="pf-initial" value={f.initial} onChange={e => set({ initial: e.target.value as ProblemDraft['initial'] })}>
             <option value="not_reviewed">Active · not reviewed yet</option>
@@ -360,7 +362,7 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">✕</Button>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-          <DiffPill d={p.difficulty} /><RatingPill r={p.lastRating} /><StatusPill s={st} /><PriorityPill p={p.priority} /><PhasePill p={p.phase} />
+          <DiffPill d={p.difficulty} /><RatingPill r={p.lastRating} /><StatusPill s={st} />{!s.autoPriority && <PriorityPill p={p.priority} />}<PhasePill p={p.phase} />
         </div>
         <div className="flex flex-wrap gap-2 mt-3">
           <Button variant="primary" size="sm" onClick={() => rate(p.id)}><Flame size={14} />Record revision</Button>

@@ -264,7 +264,8 @@ describe("Today's Focus", () => {
     const od5 = prob({ lastRating: 'red', nextReview: '2026-11-01' });
     const fresh = prob({ lastRating: 'green', nextReview: '2026-12-15', priority: 'Low', lastRevised: '2026-11-01' });
 
-    const f = buildFocus([newB, newA2, newA1, weakLater, weakRedLater, high, dueLow, dueHigh, od1, od5, fresh], pats, S, T);
+    const manual = { ...S, autoPriority: false }; // the High-priority group exists only for hand-set priorities
+    const f = buildFocus([newB, newA2, newA1, weakLater, weakRedLater, high, dueLow, dueHigh, od1, od5, fresh], pats, manual, T);
     expect(f.map(x => [x.problem.id, x.reason])).toEqual([
       [od5.id, 'Overdue'], [od1.id, 'Overdue'],
       [dueHigh.id, 'Due today'], [dueLow.id, 'Due today'],
@@ -281,6 +282,12 @@ describe("Today's Focus", () => {
     const b = prob({ lastRating: 'green', nextReview: '2026-11-01', priority: 'High' });
     const c = prob({ lastRating: 'red', nextReview: '2026-11-01', priority: 'Low' });
     expect(buildFocus([a, b, c], pats, S, T).map(x => x.problem.id)).toEqual([b.id, c.id, a.id]);
+  });
+
+  it('with autoPriority, skips the High-priority group (it would only repeat the Weak reds)', () => {
+    const high = prob({ lastRating: 'green', nextReview: '2026-12-01', priority: 'High' });
+    const red = prob({ lastRating: 'red', nextReview: '2026-11-20', priority: 'High' });
+    expect(buildFocus([high, red], pats, S, T).map(x => [x.problem.id, x.reason])).toEqual([[red.id, 'Weak']]);
   });
 
   it('says why each problem is listed', () => {

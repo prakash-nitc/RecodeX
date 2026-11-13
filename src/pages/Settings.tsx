@@ -165,7 +165,7 @@ export default function Settings() {
             <Field label="New problems per day" htmlFor="st-new" hint="Never-reviewed problems added to the focus list from your study plan. 0 turns this off."><Num id="st-new" value={s.focusNewPerDay} min={0} max={20} onChange={n => set({ focusNewPerDay: n })} suffix="per day" /></Field>
             <div className="md:col-span-2 -my-1">
               <Toggle id="st-weak" checked={s.focusIncludeWeak} onChange={v => set({ focusIncludeWeak: v })} label="Include weak problems" hint="Red and Yellow problems scheduled later can fill the remaining slots." />
-              <Toggle id="st-high" checked={s.focusIncludeHigh} onChange={v => set({ focusIncludeHigh: v })} label="Include high-priority problems" />
+              {!s.autoPriority && <Toggle id="st-high" checked={s.focusIncludeHigh} onChange={v => set({ focusIncludeHigh: v })} label="Include high-priority problems" hint="Problems you marked High, even when they are not due." />}
             </div>
             <Field label={`Study plan patterns ${s.studyPlanPatternIds.length ? `(${s.studyPlanPatternIds.length})` : '(all active patterns)'}`} className="md:col-span-2" hint="New problems are picked from these patterns, in pattern order.">
               <div className="flex flex-wrap gap-1.5">
@@ -201,7 +201,7 @@ export default function Settings() {
             <Field label="Solved-while-learning → first review in" htmlFor="st-act"><Num id="st-act" value={s.activationDelayDays} min={0} max={30} onChange={n => set({ activationDelayDays: n })} suffix="days after activation" /></Field>
             <div className="md:col-span-2 -my-1">
               <Toggle id="st-yreset" checked={s.yellowResetsStreak} onChange={v => set({ yellowResetsStreak: v })} label="Yellow resets the green streak" hint="Red always resets it. With this off, Yellow keeps the streak but never adds to it." />
-              <Toggle id="st-autopri" checked={s.autoPriority} onChange={v => set({ autoPriority: v })} label="Set priority from the rating" hint="Red → High, Yellow → Medium, Green → Low, as in your sheet." />
+              <Toggle id="st-autopri" checked={s.autoPriority} onChange={v => set({ autoPriority: v })} label="Set priority from the rating" hint="Red → High, Yellow → Medium, Green → Low, as in your sheet. Turn off to set priorities yourself: a Priority field, filter, bulk action and a High-priority group in Today's Focus then appear." />
             </div>
             <div className="md:col-span-2 rounded-xl bg-surface2 px-3.5 py-2.5 text-xs text-muted">
               Example: Red +{intervalFor('red', 0, s)}d · Yellow +{intervalFor('yellow', 0, s)}d · Green ×1 +{intervalFor('green', 1, s)}d · ×2 +{intervalFor('green', 2, s)}d · ×3 +{intervalFor('green', 3, s)}d · ×4 +{intervalFor('green', 4, s)}d.
