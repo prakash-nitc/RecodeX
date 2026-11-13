@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Pattern, Problem } from '../types';
-import { parseCsv, csvToRows, problemsToCsv, CSV_HEADERS, CSV_TEMPLATE } from './csv';
+import { parseCsv, csvToRows, problemsToCsv, revisionsToCsv, CSV_HEADERS, REVISION_CSV_HEADERS, CSV_TEMPLATE } from './csv';
 
 describe('parseCsv', () => {
   it('splits simple rows and cells', () => {
@@ -107,5 +107,27 @@ describe('problemsToCsv round trip', () => {
       track: 'active', rating: 'red', lastRevised: '2026-11-06', nextReview: '2026-11-07', phase: 'Reconstruction',
       consecutiveGreen: 0, revisionCount: 2, weakness: 'window shrink', notes: 'line one\nline two',
     });
+  });
+});
+
+describe('revisionsToCsv', () => {
+  it('exports every revision oldest first, with problem and pattern names, escaping text', () => {
+    const pattern = { id: 'pt-a', name: 'Two Pointers', order: 1, subPatterns: [], learning: 'active', description: '', createdAt: '' } as Pattern;
+    const problem = { id: 'p-101', num: 101, name: 'Two Sum', patternId: 'pt-a' } as Problem;
+    const rev = (id: string, at: string, over: object = {}) => ({
+      id, problemId: 'p-101', date: at.slice(0, 10), at, rating: 'red', phase: 'Reconstruction', timeMin: null, independent: null,
+      mistake: '', notes: '', sessionId: null, source: 'quick', nextReview: '2026-11-08', prev: null, ...over,
+    }) as any;
+    const csv = revisionsToCsv([
+      rev('r2', '2026-11-08T10:00:00.000Z', { rating: 'green', timeMin: 12, independent: true, mistake: 'off by one, again', sessionId: 's-1', source: 'session' }),
+      rev('r1', '2026-11-07T10:00:00.000Z'),
+      rev('r3', '2026-11-09T10:00:00.000Z', { problemId: 'p-gone' }),
+    ], { 'p-101': problem }, { 'pt-a': pattern }, iso => iso.slice(11, 16));
+    expect(csv.split('\n')).toEqual([
+      REVISION_CSV_HEADERS.join(','),
+      '2026-11-07,10:00,101,Two Sum,Two Pointers,red,Reconstruction,,,,,quick,2026-11-08,',
+      '2026-11-08,10:00,101,Two Sum,Two Pointers,green,Reconstruction,12,yes,"off by one, again",,session,2026-11-08,s-1',
+      '2026-11-09,10:00,,(deleted problem),,red,Reconstruction,,,,,quick,2026-11-08,',
+    ]);
   });
 });

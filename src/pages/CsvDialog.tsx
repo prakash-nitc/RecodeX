@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Upload, Copy, Download, FileText } from 'lucide-react';
 import { Button, Dialog, Segmented, Textarea, useUi } from '../components/ui';
 import { useData, settingsOf, importRows } from '../lib/store';
-import { csvToRows, problemsToCsv, CSV_TEMPLATE, CsvParseResult } from '../lib/csv';
+import { csvToRows, problemsToCsv, revisionsToCsv, CSV_TEMPLATE, CsvParseResult } from '../lib/csv';
 import { statusOf, revisionTypeOf } from '../lib/engine';
-import { today } from '../lib/dates';
+import { today, fmtTimestamp } from '../lib/dates';
 
 /** Downloads the text as a file; if the browser refuses, the caller shows the text to copy instead. */
 export async function saveFile(filename: string, data: string, mime: string): Promise<'saved' | 'fallback' | 'declined'> {
@@ -42,19 +42,29 @@ export function CsvDialog({ mode, onClose }: { mode: 'import' | 'export'; onClos
   const [parsed, setParsed] = useState<CsvParseResult | null>(null);
   const [dupMode, setDupMode] = useState<'skip' | 'update'>('skip');
   const [fallback, setFallback] = useState<string | null>(null);
-  const csvOut = () => problemsToCsv(Object.values(d.problems).sort((a, b) => a.num - b.num), d.patterns, p => statusOf(p, s), p => revisionTypeOf(p.lastRating));
+  const [what, setWhat] = useState<'problems' | 'revisions'>('problems');
+  const nRevs = Object.keys(d.revisions).length;
 
   if (mode === 'export') {
     const doSave = async () => {
-      const data = csvOut();
-      const r = await saveFile(`recodex-problem-bank-${today()}.csv`, data, 'text/csv');
+      const data = what === 'problems'
+        ? problemsToCsv(Object.values(d.problems).sort((a, b) => a.num - b.num), d.patterns, p => statusOf(p, s), p => revisionTypeOf(p.lastRating))
+        : revisionsToCsv(Object.values(d.revisions), d.problems, d.patterns, iso => fmtTimestamp(iso, 'HH:mm'));
+      const r = await saveFile(`recodex-${what === 'problems' ? 'problem-bank' : 'revision-history'}-${today()}.csv`, data, 'text/csv');
       if (r === 'saved') { toast('CSV saved'); onClose(); } else if (r === 'fallback') setFallback(data);
     };
     return (
-      <Dialog open onClose={onClose} title="Export problem bank" sub={`${Object.keys(d.problems).length} problems with ratings, dates, phases and notes`} width="max-w-2xl"
+      <Dialog open onClose={onClose} title="Export CSV" width="max-w-2xl"
         footer={<><Button variant="ghost" onClick={onClose}>Close</Button>{!fallback && <Button variant="primary" onClick={doSave}><Download size={15} />Save CSV file</Button>}</>}>
-        {fallback ? <CopyBox text={fallback} label="The download did not start. Copy the CSV and paste it into a file or Google Sheets." />
-          : <p className="text-sm text-muted">The file opens in Google Sheets or Excel and can be imported back here. Revision history is not part of the CSV. Use Settings → Backup for a complete copy.</p>}
+        {fallback ? <CopyBox text={fallback} label="The download did not start. Copy the CSV and paste it into a file or Google Sheets." /> : (
+          <div className="flex flex-col gap-3">
+            <Segmented ariaLabel="What to export" value={what} onChange={setWhat}
+              options={[{ value: 'problems', label: `Problem bank (${Object.keys(d.problems).length})` }, { value: 'revisions', label: `Revision history (${nRevs})` }]} />
+            <p className="text-sm text-muted">{what === 'problems'
+              ? 'One row per problem with its current rating, dates, phase and notes. Opens in Google Sheets or Excel and imports back here.'
+              : 'One row per revision, oldest first: date, local time, rating, phase, time taken, mistake and notes. For your own analysis; it is not re-imported. Settings → Backup keeps a complete copy.'}</p>
+          </div>
+        )}
       </Dialog>
     );
   }

@@ -1,4 +1,4 @@
-import type { Problem, Pattern, Rating, Phase, Difficulty, Priority } from '../types';
+import type { Problem, Pattern, Rating, Phase, Difficulty, Priority, Revision } from '../types';
 import type { ImportRow } from './store';
 import { isValidYmd } from './dates';
 
@@ -34,6 +34,23 @@ export function problemsToCsv(problems: Problem[], patterns: Record<string, Patt
     lines.push([
       p.num, p.name, patterns[p.patternId]?.name ?? '', p.subPattern, p.difficulty, p.url, p.priority, p.track,
       p.lastRating ?? '', p.lastRevised ?? '', p.nextReview ?? '', typeOf(p), p.phase, statusOf(p), p.consecutiveGreen, p.revisionCount, p.weakness, p.notes,
+    ].map(esc).join(','));
+  }
+  return lines.join('\n');
+}
+
+export const REVISION_CSV_HEADERS = ['date', 'time', 'problem_id', 'problem', 'pattern', 'rating', 'phase', 'time_min', 'independent', 'mistake', 'notes', 'source', 'next_review', 'session_id'];
+
+/** Every revision record, oldest first: the history that the problem-bank CSV leaves out. */
+export function revisionsToCsv(revisions: Revision[], problems: Record<string, Problem>, patterns: Record<string, Pattern>, localTime: (iso: string) => string): string {
+  const lines = [REVISION_CSV_HEADERS.join(',')];
+  const sorted = revisions.slice().sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
+  for (const r of sorted) {
+    const p = problems[r.problemId];
+    lines.push([
+      r.date, localTime(r.at), p?.num ?? '', p?.name ?? '(deleted problem)', p ? patterns[p.patternId]?.name ?? '' : '',
+      r.rating, r.phase, r.timeMin ?? '', r.independent === null ? '' : r.independent ? 'yes' : 'no',
+      r.mistake, r.notes, r.source, r.nextReview, r.sessionId ?? '',
     ].map(esc).join(','));
   }
   return lines.join('\n');
