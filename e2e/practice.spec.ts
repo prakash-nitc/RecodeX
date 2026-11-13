@@ -9,14 +9,15 @@ test.describe('Mixed Practice', () => {
     await expect(page.getByRole('heading', { name: 'Mixed Practice' })).toBeVisible();
 
     // Every preset is selectable
-    for (const name of ['Daily Mixed Revision', 'Weakness Challenge', 'Interview Simulation', 'Random Recall', 'Overdue Recovery', 'Pattern Mastery']) {
+    for (const name of ['Daily Mixed Revision', 'Weakness Challenge', 'Overdue Recovery']) {
       await page.getByRole('button', { name: new RegExp(name) }).click();
       await expect(page.getByRole('button', { name: new RegExp(name) })).toHaveAttribute('aria-pressed', 'true');
     }
-    await expect(page.getByLabel('Pattern to master')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Interview Simulation|Random Recall|Pattern Mastery/ })).toHaveCount(0);
 
-    // Options on the interview preset
-    await page.getByRole('button', { name: /Interview Simulation/ }).click();
+    // A custom session: start from a fresh page so no preset is selected
+    await go(page, 'dashboard');
+    await go(page, 'practice');
     await page.getByRole('radio', { name: '5', exact: true }).first().click();
     await page.getByRole('radio', { name: 'Easy+Med' }).click();
     await page.getByLabel('Selection strategy').selectOption('weakest');
@@ -41,13 +42,13 @@ test.describe('Mixed Practice', () => {
     const data = await stored(page);
     const sess = Object.values<any>(data.sessions)[0];
     expect(sess.status).toBe('completed');
-    expect(sess.kind).toBe('interview');
+    expect(sess.kind).toBe('custom');
     expect(sess.results).toHaveLength(4);
 
     // Recent sessions
     await go(page, 'practice');
     await page.getByRole('radio', { name: /Recent sessions \(1\)/ }).click();
-    await expect(page.getByRole('cell', { name: 'Interview Simulation' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Custom Mixed Practice' })).toBeVisible();
     expect(errors).toEqual([]);
   });
 });

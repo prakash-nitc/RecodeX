@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarClock, Zap, MessagesSquare, Shuffle, AlertOctagon, Target, Play, RefreshCw, X, History, SlidersHorizontal, Swords, Layers, Filter, Compass } from 'lucide-react';
+import { CalendarClock, Zap, Shuffle, AlertOctagon, Play, RefreshCw, X, History, SlidersHorizontal, Swords, Layers, Filter, Compass } from 'lucide-react';
 import { useData, settingsOf, startSession } from '../lib/store';
 import { PRESETS, baseConfig, candidatePool, generateSession } from '../lib/engine';
-import type { SessionConfig, Preset, Phase, DiffChoice, Strategy } from '../types';
+import type { SessionConfig, Phase, DiffChoice, Strategy } from '../types';
 import { PHASES } from '../types';
 import { fmtTimestamp } from '../lib/dates';
 import { Button, Card, CardHeader, Checkbox, Field, Input, PageHeader, Segmented, Select, cx, DiffPill, RatingPill, Empty, GYRBar, Chip } from '../components/ui';
@@ -10,9 +10,8 @@ import { useApp, PatternTag } from '../components/shared';
 import { MountainScene } from '../components/art/Mountains';
 import { fmtDur } from './Session';
 
-const ICONS: Record<string, React.ReactNode> = {
-  daily: <CalendarClock size={18} />, weakness: <Zap size={18} />, interview: <MessagesSquare size={18} />,
-  random: <Shuffle size={18} />, overdue: <AlertOctagon size={18} />, mastery: <Target size={18} />,
+const ICONS: Record<keyof typeof PRESETS, React.ReactNode> = {
+  daily: <CalendarClock size={18} />, weakness: <Zap size={18} />, overdue: <AlertOctagon size={18} />,
 };
 // Only the overdue preset carries a colour meaning (sunrise orange); the rest use the accent.
 const TONE: Record<string, string> = { overdue: 'text-hot-ink bg-hot/15' };
@@ -32,7 +31,6 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
   const patterns = Object.values(d.patterns).sort((a, b) => a.order - b.order);
   const activePatterns = patterns.filter(p => Object.values(d.problems).some(x => x.patternId === p.id && x.track === 'active'));
   const [cfg, setCfg] = useState<SessionConfig>(() => baseConfig(s));
-  const [masteryPattern, setMasteryPattern] = useState(activePatterns[0]?.id ?? '');
   const [customCount, setCustomCount] = useState('');
   const [customPatterns, setCustomPatterns] = useState('');
   const [editingCount, setEditingCount] = useState(false);
@@ -40,13 +38,11 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
   const [preview, setPreview] = useState<string[] | null>(null);
   const [tab, setTab] = useState<'create' | 'recent'>('create');
 
-  const pick = (key: Exclude<Preset, 'custom' | 'today'>) => {
+  const pick = (key: keyof typeof PRESETS) => {
     const pr = PRESETS[key];
-    const next: SessionConfig = { ...baseConfig(s), ...pr.config, preset: key, count: pr.config.count ?? s.defaultSessionSize };
-    if (key === 'mastery') next.patternIds = masteryPattern ? [masteryPattern] : [];
-    setCfg(next); setPreview(null);
+    setCfg({ ...baseConfig(s), ...pr.config, preset: key, count: pr.config.count ?? s.defaultSessionSize }); setPreview(null);
   };
-  useEffect(() => { if (initialPreset && initialPreset in PRESETS) pick(initialPreset as any); }, [initialPreset]);
+  useEffect(() => { if (initialPreset && initialPreset in PRESETS) pick(initialPreset as keyof typeof PRESETS); }, [initialPreset]);
   const up = (patch: Partial<SessionConfig>) => { setCfg(c => ({ ...c, ...patch })); setPreview(null); };
   const finishCountEdit = () => {
     setEditingCount(false);
@@ -63,7 +59,7 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
 
   const problems = Object.values(d.problems);
   const pool = useMemo(() => candidatePool(problems, cfg), [d.problems, cfg]);
-  const title = cfg.preset in PRESETS ? PRESETS[cfg.preset as keyof typeof PRESETS].title + (cfg.preset === 'mastery' && d.patterns[cfg.patternIds[0]] ? ` · ${d.patterns[cfg.patternIds[0]].name}` : '') : 'Custom Mixed Practice';
+  const title = cfg.preset in PRESETS ? PRESETS[cfg.preset as keyof typeof PRESETS].title : 'Custom Mixed Practice';
 
   const generate = () => { const r = generateSession(problems, cfg); setPreview(r.ids); };
   const start = (ids: string[]) => {
@@ -114,13 +110,6 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
             <Card className="xl:col-span-3 min-w-0">
               <CardHeader icon={<SlidersHorizontal size={17} />} title="Session configuration" sub={cfg.preset === 'custom' ? 'Custom settings' : `Preset: ${PRESETS[cfg.preset as keyof typeof PRESETS]?.title} · adjust anything below`} />
               <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-                {cfg.preset === 'mastery' && (
-                  <Group icon={<Target size={13} />} title="Pattern to master" className="md:col-span-2">
-                    <Select id="pm-pattern" aria-label="Pattern to master" className="!w-full" value={cfg.patternIds[0] ?? ''} onChange={e => { setMasteryPattern(e.target.value); setCfg(c => ({ ...c, patternIds: [e.target.value] })); setPreview(null); }}>
-                      {activePatterns.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </Select>
-                  </Group>
-                )}
                 <Group icon={<Layers size={13} />} title="Size and difficulty">
                   <Field label="Number of problems">
                     <div className="flex flex-wrap items-center gap-2">
@@ -137,17 +126,15 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
                   </Field>
                 </Group>
                 <Group icon={<Shuffle size={13} />} title="Pattern mixing">
-                  {cfg.preset !== 'mastery' && (
-                    <Field label="Number of patterns" hint="Patterns are chosen by the strategy, then problems alternate between them.">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Segmented ariaLabel="Number of patterns" value={patOpts.includes(cfg.patternCount) ? cfg.patternCount : -1} onChange={v => { if (v >= 0) up({ patternCount: v }); else document.getElementById('pm-custom-patterns')?.focus(); }} options={[{ value: 0, label: 'All' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 5, label: '5' }, { value: -1, label: 'Custom' }]} />
-                        <Input id="pm-custom-patterns" aria-label="Custom number of patterns" type="number" min={1} max={30} className="!w-20" placeholder="#"
-                          value={editingPatterns ? customPatterns : patOpts.includes(cfg.patternCount) ? '' : String(cfg.patternCount)}
-                          onFocus={() => { setCustomPatterns(patOpts.includes(cfg.patternCount) ? '' : String(cfg.patternCount)); setEditingPatterns(true); }}
-                          onChange={e => setCustomPatterns(e.target.value)} onBlur={finishPatternEdit} />
-                      </div>
-                    </Field>
-                  )}
+                  <Field label="Number of patterns" hint="Patterns are chosen by the strategy, then problems alternate between them.">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Segmented ariaLabel="Number of patterns" value={patOpts.includes(cfg.patternCount) ? cfg.patternCount : -1} onChange={v => { if (v >= 0) up({ patternCount: v }); else document.getElementById('pm-custom-patterns')?.focus(); }} options={[{ value: 0, label: 'All' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 5, label: '5' }, { value: -1, label: 'Custom' }]} />
+                      <Input id="pm-custom-patterns" aria-label="Custom number of patterns" type="number" min={1} max={30} className="!w-20" placeholder="#"
+                        value={editingPatterns ? customPatterns : patOpts.includes(cfg.patternCount) ? '' : String(cfg.patternCount)}
+                        onFocus={() => { setCustomPatterns(patOpts.includes(cfg.patternCount) ? '' : String(cfg.patternCount)); setEditingPatterns(true); }}
+                        onChange={e => setCustomPatterns(e.target.value)} onBlur={finishPatternEdit} />
+                    </div>
+                  </Field>
                   <Field label="Selection strategy" htmlFor="pm-strategy">
                     <Select id="pm-strategy" className="!w-full" value={cfg.strategy} onChange={e => up({ strategy: e.target.value as Strategy })}>
                       <option value="balanced">Balanced (weakness + overdue + variety)</option>
@@ -170,13 +157,11 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
                       <span className="text-sm text-muted">days</span>
                     </div>
                   </div>
-                  {cfg.preset !== 'mastery' && (
-                    <Field label={`Only these patterns ${cfg.patternIds.length ? `(${cfg.patternIds.length})` : '(any)'}`}>
-                      <div className="flex flex-wrap gap-1.5">
-                        {activePatterns.map(p => <Chip key={p.id} on={cfg.patternIds.includes(p.id)} onClick={() => togglePattern(p.id)}>{p.name}</Chip>)}
-                      </div>
-                    </Field>
-                  )}
+                  <Field label={`Only these patterns ${cfg.patternIds.length ? `(${cfg.patternIds.length})` : '(any)'}`}>
+                    <div className="flex flex-wrap gap-1.5">
+                      {activePatterns.map(p => <Chip key={p.id} on={cfg.patternIds.includes(p.id)} onClick={() => togglePattern(p.id)}>{p.name}</Chip>)}
+                    </div>
+                  </Field>
                   <Field label={`Only these revision phases ${cfg.phases.length ? '' : '(any)'}`}>
                     <div className="flex flex-wrap gap-1.5">
                       {PHASES.map(ph => <Chip key={ph} on={cfg.phases.includes(ph)} onClick={() => togglePhase(ph)}>{ph}</Chip>)}

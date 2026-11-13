@@ -83,7 +83,8 @@ export interface Revision {
   prev: ProblemSnapshot | null;  // state before this revision (enables undo of the latest one)
 }
 
-export type Preset = 'daily' | 'weakness' | 'interview' | 'random' | 'overdue' | 'mastery' | 'custom' | 'today';
+// 'interview' and 'random' were presets before; they stay in the type so older sessions keep their kind.
+export type Preset = 'daily' | 'weakness' | 'overdue' | 'mastery' | 'custom' | 'today' | 'interview' | 'random';
 export type Strategy = 'random' | 'weakest' | 'overdue' | 'balanced';
 export type DiffChoice = 'all' | 'Easy' | 'Medium' | 'Hard' | 'easy-medium';
 
@@ -101,7 +102,6 @@ export interface SessionConfig {
   onlyDue: boolean;
   onlyOverdue: boolean;
   onlyWeak: boolean;
-  ignoreSchedule: boolean;
 }
 
 export interface SessionResult {

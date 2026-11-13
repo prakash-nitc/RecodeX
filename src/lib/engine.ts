@@ -182,20 +182,20 @@ export function buildFocus(problems: Problem[], patterns: Record<string, Pattern
 // ---------------------------------------------------------------------------------------------
 // Mixed practice generation
 
-export const PRESETS: Record<Exclude<Preset, 'custom' | 'today'>, { title: string; blurb: string; config: Partial<SessionConfig> }> = {
+export const PRESETS: Record<'daily' | 'weakness' | 'overdue', { title: string; blurb: string; config: Partial<SessionConfig> }> = {
   daily: { title: 'Daily Mixed Revision', blurb: 'Due and overdue problems, mixed across patterns', config: { strategy: 'balanced', onlyDue: true, includeNew: false, includeSolved: true, patternCount: 0, difficulty: 'all' } },
-  weakness: { title: 'Weakness Challenge', blurb: 'Red and Yellow problems first', config: { strategy: 'weakest', onlyWeak: true, includeNew: false, includeSolved: true, patternCount: 0, difficulty: 'all', ignoreSchedule: true } },
-  interview: { title: 'Interview Simulation', blurb: 'Easy and Medium from several patterns', config: { strategy: 'random', difficulty: 'easy-medium', includeNew: true, includeSolved: true, patternCount: 0, count: 5, ignoreSchedule: true } },
-  random: { title: 'Random Recall', blurb: 'Previously studied, ignoring due dates', config: { strategy: 'random', includeNew: false, includeSolved: true, patternCount: 0, difficulty: 'all', ignoreSchedule: true } },
+  weakness: { title: 'Weakness Challenge', blurb: 'Red and Yellow problems first', config: { strategy: 'weakest', onlyWeak: true, includeNew: false, includeSolved: true, patternCount: 0, difficulty: 'all' } },
   overdue: { title: 'Overdue Recovery', blurb: 'Every overdue problem, most overdue first', config: { strategy: 'overdue', onlyOverdue: true, includeNew: false, includeSolved: true, patternCount: 0, difficulty: 'all', count: 20 } },
-  mastery: { title: 'Pattern Mastery', blurb: 'A full session from one pattern', config: { strategy: 'weakest', includeNew: true, includeSolved: true, patternCount: 1, difficulty: 'all', ignoreSchedule: true } },
 };
+
+/** A full session from one pattern, started from the pattern's page. */
+export const MASTERY_CONFIG: Partial<SessionConfig> = { strategy: 'weakest', includeNew: true, includeSolved: true, patternCount: 1, difficulty: 'all' };
 
 export function baseConfig(s: Settings): SessionConfig {
   return {
     preset: 'custom', count: s.defaultSessionSize, difficulty: s.defaultDifficulty, patternCount: 3, strategy: 'balanced',
     includeSolved: true, includeNew: false, excludeRecentDays: 0, patternIds: [], phases: [],
-    onlyDue: false, onlyOverdue: false, onlyWeak: false, ignoreSchedule: false,
+    onlyDue: false, onlyOverdue: false, onlyWeak: false,
   };
 }
 

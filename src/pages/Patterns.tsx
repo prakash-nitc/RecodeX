@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Plus, ChevronLeft, Pencil, Trash2, GraduationCap, ArrowUp, ArrowDown, Play, Shapes, Clock } from 'lucide-react';
 import { useData, settingsOf, addPattern, updatePattern, deletePattern, setLearningState, startSession } from '../lib/store';
 import { patternStats, PatternStat, isMastered } from '../lib/stats';
-import { statusOf, PRESETS, baseConfig, generateSession } from '../lib/engine';
+import { statusOf, MASTERY_CONFIG, baseConfig, generateSession } from '../lib/engine';
 import { fmt, relDay } from '../lib/dates';
 import { Button, Card, PageHeader, GYRBar, Progress, cx, Dialog, Field, Input, Select, Textarea, Segmented, useUi, Empty, RatingPill, PhasePill, Ring, Chip } from '../components/ui';
 import { useApp } from '../components/shared';
@@ -177,7 +177,7 @@ export function PatternDetail({ id }: { id: string }) {
     updatePattern(sorted[i].id, { order: sorted[j].order }); updatePattern(sorted[j].id, { order: sorted[i].order });
   };
   const mastery = () => {
-    const cfg = { ...baseConfig(s), ...PRESETS.mastery.config, preset: 'mastery' as const, patternIds: [id], count: s.defaultSessionSize };
+    const cfg = { ...baseConfig(s), ...MASTERY_CONFIG, preset: 'mastery' as const, patternIds: [id], count: s.defaultSessionSize };
     const r = generateSession(Object.values(d.problems), cfg);
     if (!r.ids.length) { toast('No active problems in this pattern yet', 'info'); return; }
     startSession({ kind: 'mastery', title: `Pattern Mastery · ${pattern.name}`, config: cfg, problemIds: r.ids }); go('session');
