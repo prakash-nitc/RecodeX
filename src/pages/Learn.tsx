@@ -43,7 +43,6 @@ function RoadmapTrail({ topics, allProbs, go }: { topics: Pattern[]; allProbs: R
               const learned = ps.filter(p => p.learnedAt || p.lastRating).length;
               const pct = ps.length ? learned / ps.length : 0;
               const isLearning = topic.learning === 'learning';
-              const isCompleted = topic.learning === 'completed';
               const altitude = topics.length - i;
 
               return (
@@ -55,11 +54,10 @@ function RoadmapTrail({ topics, allProbs, go }: { topics: Pattern[]; allProbs: R
                   {/* Camp marker on the trail */}
                   <div className={cx(
                     'relative z-10 flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border-2 transition-colors',
-                    isCompleted ? 'border-ok/50 bg-ok/12 text-ok-ink' :
                     isLearning ? 'border-accent/50 bg-accent/12 text-accent-ink' :
                     'border-line bg-surface2 text-muted',
                   )}>
-                    {isCompleted ? <CheckCircle2 size={18} /> : <Mountain size={18} />}
+                    <Mountain size={18} />
                   </div>
 
                   <div className="flex-1 min-w-0 rounded-2xl border border-line bg-surface p-3.5 sm:p-4 shadow-card group-hover:border-accent/40 group-hover:shadow-lift transition-[border-color,box-shadow]">
@@ -69,11 +67,10 @@ function RoadmapTrail({ topics, allProbs, go }: { topics: Pattern[]; allProbs: R
                           <span className="text-[10px] font-bold text-muted tabular-nums">CAMP {altitude}</span>
                           <span className={cx(
                             'rounded-lg px-1.5 py-0.5 text-[10px] font-bold',
-                            isCompleted ? 'bg-ok/12 text-ok-ink' :
                             isLearning ? 'bg-accent/12 text-accent-ink' :
                             'bg-surface2 text-muted',
                           )}>
-                            {isCompleted ? 'Learned' : isLearning ? 'Learning' : 'Yet to learn'}
+                            {isLearning ? 'Learning' : 'Yet to learn'}
                           </span>
                         </div>
                         <div className="font-display text-base sm:text-lg font-semibold text-fg mt-0.5 group-hover:text-accent-ink transition-colors">{topic.name}</div>
@@ -124,15 +121,19 @@ function Topic({ topic }: { topic: Pattern }) {
     <Card>
       <div className="flex flex-wrap items-start justify-between gap-3 px-4 sm:px-5 pt-4 pb-3">
         <div className="flex items-start gap-3 min-w-0">
-          <div className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', topic.learning === 'completed' ? 'bg-ok/12 text-ok-ink' : topic.learning === 'learning' ? 'bg-accent/12 text-accent-ink' : 'bg-surface2 text-muted')}><GraduationCap size={19} /></div>
+          <div className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', topic.learning === 'learning' ? 'bg-accent/12 text-accent-ink' : 'bg-surface2 text-muted')}><GraduationCap size={19} /></div>
           <div className="min-w-0">
             <button onClick={() => go(patternRoute(topic.id))} className="font-display text-lg font-bold text-fg hover:text-accent-ink transition-colors">{topic.name}</button>
             <div className="text-xs text-muted">{probs.length} problems · {topic.subPatterns.join(' · ')}</div>
           </div>
         </div>
         <Segmented size="sm" ariaLabel={`${topic.name} learning state`} value={topic.learning}
-          onChange={v => { setLearningState(topic.id, v); if (v === 'learning') setOpen(true); toast(`${topic.name}: ${v === 'learning' ? 'currently learning' : v === 'completed' ? 'marked learned' : 'yet to learn'}`); }}
-          options={[{ value: 'yet_to_learn', label: 'Yet to learn' }, { value: 'learning', label: 'Learning' }, { value: 'completed', label: 'Learned' }]} />
+          onChange={v => {
+            const held = backlog.length;
+            setLearningState(topic.id, v); if (v === 'learning') setOpen(true);
+            toast(v === 'active' ? `${topic.name} moved into revision${held ? ` · ${held} problem${held === 1 ? '' : 's'} activated` : ''}` : `${topic.name}: ${v === 'learning' ? 'currently learning' : 'yet to learn'}`);
+          }}
+          options={[{ value: 'yet_to_learn', label: 'Yet to learn' }, { value: 'learning', label: 'Learning' }, { value: 'active', label: 'Learned · start revising' }]} />
       </div>
       <div className="px-4 sm:px-5 pb-4">
         <div className="flex flex-wrap items-center justify-between gap-2 text-sm mb-1.5">
@@ -146,7 +147,6 @@ function Topic({ topic }: { topic: Pattern }) {
           </div>
         </div>
         <Progress value={probs.length ? learned.length / probs.length : 0} tone="ok" />
-        {topic.learning === 'completed' && backlog.length > 0 && <p className="text-xs text-hot-ink mt-2">Marked learned, but {backlog.length} problems are still held back. Activate them to start spaced revision.</p>}
       </div>
       {open && (
         <ul className="divide-y divide-line/70 border-t border-line/70">

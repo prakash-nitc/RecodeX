@@ -69,7 +69,7 @@ export function boot(b: Backend) {
   const live = <A extends unknown[]>(fn: (...a: A) => void) => (...a: A) => { if (backend === mine) fn(...a); };
   b.start({
     onChanges: live(applyChanges),
-    onReady: live((hasMeta: boolean) => set({ status: 'ready', needsImport: isEmptyAccount(hasMeta) })),
+    onReady: live((hasMeta: boolean) => { set({ status: 'ready', needsImport: isEmptyAccount(hasMeta) }); migrateLegacyLearning(); }),
     onSlow: live(() => { if (state.status === 'booting') set({ status: 'slow' }); }),
     onError: live((msg: string) => set({ error: msg })),
     onWriteRecovered: live(() => {
@@ -274,9 +274,26 @@ export function deletePattern(id: string, moveTo: string | null) {
 }
 export function setLearningState(id: string, learning: Pattern['learning']) {
   updatePattern(id, { learning });
+  const own = Object.values(state.problems).filter(p => p.patternId === id);
   if (learning === 'yet_to_learn') {
     // Move never-reviewed problems back into the backlog so they leave the daily queue.
-    bulkUpdate(Object.values(state.problems).filter(p => p.patternId === id && !p.lastRating).map(p => p.id), () => ({ track: 'backlog' }));
+    bulkUpdate(own.filter(p => !p.lastRating).map(p => p.id), () => ({ track: 'backlog' }));
+  } else if (learning === 'active') {
+    // In revision: nothing stays held back. Problems solved while learning get their first review.
+    activateProblems(own.filter(p => p.track === 'backlog').map(p => p.id));
+  }
+}
+
+/**
+ * 'completed' ("Learned") was a fourth learning state that could leave problems held back in a
+ * pattern marked learned. It is gone: such a pattern becomes 'learning' while it still holds
+ * problems back (so they stay visible on Yet to Learn), otherwise 'active'.
+ */
+function migrateLegacyLearning() {
+  for (const pt of Object.values(state.patterns)) {
+    if ((pt.learning as string) !== 'completed') continue;
+    const held = Object.values(state.problems).some(p => p.patternId === pt.id && p.track === 'backlog');
+    updatePattern(pt.id, { learning: held ? 'learning' : 'active' });
   }
 }
 
@@ -387,6 +404,7 @@ export function restoreBackup(b: Backup) {
   b.sessions.forEach(s => putDoc('sessions', s));
   putMeta(b.meta ?? baseMeta());
   set({ needsImport: false });
+  migrateLegacyLearning();
 }
 export function resetToImport() {
   wipeAll();

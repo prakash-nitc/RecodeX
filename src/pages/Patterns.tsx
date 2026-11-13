@@ -11,7 +11,7 @@ import { ProblemTable, FilterBar, applyFilters, EMPTY_FILTERS, Filters } from '.
 import type { Pattern, Problem, Settings } from '../types';
 
 export const patternRoute = (id: string) => `pattern-${id.replace(/^pt-/, '')}`;
-const LEARN_LABEL: Record<Pattern['learning'], string> = { active: 'In revision', yet_to_learn: 'Yet to learn', learning: 'Learning', completed: 'Learned' };
+const LEARN_LABEL: Record<Pattern['learning'], string> = { active: 'In revision', yet_to_learn: 'Yet to learn', learning: 'Learning' };
 
 function avgLabel(avg: number | null) {
   if (avg === null) return '—';
@@ -95,7 +95,7 @@ export default function Patterns() {
   const stats = useMemo(() => patternStats(Object.values(d.patterns).sort((a, b) => a.order - b.order), problems, Object.values(d.revisions), s), [d.patterns, problems, d.revisions, d.meta]);
   const mastered = useMemo(() => masteredBy(problems, s), [problems, d.meta]);
   const byPattern = useMemo(() => { const m = new Map<string, Problem[]>(); for (const p of problems) { const a = m.get(p.patternId) ?? []; a.push(p); m.set(p.patternId, a); } return m; }, [problems]);
-  const shown = stats.filter(x => view === 'all' || (view === 'active' ? x.pattern.learning === 'active' || x.pattern.learning === 'completed' : x.pattern.learning === 'yet_to_learn' || x.pattern.learning === 'learning'));
+  const shown = stats.filter(x => view === 'all' || (view === 'active' ? x.pattern.learning === 'active' : x.pattern.learning !== 'active'));
   const totalMastered = [...mastered.values()].reduce((a, b) => a + b, 0);
   return (
     <div>
@@ -136,9 +136,9 @@ export function PatternDialog({ pattern, onClose }: { pattern?: Pattern; onClose
       <div className="flex flex-col gap-3.5">
         <Field label="Name" htmlFor="pd-name"><Input id="pd-name" data-autofocus value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Tries" /></Field>
         <Field label="Description" htmlFor="pd-desc"><Textarea id="pd-desc" rows={2} value={desc} onChange={e => setDesc(e.target.value)} placeholder="What the pattern is for" /></Field>
-        <Field label="Learning state" htmlFor="pd-learn" hint="Yet to learn keeps its problems out of the daily queue.">
+        <Field label="Learning state" htmlFor="pd-learn" hint="Yet to learn keeps unreviewed problems out of the daily queue; In revision activates any held back.">
           <Select id="pd-learn" className="!w-full" value={learning} onChange={e => setLearning(e.target.value as Pattern['learning'])}>
-            <option value="active">In revision</option><option value="yet_to_learn">Yet to learn</option><option value="learning">Currently learning</option><option value="completed">Learned</option>
+            <option value="active">In revision</option><option value="yet_to_learn">Yet to learn</option><option value="learning">Currently learning</option>
           </Select>
         </Field>
         <Field label="Sub-patterns (one per line)" htmlFor="pd-subs"><Textarea id="pd-subs" rows={4} value={subs} onChange={e => setSubs(e.target.value)} placeholder={'Basics\nBinary Search on Answer'} /></Field>

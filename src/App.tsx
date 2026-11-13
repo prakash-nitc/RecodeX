@@ -133,7 +133,7 @@ function Shell() {
     <nav className="flex flex-col gap-0.5" aria-label="Main">
       {NAV.map(n => {
         const Icon = n.icon; const on = sec === n.id;
-        const badge = n.id === 'today' && queue > 0 ? queue : n.id === 'learn' ? Object.values(d.patterns).filter(p => p.learning === 'yet_to_learn' || p.learning === 'learning').length || null : null;
+        const badge = n.id === 'today' && queue > 0 ? queue : n.id === 'learn' ? Object.values(d.patterns).filter(p => p.learning !== 'active').length || null : null;
         return (
           <button key={n.id} onClick={() => go(n.id)} title={compact ? n.label : undefined} aria-current={on ? 'page' : undefined}
             className={cx('group relative flex items-center gap-3 rounded-xl h-10 text-sm font-semibold transition-colors', compact ? 'justify-center px-0' : 'px-3',

@@ -6,7 +6,8 @@ export type Phase = 'Reconstruction' | 'Recall/Repair' | 'Quick Recall';
 export type Priority = 'High' | 'Medium' | 'Low';
 export type Difficulty = 'Easy' | 'Medium' | 'Hard';
 export type Track = 'active' | 'backlog';
-export type LearningState = 'active' | 'yet_to_learn' | 'learning' | 'completed';
+/** 'learning' marks the topic you are studying now. A legacy 'completed' value is migrated on load (store.ts). */
+export type LearningState = 'active' | 'yet_to_learn' | 'learning';
 export type Status = 'Yet to Learn' | 'Not Reviewed' | 'Overdue' | 'Due Today' | 'Scheduled' | 'Mastered';
 export type UrlKind = 'leetcode' | 'gfg' | 'search' | 'other' | '';
 

@@ -149,3 +149,26 @@ describe('milestones', () => {
     expect(settingsOf().milestones['first-mastered']).toBe('2026-11-04');
   });
 });
+
+describe('learning states', () => {
+  it('moving a pattern into revision activates everything it held back', () => {
+    const pt = addPattern('P', 'learning');
+    const mk = (n: string) => addProblem({ name: n, patternId: pt.id, subPattern: '', difficulty: 'Easy', url: '', priority: 'Medium', track: 'backlog', notes: '', initial: 'backlog' });
+    const solved = mk('solved'), unsolved = mk('unsolved');
+    setLearned(solved.id, true);
+    setLearningState(pt.id, 'active');
+    expect(getState().patterns[pt.id].learning).toBe('active');
+    expect(getState().problems[solved.id]).toMatchObject({ track: 'active', nextReview: addDays(today(), settingsOf().activationDelayDays) });
+    expect(getState().problems[unsolved.id]).toMatchObject({ track: 'active', nextReview: null });
+  });
+
+  it('migrates a legacy "completed" pattern from a restored backup without hiding anything', () => {
+    const a = addPattern('Held'), b = addPattern('Done');
+    addProblem({ name: 'x', patternId: a.id, subPattern: '', difficulty: 'Easy', url: '', priority: 'Medium', track: 'backlog', notes: '', initial: 'backlog' });
+    const backup = makeBackup();
+    backup.patterns = backup.patterns.map(p => ({ ...p, learning: 'completed' as any }));
+    restoreBackup(backup);
+    expect(getState().patterns[a.id].learning).toBe('learning'); // still holds a problem back
+    expect(getState().patterns[b.id].learning).toBe('active');
+  });
+});
