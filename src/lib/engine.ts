@@ -3,6 +3,7 @@ import type {
   Problem, Rating, Phase, Settings, Status, Revision, SessionConfig, Pattern, Priority, ProblemSnapshot, Preset,
 } from '../types';
 import { addDays, diffDays, today, nowIso, fmt, relDay } from './dates';
+import { byStudyOrder } from './order';
 
 export const RATING_SCORE: Record<Rating, number> = { green: 3, yellow: 2, red: 1 };
 export const PRIORITY_RANK: Record<Priority, number> = { High: 0, Medium: 1, Low: 2 };
@@ -174,7 +175,7 @@ export function buildFocus(problems: Problem[], patterns: Record<string, Pattern
   if (s.focusNewPerDay > 0) {
     const plan = new Set(s.studyPlanPatternIds);
     const fresh = active.filter(p => !p.lastRating && !seen.has(p.id) && (plan.size === 0 || plan.has(p.patternId)))
-      .sort((a, b) => (patterns[a.patternId].order - patterns[b.patternId].order) || a.num - b.num);
+      .sort(byStudyOrder(patterns)); // the next problems in your study order
     fresh.slice(0, s.focusNewPerDay).forEach(p => push(p, 'New'));
   }
   return out;

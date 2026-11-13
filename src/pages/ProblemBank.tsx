@@ -1,24 +1,30 @@
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { Plus, Upload, Download, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, ArrowUpDown, X, Pencil, History, Flame, SlidersHorizontal, Library } from 'lucide-react';
+import { Plus, Upload, Download, Trash2, ChevronLeft, ChevronRight, ChevronDown, MoreHorizontal, ArrowUpDown, X, Pencil, History, Flame, SlidersHorizontal, Library, ArrowRight } from 'lucide-react';
 import { useData, settingsOf, bulkUpdate, deleteProblems, markNotReviewed, activateProblems } from '../lib/store';
 import { statusOf, PRIORITY_RANK } from '../lib/engine';
+import { byStudyOrder } from '../lib/order';
 import { fmt, today, addDays, relDay, diffDays } from '../lib/dates';
-import type { Problem, Status, Priority } from '../types';
+import type { Pattern, Problem, Status, Priority } from '../types';
 import { STATUSES, PHASES, PRIORITIES, DIFFICULTIES } from '../types';
 import {
-  Button, Card, PageHeader, SearchInput, Select, Checkbox, DiffPill, RatingPill, StatusPill, PriorityPill, PhasePill, Tag, cx, Empty, Dialog, Field, Input, useUi, LinkButton, Segmented, RatingDot,
+  Button, Card, PageHeader, SearchInput, Select, Checkbox, DiffPill, RatingPill, StatusPill, PriorityPill, PhasePill, Tag, cx, Empty, Dialog, Field, Input, useUi, LinkButton, Segmented, RatingDot, GYRBar,
 } from '../components/ui';
-import { useApp, QuickRate } from '../components/shared';
+import { useApp, QuickRate, usePositions } from '../components/shared';
 import { MountainScene } from '../components/art/Mountains';
+import { patternRoute } from './Patterns';
 import { CsvDialog } from './CsvDialog';
 
 export interface Filters {
   q: string; pattern: string; difficulty: string; rating: string; priority: string; phase: string; status: string;
-  sort: 'next' | 'priority' | 'last' | 'num' | 'name';
+  sort: 'pattern' | 'next' | 'priority' | 'last' | 'num' | 'name';
 }
-export const EMPTY_FILTERS: Filters = { q: '', pattern: '', difficulty: '', rating: '', priority: '', phase: '', status: '', sort: 'next' };
+export const EMPTY_FILTERS: Filters = { q: '', pattern: '', difficulty: '', rating: '', priority: '', phase: '', status: '', sort: 'pattern' };
 
-export function applyFilters(problems: Problem[], f: Filters, statusFn: (p: Problem) => Status) {
+/** True when anything narrows the list (search or a filter), as opposed to only a sort. */
+export const isFiltering = (f: Filters, ignorePattern = false) =>
+  Object.entries(f).some(([k, v]) => k !== 'sort' && v && !(ignorePattern && k === 'pattern'));
+
+export function applyFilters(problems: Problem[], f: Filters, statusFn: (p: Problem) => Status, patterns: Record<string, Pattern>) {
   const q = f.q.trim().toLowerCase();
   const list = problems.filter(p =>
     (!q || p.name.toLowerCase().includes(q) || String(p.num) === q.replace('#', '') || p.subPattern.toLowerCase().includes(q)) &&
@@ -27,13 +33,14 @@ export function applyFilters(problems: Problem[], f: Filters, statusFn: (p: Prob
     (!f.priority || p.priority === f.priority) && (!f.phase || p.phase === f.phase) && (!f.status || statusFn(p) === f.status));
   const nx = (p: Problem) => p.nextReview ?? '9999';
   const sorters: Record<Filters['sort'], (a: Problem, b: Problem) => number> = {
+    pattern: byStudyOrder(patterns),
     next: (a, b) => (nx(a) < nx(b) ? -1 : nx(a) > nx(b) ? 1 : PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || a.num - b.num),
     priority: (a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || (nx(a) < nx(b) ? -1 : 1),
     last: (a, b) => ((b.lastRevised ?? '') < (a.lastRevised ?? '') ? -1 : (b.lastRevised ?? '') > (a.lastRevised ?? '') ? 1 : a.num - b.num),
     num: (a, b) => a.num - b.num,
     name: (a, b) => a.name.localeCompare(b.name),
   };
-  return list.sort(sorters[f.sort]);
+  return list.sort(sorters[f.sort] ?? sorters.pattern);
 }
 
 export function FilterBar({ f, setF, hidePattern }: { f: Filters; setF: (f: Filters) => void; hidePattern?: boolean }) {
@@ -45,14 +52,14 @@ export function FilterBar({ f, setF, hidePattern }: { f: Filters; setF: (f: Filt
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex flex-wrap gap-2">
-        <SearchInput id="bank-q" value={f.q} onChange={q => up({ q })} placeholder="Search by name, #ID or sub-pattern" />
+        <SearchInput id="bank-q" value={f.q} onChange={q => up({ q })} placeholder="Search by name or sub-pattern" />
         <Button variant={open || active ? 'outline' : 'ghost'} className={cx('h-10', active > 0 && 'border-accent/50 text-accent-ink')} onClick={() => setOpen(!open)} aria-expanded={open}>
           <SlidersHorizontal size={15} />Filters{active ? ` · ${active}` : ''}
         </Button>
         <div className="flex items-center gap-1.5">
           <ArrowUpDown size={14} className="text-muted" />
           <Select aria-label="Sort" value={f.sort} onChange={e => up({ sort: e.target.value as Filters['sort'] })}>
-            <option value="next">Next review ↑</option>{(manualPri || f.sort === 'priority') && <option value="priority">Priority</option>}<option value="last">Last revised ↓</option><option value="num">Problem ID</option><option value="name">Name</option>
+            <option value="pattern">Study order</option><option value="next">Next review ↑</option>{(manualPri || f.sort === 'priority') && <option value="priority">Priority</option>}<option value="last">Last revised ↓</option><option value="num">Date added</option><option value="name">Name</option>
           </Select>
         </div>
       </div>
@@ -82,24 +89,91 @@ function NextCell({ p, st, t }: { p: Problem; st: Status; t: string }) {
 }
 
 const PAGE_SIZES = [50, 100, 200];
+const GROUP_PAGE = 50;          // rows shown per expanded group before "Show more"
+const OPEN_KEY = 'recodex-bank-open';
+const readOpen = (): Set<string> => { try { return new Set(JSON.parse(localStorage.getItem(OPEN_KEY) ?? '[]')); } catch { return new Set(); } };
+const writeOpen = (s: Set<string>) => { try { localStorage.setItem(OPEN_KEY, JSON.stringify([...s])); } catch { /* per-device convenience only */ } };
 
-export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emptyText?: string }) {
+type GroupLine = { kind: 'group'; pattern: Pattern | null; patternId: string; rows: Problem[]; total: number; open: boolean };
+type MoreLine = { kind: 'more'; patternId: string; hidden: number };
+type Line = GroupLine | MoreLine | { kind: 'sub'; key: string; label: string; count: number } | { kind: 'row'; p: Problem };
+
+/**
+ * The problem list. `layout`:
+ *  - 'grouped': collapsible pattern sections in journey order (the bank's default)
+ *  - 'flat':    one sortable, paginated table
+ * `dividers` adds sub-pattern divider rows (only meaningful in study order).
+ * `filtering` (search or filters active) expands every group that has matches.
+ */
+export function ProblemTable({ problems, emptyText, layout = 'flat', dividers = false, filtering = false, singlePattern = false }: {
+  problems: Problem[]; emptyText?: string; layout?: 'grouped' | 'flat'; dividers?: boolean; filtering?: boolean;
+  /** The list is one pattern's (its own page): the pattern column would repeat the same name. */
+  singlePattern?: boolean;
+}) {
   const d = useData(); const s = settingsOf(d); const manualPri = !s.autoPriority;
-  const { openProblem, editProblem, rate } = useApp();
+  const pos = usePositions();
+  const { openProblem, editProblem, rate, go } = useApp();
   const { confirm, toast } = useUi();
+  const grouped = layout === 'grouped';
+  const showPattern = !grouped && !singlePattern;
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(PAGE_SIZES[0]);
   const [bulk, setBulk] = useState<null | 'priority' | 'pattern' | 'reschedule'>(null);
   const [menu, setMenu] = useState<string | null>(null);
+  const [openGroups, setOpenGroups] = useState<Set<string>>(readOpen);
+  const [override, setOverride] = useState<Record<string, boolean>>({}); // toggles made while filtering
+  const [limits, setLimits] = useState<Record<string, number>>({});
+  useEffect(() => { setOverride({}); }, [filtering]);
   const pages = Math.max(1, Math.ceil(problems.length / size));
   useEffect(() => { if (page >= pages) setPage(0); }, [pages]);
   useEffect(() => { setSel(x => new Set([...x].filter(id => d.problems[id]))); }, [d.problems]);
-  const rows = problems.slice(page * size, page * size + size);
-  const allOnPage = rows.length > 0 && rows.every(r => sel.has(r.id));
   const toggle = (id: string) => setSel(x => { const n = new Set(x); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const ids = [...sel];
   const t = today();
+  const isOpen = (id: string) => override[id] ?? (filtering || openGroups.has(id));
+  const toggleGroup = (id: string) => {
+    if (filtering) { setOverride(o => ({ ...o, [id]: !isOpen(id) })); return; }
+    setOpenGroups(g => { const n = new Set(g); n.has(id) ? n.delete(id) : n.add(id); writeOpen(n); return n; });
+  };
+
+  // Lines to render, and the problems currently on screen (for "select all").
+  const { lines, visible } = useMemo(() => {
+    const subLines = (rows: Problem[], keyPrefix: string): Line[] => {
+      const out: Line[] = []; let cur: string | null = null;
+      for (const p of rows) {
+        if (dividers && p.subPattern !== cur) {
+          cur = p.subPattern;
+          const label = cur;
+          out.push({ kind: 'sub', key: `${keyPrefix}|${label}`, label: label || 'No sub-pattern', count: rows.filter(x => x.subPattern === label).length });
+        }
+        out.push({ kind: 'row', p });
+      }
+      return out;
+    };
+    if (!grouped) {
+      const rows = problems.slice(page * size, page * size + size);
+      return { lines: subLines(rows, 'flat'), visible: rows };
+    }
+    const byPattern = new Map<string, Problem[]>();
+    for (const p of problems) { const a = byPattern.get(p.patternId) ?? []; a.push(p); byPattern.set(p.patternId, a); }
+    const totals = new Map<string, number>();
+    for (const p of Object.values(d.problems)) totals.set(p.patternId, (totals.get(p.patternId) ?? 0) + 1);
+    const order = [...byPattern.keys()].sort((a, b) => (d.patterns[a]?.order ?? Infinity) - (d.patterns[b]?.order ?? Infinity));
+    const out: Line[] = []; const vis: Problem[] = [];
+    for (const id of order) {
+      const rows = byPattern.get(id)!; const open = override[id] ?? (filtering || openGroups.has(id));
+      out.push({ kind: 'group', pattern: d.patterns[id] ?? null, patternId: id, rows, total: totals.get(id) ?? rows.length, open });
+      if (!open) continue;
+      const shown = rows.slice(0, limits[id] ?? GROUP_PAGE);
+      out.push(...subLines(shown, id)); vis.push(...shown);
+      if (shown.length < rows.length) out.push({ kind: 'more', patternId: id, hidden: rows.length - shown.length });
+    }
+    return { lines: out, visible: vis };
+  }, [problems, grouped, page, size, dividers, openGroups, override, filtering, limits, d.patterns, d.problems]);
+
+  const allVisible = visible.length > 0 && visible.every(r => sel.has(r.id));
+  const setMany = (list: Problem[], v: boolean) => setSel(x => { const n = new Set(x); list.forEach(r => v ? n.add(r.id) : n.delete(r.id)); return n; });
 
   const doDelete = async (list: string[]) => {
     const set = new Set(list);
@@ -127,6 +201,32 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
       )}
     </div>
   );
+  const posTitle = (p: Problem) => `No. ${pos.get(p.id) ?? '?'} in ${d.patterns[p.patternId]?.name ?? 'its pattern'} · added as #${p.num}`;
+
+  const groupHeader = (l: GroupLine, phone?: boolean) => {
+    const c = { g: 0, y: 0, r: 0, n: 0 };
+    for (const p of l.rows) { if (p.lastRating === 'green') c.g++; else if (p.lastRating === 'yellow') c.y++; else if (p.lastRating === 'red') c.r++; else c.n++; }
+    const groupSel = l.rows.length > 0 && l.rows.every(r => sel.has(r.id));
+    const name = l.pattern?.name ?? 'Unknown pattern';
+    return (
+      <div className={cx('flex items-center gap-3', phone ? 'px-3 py-3' : 'py-2.5 pr-3')}>
+        <Checkbox checked={groupSel} onChange={v => setMany(l.rows, v)} label={<span className="sr-only">Select all in {name}</span>} />
+        <button className="flex min-w-0 flex-1 items-center gap-2.5 text-left" onClick={() => toggleGroup(l.patternId)} aria-expanded={l.open} aria-label={`${name}, ${l.rows.length} problems`}>
+          <ChevronDown size={16} className={cx('shrink-0 text-muted transition-transform', !l.open && '-rotate-90')} />
+          <span className="truncate font-display text-[15px] font-semibold text-fg">{name}</span>
+          <span className="shrink-0 text-xs font-semibold tabular-nums text-muted">{filtering && l.rows.length !== l.total ? `${l.rows.length} of ${l.total}` : l.total}</span>
+          <span className="hidden sm:block w-28 shrink-0 lg:w-40"><GYRBar g={c.g} y={c.y} r={c.r} n={c.n} height={6} /></span>
+          {l.pattern && l.pattern.learning !== 'active' && <span className="hidden sm:inline shrink-0 rounded-lg border border-dashed border-line px-1.5 py-0.5 text-[10px] font-semibold text-muted">{l.pattern.learning === 'learning' ? 'Learning' : 'Yet to learn'}</span>}
+        </button>
+        {l.pattern && <Button size="sm" variant="ghost" className="shrink-0" onClick={() => go(patternRoute(l.patternId))} aria-label={`Open ${name} page`}><span className="hidden sm:inline">Open</span><ArrowRight size={14} /></Button>}
+      </div>
+    );
+  };
+  const moreButton = (l: MoreLine) => (
+    <Button size="sm" variant="ghost" onClick={() => setLimits(m => ({ ...m, [l.patternId]: (m[l.patternId] ?? GROUP_PAGE) + GROUP_PAGE }))}>
+      Show {Math.min(GROUP_PAGE, l.hidden)} more <span className="text-muted">({l.hidden} hidden)</span>
+    </Button>
+  );
 
   return (
     <div className="min-w-0">
@@ -144,15 +244,15 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
         </div>
       )}
       <Card className="overflow-hidden">
-        {/* Desktop and tablet: compact table */}
+        {/* Desktop and tablet: one table, so columns line up across groups */}
         <div className="relative hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
-            <thead>
+            <thead className={cx(grouped && !visible.length && 'hidden')}>
               <tr className="border-b border-line bg-surface2/50 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-muted">
-                <th className="w-10 px-3 py-2.5"><Checkbox checked={allOnPage} onChange={v => setSel(x => { const n = new Set(x); rows.forEach(r => v ? n.add(r.id) : n.delete(r.id)); return n; })} label={<span className="sr-only">Select page</span>} /></th>
-                <th className="px-2 py-2.5 w-12">#</th>
+                <th className="w-10 px-3 py-2.5"><Checkbox checked={allVisible} onChange={v => setMany(visible, v)} label={<span className="sr-only">{grouped ? 'Select all shown' : 'Select page'}</span>} /></th>
+                <th className="px-2 py-2.5 w-12" title="Position in its pattern">#</th>
                 <th className="px-2 py-2.5">Problem</th>
-                <th className="px-2 py-2.5">Pattern</th>
+                {showPattern && <th className="px-2 py-2.5">Pattern</th>}
                 <th className="px-2 py-2.5 hidden 2xl:table-cell">Difficulty</th>
                 <th className="px-2 py-2.5">Rating</th>
                 <th className="px-2 py-2.5">Next review</th>
@@ -164,20 +264,33 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
               </tr>
             </thead>
             <tbody>
-              {rows.map(p => {
-                const st = statusOf(p, s, t);
+              {lines.map(l => {
+                if (l.kind === 'group') return (
+                  <tr key={`g-${l.patternId}`} className="border-b border-line bg-surface2/40">
+                    <td colSpan={20} className="pl-3">{groupHeader(l)}</td>
+                  </tr>
+                );
+                if (l.kind === 'sub') return (
+                  <tr key={`s-${l.key}`} className="border-b border-line/60">
+                    <td colSpan={20} className="pl-[4.25rem] pt-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-muted">{l.label} <span className="font-semibold tabular-nums">· {l.count}</span></td>
+                  </tr>
+                );
+                if (l.kind === 'more') return (
+                  <tr key={`m-${l.patternId}`} className="border-b border-line/60"><td colSpan={20} className="py-1.5 pl-[4.25rem]">{moreButton(l)}</td></tr>
+                );
+                const p = l.p; const st = statusOf(p, s, t);
                 return (
                   <tr key={p.id} className={cx('group border-b border-line/60 last:border-0 hover:bg-surface2/60 cursor-pointer transition-colors', sel.has(p.id) && 'bg-accent/6')} onClick={() => openProblem(p.id)}>
                     <td className="px-3 py-2" onClick={e => e.stopPropagation()}><Checkbox checked={sel.has(p.id)} onChange={() => toggle(p.id)} label={<span className="sr-only">Select {p.name}</span>} /></td>
-                    <td className="px-2 py-2 font-mono text-xs text-muted tabular-nums">{p.num}</td>
-                    <td className="px-2 py-2 max-w-[260px]">
+                    <td className="px-2 py-2 text-xs text-muted tabular-nums" title={posTitle(p)}>{pos.get(p.id)}</td>
+                    <td className="px-2 py-2 max-w-[320px]">
                       <div className="flex items-center gap-1">
                         <span className="font-semibold text-fg truncate group-hover:text-accent-ink transition-colors" title={p.name}>{p.name}</span>
                         {p.url && <LinkButton url={p.url} size="icon" />}
                       </div>
-                      {(p.subPattern || p.weakness) && <div className="text-[11px] text-muted truncate" title={p.weakness}>{p.weakness ? `⚑ ${p.weakness}` : p.subPattern}</div>}
+                      {(p.weakness || (p.subPattern && !dividers)) && <div className="text-[11px] text-muted truncate" title={p.weakness}>{p.weakness ? `⚑ ${p.weakness}` : p.subPattern}</div>}
                     </td>
-                    <td className="px-2 py-2"><Tag>{d.patterns[p.patternId]?.name ?? '—'}</Tag></td>
+                    {showPattern && <td className="px-2 py-2"><Tag>{d.patterns[p.patternId]?.name ?? '—'}</Tag></td>}
                     <td className="px-2 py-2 hidden 2xl:table-cell"><DiffPill d={p.difficulty} /></td>
                     <td className="px-2 py-2"><RatingPill r={p.lastRating} /></td>
                     <td className="px-2 py-2"><NextCell p={p} st={st} t={t} /></td>
@@ -194,15 +307,18 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
         </div>
         {/* Phone: compact cards, no sideways scrolling */}
         <ul className="md:hidden divide-y divide-line/70">
-          {rows.map(p => {
-            const st = statusOf(p, s, t);
+          {lines.map(l => {
+            if (l.kind === 'group') return <li key={`g-${l.patternId}`} className="bg-surface2/40">{groupHeader(l, true)}</li>;
+            if (l.kind === 'sub') return <li key={`s-${l.key}`} className="px-3 pt-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-muted">{l.label} · {l.count}</li>;
+            if (l.kind === 'more') return <li key={`m-${l.patternId}`} className="px-3 py-1.5">{moreButton(l)}</li>;
+            const p = l.p; const st = statusOf(p, s, t);
             return (
               <li key={p.id} className={cx('flex items-start gap-3 px-3 py-3', sel.has(p.id) && 'bg-accent/6')}>
                 <div className="pt-0.5"><Checkbox checked={sel.has(p.id)} onChange={() => toggle(p.id)} label={<span className="sr-only">Select {p.name}</span>} /></div>
                 <button className="min-w-0 flex-1 text-left" onClick={() => openProblem(p.id)}>
-                  <div className="flex items-center gap-2"><RatingDot r={p.lastRating} /><span className="text-sm font-semibold text-fg truncate">{p.name}</span></div>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <Tag>{d.patterns[p.patternId]?.name ?? '—'}</Tag><DiffPill d={p.difficulty} />
+                  <div className="flex items-center gap-2"><span className="w-5 shrink-0 text-xs tabular-nums text-muted">{pos.get(p.id)}</span><RatingDot r={p.lastRating} /><span className="text-sm font-semibold text-fg truncate">{p.name}</span></div>
+                  <div className="mt-1.5 ml-7 flex flex-wrap items-center gap-1.5">
+                    {showPattern && <Tag>{d.patterns[p.patternId]?.name ?? '—'}</Tag>}<DiffPill d={p.difficulty} />
                     {st !== 'Scheduled' && <StatusPill s={st} />}
                     <span className="text-[11px]"><NextCell p={p} st={st} t={t} /></span>
                   </div>
@@ -213,7 +329,15 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
           })}
         </ul>
         {problems.length === 0 && <Empty art={<MountainScene className="h-28 w-full" />} title="No problems match" body={emptyText ?? 'Change the filters, or add a problem.'} />}
-        {problems.length > 0 && (
+        {problems.length > 0 && (grouped ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2.5 text-xs text-muted">
+            <span className="tabular-nums">{problems.length} problem{problems.length === 1 ? '' : 's'} in {new Set(problems.map(p => p.patternId)).size} patterns</span>
+            {!filtering && <div className="flex gap-1">
+              <Button size="sm" variant="ghost" onClick={() => { const all = new Set(problems.map(p => p.patternId)); writeOpen(all); setOpenGroups(all); }}>Expand all</Button>
+              <Button size="sm" variant="ghost" onClick={() => { writeOpen(new Set()); setOpenGroups(new Set()); }}>Collapse all</Button>
+            </div>}
+          </div>
+        ) : (
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2.5 text-xs text-muted">
             <span className="tabular-nums">Showing {page * size + 1}–{Math.min(problems.length, page * size + size)} of {problems.length}</span>
             <div className="flex items-center gap-2">
@@ -225,7 +349,7 @@ export function ProblemTable({ problems, emptyText }: { problems: Problem[]; emp
               <Button size="icon" variant="ghost" disabled={page >= pages - 1} onClick={() => setPage(page + 1)} aria-label="Next page"><ChevronRight size={16} /></Button>
             </div>
           </div>
-        )}
+        ))}
       </Card>
       {bulk && <BulkDialog kind={bulk} ids={ids} onClose={() => setBulk(null)} onDone={() => { setBulk(null); setSel(new Set()); }} />}
     </div>
@@ -277,6 +401,8 @@ function BulkDialog({ kind, ids, onClose, onDone }: { kind: 'priority' | 'patter
   );
 }
 
+const VIEW_KEY = 'recodex-bank-view';
+
 const QUICK: { status: Status; label: string; cls: string }[] = [
   { status: 'Overdue', label: 'Overdue', cls: 'text-hot-ink' },
   { status: 'Due Today', label: 'Due today', cls: 'text-hot-ink' },
@@ -291,12 +417,14 @@ export default function ProblemBank({ initial }: { initial?: Partial<Filters> })
   const { addProblemDialog } = useApp();
   const [f, setF] = useState<Filters>({ ...EMPTY_FILTERS, ...initial });
   const [csv, setCsv] = useState<null | 'import' | 'export'>(null);
+  const [layout, setLayoutState] = useState<'grouped' | 'flat'>(() => { try { return localStorage.getItem(VIEW_KEY) === 'flat' ? 'flat' : 'grouped'; } catch { return 'grouped'; } });
+  const setLayout = (v: 'grouped' | 'flat') => { setLayoutState(v); try { localStorage.setItem(VIEW_KEY, v); } catch { /* per-device only */ } };
   useEffect(() => { if (initial) setF({ ...EMPTY_FILTERS, ...initial }); }, [JSON.stringify(initial)]);
   const t = today();
   // Deferred filters keep typing responsive with thousands of problems.
   const df = useDeferredValue(f);
   const statusMap = useMemo(() => new Map(Object.values(d.problems).map(p => [p.id, statusOf(p, s, t)])), [d.problems, d.meta]);
-  const list = useMemo(() => applyFilters(Object.values(d.problems), df, p => statusMap.get(p.id)!), [d.problems, df, statusMap]);
+  const list = useMemo(() => applyFilters(Object.values(d.problems), df, p => statusMap.get(p.id)!, d.patterns), [d.problems, d.patterns, df, statusMap]);
   const counts = useMemo(() => { const c = new Map<Status, number>(); for (const v of statusMap.values()) c.set(v, (c.get(v) ?? 0) + 1); return c; }, [statusMap]);
   const total = Object.keys(d.problems).length;
   return (
@@ -319,8 +447,11 @@ export default function ProblemBank({ initial }: { initial?: Partial<Filters> })
           );
         })}
       </div>
-      <div className="mb-4"><FilterBar f={f} setF={setF} /></div>
-      <ProblemTable problems={list} />
+      <div className="mb-4 flex flex-col gap-2.5 lg:flex-row lg:items-start">
+        <div className="min-w-0 flex-1"><FilterBar f={f} setF={setF} /></div>
+        <Segmented ariaLabel="Layout" value={layout} onChange={setLayout} options={[{ value: 'grouped', label: 'By pattern' }, { value: 'flat', label: 'Flat list' }]} />
+      </div>
+      <ProblemTable problems={list} layout={layout} dividers={layout === 'grouped' && df.sort === 'pattern'} filtering={isFiltering(df)} />
       {csv && <CsvDialog mode={csv} onClose={() => setCsv(null)} />}
     </div>
   );

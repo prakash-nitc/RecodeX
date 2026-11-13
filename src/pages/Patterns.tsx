@@ -153,14 +153,14 @@ export function PatternDetail({ id }: { id: string }) {
   const { confirm, toast } = useUi();
   const [tab, setTab] = useState<'problems' | 'history' | 'notes'>('problems');
   const [editing, setEditing] = useState(false);
-  const [f, setF] = useState<Filters>({ ...EMPTY_FILTERS, pattern: id, sort: 'num' });
+  const [f, setF] = useState<Filters>({ ...EMPTY_FILTERS, pattern: id });
   const [sub, setSub] = useState('');
   const pattern = d.patterns[id];
   const probs = useMemo(() => Object.values(d.problems).filter(p => p.patternId === id), [d.problems, id]);
   const st = useMemo(() => pattern ? patternStats([pattern], probs, Object.values(d.revisions), s)[0] : null, [pattern, probs, d.revisions]);
   const hist = useMemo(() => { const ids = new Set(probs.map(p => p.id)); return Object.values(d.revisions).filter(r => ids.has(r.problemId)).sort((a, b) => (a.at < b.at ? 1 : -1)); }, [probs, d.revisions]);
   if (!pattern || !st) return <Card><Empty title="Pattern not found" action={<Button onClick={() => go('patterns')}>All patterns</Button>} /></Card>;
-  const list = applyFilters(probs.filter(p => !sub || p.subPattern === sub), f, p => statusOf(p, s));
+  const list = applyFilters(probs.filter(p => !sub || p.subPattern === sub), f, p => statusOf(p, s), d.patterns);
   const subs = subStats(pattern, probs);
   const mastered = probs.filter(p => isMastered(p, s)).length;
   const mPct = st.total ? mastered / st.total : 0;
@@ -241,7 +241,7 @@ export function PatternDetail({ id }: { id: string }) {
         </Card>
       </div>
       <div className="mb-3"><Segmented ariaLabel="Section" value={tab} onChange={setTab} options={[{ value: 'problems', label: `Problems (${probs.length})` }, { value: 'history', label: `Revision history (${hist.length})` }, { value: 'notes', label: 'Notes' }]} /></div>
-      {tab === 'problems' && <><div className="mb-3"><FilterBar f={f} setF={setF} hidePattern /></div><ProblemTable problems={list} /></>}
+      {tab === 'problems' && <><div className="mb-3"><FilterBar f={f} setF={setF} hidePattern /></div><ProblemTable problems={list} dividers={f.sort === 'pattern' && !sub} singlePattern /></>}
       {tab === 'history' && (
         <Card className="overflow-hidden">
           {hist.length === 0 ? <Empty title="No revisions in this pattern yet" /> : (

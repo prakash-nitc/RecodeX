@@ -7,6 +7,7 @@ import {
 } from '../lib/store';
 import { previewNext, statusOf, revisionTypeOf, RATING_MEANING, PHASE_HINT, suggestPhase } from '../lib/engine';
 import { fmt, relDay, today } from '../lib/dates';
+import { patternPositions } from '../lib/order';
 import {
   Button, Dialog, Field, Input, Select, Textarea, Segmented, cx, RatingPill, DiffPill, PriorityPill, StatusPill, PhasePill, Tag, Drawer, useUi, RatingDot, Card,
 } from './ui';
@@ -159,7 +160,7 @@ export function submitRating(problemId: string, v: RatingFormValue, source: Revi
 }
 
 function RatingDialog({ problemId, source, sessionId, initialRating, onClose, onSaved }: { problemId: string; source: Revision['source']; sessionId: string | null; initialRating?: Rating; onClose: () => void; onSaved: (r: Revision) => void }) {
-  const d = useData(); const { toast } = useUi();
+  const d = useData(); const { toast } = useUi(); const pos = usePositions();
   const p = d.problems[problemId];
   const [v, setV] = useState<RatingFormValue | null>(p ? initialRatingValue(p, initialRating) : null);
   if (!p || !v) return null;
@@ -168,7 +169,7 @@ function RatingDialog({ problemId, source, sessionId, initialRating, onClose, on
     if (r) { toast(`${p.name}: ${r.rating}, next review ${fmt(r.nextReview, 'd MMM')}`); onSaved(r); }
   };
   return (
-    <Dialog open onClose={onClose} title={`Record revision · ${p.name}`} sub={<span>#{p.num} · {d.patterns[p.patternId]?.name} · {p.difficulty}</span>} width="max-w-xl"
+    <Dialog open onClose={onClose} title={`Record revision · ${p.name}`} sub={<span>{d.patterns[p.patternId]?.name} #{pos.get(p.id)} · {p.difficulty}</span>} width="max-w-xl"
       footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!v.rating} onClick={save}>Save revision</Button></>}>
       {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-ink hover:underline"><ExternalLink size={14} />Open problem</a>}
       <RatingForm problem={p} value={v} onChange={setV} idPrefix="rd" />
@@ -228,7 +229,7 @@ function ProblemFormDialog({ mode, id, prefill, onClose }: { mode: 'add' | 'edit
     }
     if (mode === 'add') {
       const p = addProblem({ name: f.name, patternId, subPattern: f.subPattern, difficulty: f.difficulty, url: f.url, priority: f.priority, track: f.initial === 'backlog' ? 'backlog' : 'active', notes: f.notes, weakness: f.weakness, initial: f.initial });
-      toast(`Added #${p.num} ${p.name}`);
+      toast(`Added ${p.name} to ${d.patterns[patternId]?.name ?? 'the bank'}`);
     } else if (existing) {
       const patch: Partial<Problem> = {
         name: f.name.trim(), patternId, subPattern: f.subPattern.trim(), difficulty: f.difficulty, url: f.url.trim(), priority: f.priority,
@@ -245,7 +246,7 @@ function ProblemFormDialog({ mode, id, prefill, onClose }: { mode: 'add' | 'edit
   };
 
   return (
-    <Dialog open onClose={onClose} title={mode === 'add' ? 'Add problem' : `Edit #${existing?.num} ${existing?.name}`} width="max-w-xl"
+    <Dialog open onClose={onClose} title={mode === 'add' ? 'Add problem' : `Edit ${existing?.name}`} width="max-w-xl"
       footer={<>
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
         <Button variant="primary" disabled={!valid} onClick={save}>{forceDup ? 'Add anyway' : mode === 'add' ? 'Add problem' : 'Save changes'}</Button>
@@ -260,7 +261,7 @@ function ProblemFormDialog({ mode, id, prefill, onClose }: { mode: 'add' | 'edit
         {dups.length > 0 && (
           <div className={cx('sm:col-span-2 rounded-lg border px-3 py-2.5 text-sm', forceDup ? 'border-hot/60 bg-hot/10' : 'border-warn/40 bg-warn/10')}>
             <div className="font-semibold text-fg">Possible duplicate</div>
-            {dups.slice(0, 3).map(p => <div key={p.id} className="text-muted text-xs mt-1">#{p.num} {p.name} · {d.patterns[p.patternId]?.name}{p.url && normalizeEq(p.url, f.url) ? ' (same URL)' : ''}</div>)}
+            {dups.slice(0, 3).map(p => <div key={p.id} className="text-muted text-xs mt-1">{p.name} · {d.patterns[p.patternId]?.name}{p.url && normalizeEq(p.url, f.url) ? ' (same URL)' : ''}</div>)}
             {forceDup && <div className="text-xs text-fg mt-1.5">Press "Add anyway" to add it as a separate problem.</div>}
           </div>
         )}
@@ -322,7 +323,7 @@ const normalizeEq = (a: string, b: string) => a.trim().toLowerCase().replace(/\/
 // Problem detail drawer
 
 function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void }) {
-  const d = useData(); const s = settingsOf(d);
+  const d = useData(); const s = settingsOf(d); const pos = usePositions();
   const { rate, editProblem } = useApp();
   const { confirm, toast } = useUi();
   const p = id ? d.problems[id] : null;
@@ -335,7 +336,7 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
   const trend = seq.length >= 2 ? (seq[seq.length - 1].rating === 'green' && seq[0].rating !== 'green' ? 'Improving' : seq[seq.length - 1].rating === 'red' && seq.length > 1 && seq[seq.length - 2].rating !== 'red' ? 'Regressed' : null) : null;
 
   const del = async () => {
-    if (await confirm({ title: `Delete #${p.num} ${p.name}?`, body: `This removes the problem and its ${history.length} revision record${history.length === 1 ? '' : 's'}. It cannot be undone.`, confirmLabel: 'Delete', danger: true })) {
+    if (await confirm({ title: `Delete ${p.name}?`, body: `This removes the problem and its ${history.length} revision record${history.length === 1 ? '' : 's'}. It cannot be undone.`, confirmLabel: 'Delete', danger: true })) {
       deleteProblems([p.id]); onClose(); toast('Problem deleted');
     }
   };
@@ -356,7 +357,7 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
       <div className="sticky top-0 z-10 bg-bg/95 backdrop-blur border-b border-line px-5 pt-4 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-xs font-mono text-muted">#{p.num} · {pattern?.name}{p.subPattern ? ` › ${p.subPattern}` : ''}</div>
+            <div className="text-xs text-muted">{pattern?.name} #{pos.get(p.id)}{p.subPattern ? ` › ${p.subPattern}` : ''}</div>
             <h2 className="font-display text-xl font-extrabold text-fg mt-1 text-balance">{p.name}</h2>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">✕</Button>
@@ -431,6 +432,12 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
       </div>
     </Drawer>
   );
+}
+
+/** Problem id → position within its pattern (1, 2, 3…), in study order. See lib/order.ts. */
+export function usePositions(): Map<string, number> {
+  const d = useData();
+  return useMemo(() => patternPositions(Object.values(d.problems), d.patterns), [d.problems, d.patterns]);
 }
 
 export function PatternTag({ id }: { id: string }) {

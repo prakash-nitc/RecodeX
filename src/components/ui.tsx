@@ -97,7 +97,7 @@ export function Segmented<T extends string | number>({ value, options, onChange,
 }
 export function SearchInput({ value, onChange, placeholder, id }: { value: string; onChange: (v: string) => void; placeholder?: string; id?: string }) {
   return (
-    <div className="relative min-w-0 flex-1">
+    <div className="relative min-w-0 flex-1 basis-full sm:basis-0">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" size={15} />
       <Input id={id} type="search" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} aria-label={placeholder} className="pl-9" />
     </div>

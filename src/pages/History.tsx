@@ -67,7 +67,6 @@ function DayCard({ group, isToday }: { group: DayGroup; isToday: boolean }) {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-fg truncate">{p.name}</span>
-                        <span className="text-[11px] font-mono text-muted shrink-0">#{p.num}</span>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-muted">
                         <Tag>{d.patterns[p.patternId]?.name}</Tag>

@@ -127,7 +127,7 @@ function Runner({ session }: { session: Session }) {
 
       <main className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-5 px-4 py-6 lg:grid-cols-[1.2fr_1fr] lg:py-10">
         <section key={p.id} className="flex flex-col animate-rise">
-          <div className="text-xs font-mono text-muted">#{p.num}{p.subPattern ? ` · ${p.subPattern}` : ''}</div>
+          {p.subPattern && <div className="text-xs text-muted">{p.subPattern}</div>}
           <h1 className="mt-2 font-display text-[28px] sm:text-4xl font-semibold leading-tight tracking-tight text-fg text-balance">{p.name}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-1.5"><PatternTag id={p.patternId} /><DiffPill d={p.difficulty} /><RatingPill r={p.lastRating} /><PhasePill p={form.phaseUsed} /></div>
 

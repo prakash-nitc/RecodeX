@@ -6,6 +6,7 @@ import { useApp } from '../components/shared';
 import { settingsOf } from '../lib/store';
 import { statusOf } from '../lib/engine';
 import { fmt } from '../lib/dates';
+import { compareInPattern } from '../lib/order';
 import { patternRoute } from './Patterns';
 import { MountainScene } from '../components/art/Mountains';
 import type { Pattern } from '../types';
@@ -110,7 +111,7 @@ function Topic({ topic }: { topic: Pattern }) {
   const d = useData(); const s = settingsOf(d);
   const { openProblem, go, addProblemDialog } = useApp();
   const { toast } = useUi();
-  const probs = Object.values(d.problems).filter(p => p.patternId === topic.id).sort((a, b) => a.num - b.num);
+  const probs = Object.values(d.problems).filter(p => p.patternId === topic.id).sort((a, b) => compareInPattern(a, b, topic));
   const backlog = probs.filter(p => p.track === 'backlog');
   const learned = probs.filter(p => p.learnedAt || p.lastRating);
   const active = probs.filter(p => p.track === 'active');

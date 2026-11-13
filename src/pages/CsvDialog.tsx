@@ -4,6 +4,7 @@ import { Button, Dialog, Segmented, Textarea, useUi } from '../components/ui';
 import { useData, settingsOf, importRows } from '../lib/store';
 import { csvToRows, problemsToCsv, revisionsToCsv, CSV_TEMPLATE, CsvParseResult } from '../lib/csv';
 import { statusOf, revisionTypeOf } from '../lib/engine';
+import { byStudyOrder } from '../lib/order';
 import { today, fmtTimestamp } from '../lib/dates';
 
 /** Downloads the text as a file; if the browser refuses, the caller shows the text to copy instead. */
@@ -48,7 +49,7 @@ export function CsvDialog({ mode, onClose }: { mode: 'import' | 'export'; onClos
   if (mode === 'export') {
     const doSave = async () => {
       const data = what === 'problems'
-        ? problemsToCsv(Object.values(d.problems).sort((a, b) => a.num - b.num), d.patterns, p => statusOf(p, s), p => revisionTypeOf(p.lastRating))
+        ? problemsToCsv(Object.values(d.problems).sort(byStudyOrder(d.patterns)), d.patterns, p => statusOf(p, s), p => revisionTypeOf(p.lastRating))
         : revisionsToCsv(Object.values(d.revisions), d.problems, d.patterns, iso => fmtTimestamp(iso, 'HH:mm'));
       const r = await saveFile(`recodex-${what === 'problems' ? 'problem-bank' : 'revision-history'}-${today()}.csv`, data, 'text/csv');
       if (r === 'saved') { toast('CSV saved'); onClose(); } else if (r === 'fallback') setFallback(data);

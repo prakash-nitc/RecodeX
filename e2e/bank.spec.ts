@@ -7,6 +7,26 @@ test.describe('Problem Bank', () => {
     await freshImport(page);
     await go(page, 'bank');
     await expect(page.getByRole('heading', { name: 'Problem Bank' })).toBeVisible();
+
+    // Default layout: collapsible pattern groups in study order, numbered within each pattern
+    await expect(page.getByText(/^195 problems in \d+ patterns$/)).toBeVisible();
+    const twoPointers = page.getByRole('button', { name: 'Two Pointers, 14 problems' });
+    await expect(twoPointers).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.getByRole('row', { name: /Two Sum II/ })).toHaveCount(0);
+    await twoPointers.click();
+    await expect(page.getByRole('cell', { name: /^Pair Sum · 3$/ })).toBeVisible();
+    const first = page.getByRole('row', { name: /Two Sum II/ });
+    await expect(first.getByRole('cell').nth(1)).toHaveText('1');
+    await expect(page.getByRole('row', { name: /Dutch National Flag/ }).getByRole('cell').nth(1)).toHaveText('5'); // after Pair Sum (3) and Rearrange 0 and 1
+    // Searching expands every group that has a match
+    await twoPointers.click();
+    await page.getByRole('searchbox', { name: /Search by name/ }).fill('two sum');
+    await expect(page.getByRole('row', { name: /Two Sum II/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Two Pointers, \d+ problems$/ })).toHaveAttribute('aria-expanded', 'true');
+    await page.getByRole('searchbox', { name: /Search by name/ }).fill('');
+
+    // Flat list: one sortable, paginated table
+    await page.getByRole('radio', { name: 'Flat list' }).click();
     await expect(page.getByText('Showing 1–50 of 195')).toBeVisible();
 
     // Quick status filter
@@ -72,8 +92,8 @@ test.describe('Problem Bank', () => {
     await page.getByRole('switch', { name: /Set priority from the rating/ }).click();
     await go(page, 'bank');
     const firstRow = page.locator('tbody tr').first();
-    const target = (await firstRow.locator('td').nth(1).textContent())!.trim(); // the problem number
-    const before = Object.values<any>((await stored(page)).problems).find(p => String(p.num) === target).priority;
+    const target = (await firstRow.locator('span[title]').first().getAttribute('title'))!; // the problem name
+    const before = Object.values<any>((await stored(page)).problems).find(p => p.name === target).priority;
     const pick = before === 'High' ? 'Low' : 'High';
     await firstRow.getByRole('checkbox').check();
     await page.getByRole('button', { name: 'Priority', exact: true }).click();
@@ -81,7 +101,7 @@ test.describe('Problem Bank', () => {
     await page.getByRole('button', { name: 'Apply' }).click();
     await expect(page.getByText('Updated 1 problem')).toBeVisible();
     data = await stored(page);
-    expect(Object.values<any>(data.problems).find(p => String(p.num) === target).priority).toBe(pick);
+    expect(Object.values<any>(data.problems).find(p => p.name === target).priority).toBe(pick);
     expect(errors).toEqual([]);
   });
 
@@ -95,6 +115,7 @@ test.describe('Problem Bank', () => {
     });
     await page.reload();
     await go(page, 'bank');
+    await page.getByRole('radio', { name: 'Flat list' }).click();
     await expect(page.getByText('of 5195')).toBeVisible();
     const t0 = Date.now();
     await page.getByRole('searchbox', { name: /Search by name/ }).fill('bulk problem 4321');
