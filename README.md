@@ -2,7 +2,7 @@
 
 > **The Journey to Mastery** — A calm, motivating training ground for lifelong problem-solving mastery with spaced repetition.
 
-RecodeX is built with **React 18 + TypeScript + Vite + Tailwind CSS + Recharts + Lucide + date-fns**, backed by **Supabase** (with offline-first IndexedDB caching) and packaged as an installable **Progressive Web App (PWA)**.
+RecodeX is built with **React 18 + TypeScript + Vite + Tailwind CSS + Lucide + date-fns**, backed by **Supabase** (with offline-first IndexedDB caching) and packaged as an installable **Progressive Web App (PWA)**.
 
 ---
 
@@ -13,9 +13,12 @@ RecodeX is built with **React 18 + TypeScript + Vite + Tailwind CSS + Recharts +
 - **Spaced Repetition Engine**: Red (1d), Yellow (3d), and Green ladder (7d → 14d → 30d → 60d) with customizable intervals and automatic phase progression (Reconstruction → Recall/Repair → Quick Recall).
 - **Focus Mode**: Distraction-free, full-screen session runner with one problem at a time, keyboard controls (`1`/`2`/`3` to rate, `Enter` to save, `S` to skip, `P` to pause), and a large timer.
 - **Problem Bank**: Filterable, sortable library with compact views, quick inline ratings, and full details drawer.
-- **Mixed Practice Arena**: Configurable practice sessions (Daily Balanced, Weakness Challenge, Interview Simulation, Overdue Recovery, Pattern Mastery, Random Surprise) with round-robin pattern interleaving.
-- **52-Week Consistency Heatmap & Analytics**: Recharts visualizations, monthly comparisons, streak counters, and permanent lifetime milestones.
-- **Yet to Learn Roadmap**: Visual trail from Base Camp to the Summit for tracking unstudied topics and moving them into active revision.
+- **Today's Focus that explains itself**: every queued problem says which rule put it there ("Red on 2 Nov · 1-day interval · due 3 Nov").
+- **Mixed Practice Arena**: three presets (Daily Mixed Revision, Weakness Challenge, Overdue Recovery) plus fully custom sessions, with round-robin pattern interleaving. Each pattern's page starts a Pattern Mastery session.
+- **Week in review**: what improved, slipped or was mastered this week, and what is one Green from mastery.
+- **52-Week Consistency Heatmap & Analytics**: lightweight SVG charts, monthly comparisons, streak counters, and lifetime milestones awarded as you reach them.
+- **Exports**: problem bank and full revision history as CSV; complete JSON backup and restore.
+- **Yet to Learn Roadmap**: Visual trail from Base Camp to the Summit for tracking unstudied topics; marking a topic learned moves its problems into revision.
 - **Installable PWA**: Works offline, installable on desktop (Chrome / Edge) and mobile (Android / iOS), with service worker caching and update notifications.
 
 ---
