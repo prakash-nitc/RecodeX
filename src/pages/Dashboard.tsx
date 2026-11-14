@@ -9,6 +9,7 @@ import { quoteForDay } from '../lib/quotes';
 import { Card, CardHeader, Button, Progress, DiffPill, RatingDot, cx, Empty, LinkButton, Ring, Flame, GYRBar } from '../components/ui';
 import { useApp, QuickRate, PatternTag } from '../components/shared';
 import { MountainScene } from '../components/art/Mountains';
+import { StudyScene } from '../components/art/StudyScene';
 import { JourneyRoadmap } from '../components/Journey';
 import { patternRoute } from './Patterns';
 import type { Problem } from '../types';
@@ -153,7 +154,7 @@ export default function Dashboard() {
       {/* Hero + today's mission */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <section className="relative overflow-hidden rounded-3xl h-[200px] sm:h-[240px] lg:col-span-2 shadow-lift" aria-label="Welcome">
-          <MountainScene className="absolute inset-0 h-full w-full" />
+          <StudyScene className="absolute inset-0 h-full w-full" />
           <div className="absolute inset-0 bg-gradient-to-r from-[rgb(8_10_28/0.72)] via-[rgb(8_10_28/0.38)] to-[rgb(8_10_28/0.05)]" />
           <div className="relative flex h-full flex-col justify-between p-5 sm:p-7 text-white [text-shadow:0_1px_12px_rgb(0_0_0/0.35)]">
             <div>

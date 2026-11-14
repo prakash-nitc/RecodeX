@@ -10,6 +10,7 @@ RecodeX is built with **React 18 + TypeScript + Vite + Tailwind CSS + Lucide + d
 
 - **The Journey to Mastery Design**: Two cohesive themes — **Dawn** (light, default) and **Dusk** (dark) — adhering to strict semantic colour rules, Fraunces display typography, and WCAG AA contrast.
 - **Mountain Sunrise Artwork**: Original procedural artwork that follows your local time (dawn, day, dusk, starry night).
+- **Late-night session**: the dashboard hero is an original animated lofi scene (SVG + CSS, a few KB) of someone coding by a window onto the mountain range; the sky follows your local time, and motion pauses off-screen and stops for reduced-motion users.
 - **Spaced Repetition Engine**: Red (1d), Yellow (3d), and Green ladder (7d → 14d → 30d → 60d) with customizable intervals and automatic phase progression (Reconstruction → Recall/Repair → Quick Recall).
 - **Focus Mode**: Distraction-free, full-screen session runner with one problem at a time, keyboard controls (`1`/`2`/`3` to rate, `Enter` to save, `S` to skip, `P` to pause), and a large timer.
 - **Problem Bank**: Organised by pattern in study order (collapsible pattern sections, sub-pattern dividers, problems numbered 1, 2, 3… within each pattern), or as a flat sortable list; filters, quick inline ratings, bulk actions and a full details drawer.
