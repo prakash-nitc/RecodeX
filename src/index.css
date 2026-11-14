@@ -105,6 +105,7 @@
   --shadow: 32 40 51; --scrim: 225 229 234; --onart-shadow: 255 255 255; --backdrop: 32 40 51; --glow: 0; --edge: 0.5;
   --hero-bg: linear-gradient(180deg, #EEF1F4 0%, #E5E9EE 55%, #D6DCE3 100%);
   --hero-veil: linear-gradient(180deg, rgb(238 241 244 / 0.95) 0%, rgb(238 241 244 / 0.9) 40%, rgb(238 241 244 / 0) 62%), linear-gradient(90deg, rgb(238 241 244 / 0.94) 0%, rgb(238 241 244 / 0.88) 50%, rgb(238 241 244 / 0) 74%);
+  --hero-veil-mask: linear-gradient(90deg, #000 76%, transparent 90%);
   --headline-a: 112 120 129; --headline-b: 112 120 129;
   --ring-a: 112 120 129; --ring-b: 174 181 191;
   color-scheme: light;
@@ -175,8 +176,19 @@ select option { background: rgb(var(--surface)); color: rgb(var(--fg)); }
 /* Artwork follows the theme's tone (Obsidian Graphite renders it in grayscale). */
 .art-tone { filter: var(--art-filter, none); }
 
+/* Dawn's dashboard banner while it shows the daylight animation (set by Dashboard.tsx): dark text on a light,
+   lavender veil, and the sunrise highlight in deeper tones so it stays readable on light ground (>= 3:1).
+   Scoped to the banner, so Dawn's sign-in page and session summaries keep white text on their artwork. */
+[data-art="day"] {
+  --onart: 26 29 58; --onart-shadow: 255 255 255; --scrim: 246 244 251;
+  --hero-bg: linear-gradient(180deg, #F8F6FC 0%, #F1EEF9 55%, #E6E1F2 100%);
+  --hero-veil: linear-gradient(180deg, rgb(248 246 252 / 0.95) 0%, rgb(248 246 252 / 0.9) 40%, rgb(248 246 252 / 0) 62%), linear-gradient(90deg, rgb(248 246 252 / 0.94) 0%, rgb(248 246 252 / 0.88) 50%, rgb(248 246 252 / 0) 74%);
+  --hero-veil-mask: linear-gradient(90deg, #000 76%, transparent 90%);
+  --headline-a: 163 72 0; --headline-b: 200 100 26;
+}
+
 /* Light themes with dark artwork lay a veil under the hero text (Cloud defines --hero-veil; elsewhere it paints nothing). */
-.hero-veil { background: var(--hero-veil, none); }
+.hero-veil { background: var(--hero-veil, none); -webkit-mask-image: var(--hero-veil-mask, none); mask-image: var(--hero-veil-mask, none); }
 
 /* The highlighted word in hero headlines ("Master."): sunrise on Dawn, ice blue on Dusk. */
 .headline-accent { background: linear-gradient(90deg, rgb(var(--headline-a)), rgb(var(--headline-b))); -webkit-background-clip: text; background-clip: text; color: transparent; }

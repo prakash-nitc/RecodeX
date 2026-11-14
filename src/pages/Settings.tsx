@@ -150,7 +150,7 @@ export default function Settings() {
             <Field label="Theme" className="md:col-span-2" hint="Applies instantly, on every device signed in to your account.">
               <ThemePicker value={s.theme} onChange={v => { set({ theme: v }); applyTheme(v); }} />
             </Field>
-            <Field label="Dashboard scene" hint="Server room is your own animation. Pixel den follows the theme (daytime in the light themes, night in the dark ones); Lofi window and Mountains follow the time of day. Obsidian Graphite shows all of them in grayscale. All stay still if your device reduces motion.">
+            <Field label="Dashboard scene" hint="Server room is your own animation: daylight in the light themes, night in the dark ones. Pixel den follows the theme (daytime in the light themes, night in the dark ones); Lofi window and Mountains follow the time of day. Obsidian Graphite shows all of them in grayscale. All stay still if your device reduces motion.">
               <Segmented ariaLabel="Dashboard scene" value={s.heroScene} onChange={v => set({ heroScene: v })}
                 options={[{ value: 'gif', label: 'Server room' }, { value: 'pixel', label: 'Pixel den' }, { value: 'lofi', label: 'Lofi window' }, { value: 'mountains', label: 'Mountains' }]} />
             </Field>

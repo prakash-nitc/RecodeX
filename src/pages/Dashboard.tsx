@@ -12,6 +12,7 @@ import { MountainScene } from '../components/art/Mountains';
 import { StudyScene } from '../components/art/StudyScene';
 import { PixelScene } from '../components/art/PixelScene';
 import { GifScene } from '../components/art/GifScene';
+import { usePalette } from '../lib/theme';
 import { JourneyRoadmap } from '../components/Journey';
 import { patternRoute } from './Patterns';
 import type { Problem } from '../types';
@@ -110,6 +111,10 @@ export default function Dashboard() {
   const d = useData();
   const { go, openProblem, addProblemDialog } = useApp();
   const { problems, revs, focus, todayRevs, doneIds, s, t } = useToday();
+  // Light themes show the daylight animation. Dawn's banner was built for the night one (white text on a dark
+  // fade), so while the daylight animation shows there it switches to dark text on a light veil (data-art="day").
+  const palette = usePalette();
+  const daylight = palette === 'dawn' || palette === 'cloud';
 
   const counts = useMemo(() => {
     const st = problems.map(p => statusOf(p, s, t));
@@ -155,11 +160,12 @@ export default function Dashboard() {
     <div className="flex flex-col gap-4">
       {/* Hero + today's mission */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <section className="relative overflow-hidden rounded-3xl h-[200px] sm:h-[240px] lg:col-span-2 shadow-lift" aria-label="Welcome">
+        <section className="relative overflow-hidden rounded-3xl h-[200px] sm:h-[240px] lg:col-span-2 shadow-lift" aria-label="Welcome"
+          data-art={s.heroScene === 'gif' && palette === 'dawn' ? 'day' : undefined}>
           {s.heroScene === 'mountains' ? <MountainScene className="absolute inset-0 h-full w-full" />
             : s.heroScene === 'lofi' ? <StudyScene className="absolute inset-0 h-full w-full" />
             : s.heroScene === 'pixel' ? <PixelScene className="absolute inset-0 h-full w-full" />
-            : <GifScene className="absolute inset-0 h-full w-full" />}
+            : <GifScene className="absolute inset-0 h-full w-full" variant={daylight ? 'day' : 'night'} />}
           <div className="hero-veil absolute inset-0" aria-hidden />
           <div className="absolute inset-0 bg-gradient-to-r from-scrim/[0.72] via-scrim/[0.38] to-scrim/5" />
           <div className="relative flex h-full flex-col justify-between p-5 sm:p-7 text-onart [text-shadow:0_1px_12px_rgb(var(--onart-shadow)/0.35)]">
