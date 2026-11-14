@@ -150,6 +150,10 @@ export default function Settings() {
               <Segmented ariaLabel="Theme" value={s.theme} onChange={v => { set({ theme: v }); applyTheme(v); }}
                 options={[{ value: 'system', label: <span className="inline-flex items-center gap-1"><Monitor size={13} />System</span> }, { value: 'light', label: <span className="inline-flex items-center gap-1"><Sun size={13} />Dawn</span> }, { value: 'dark', label: <span className="inline-flex items-center gap-1"><Moon size={13} />Dusk</span> }]} />
             </Field>
+            <Field label="Dashboard scene" hint="Server room is your own animation. Pixel den follows the theme (daytime in Dawn, night in Dusk); Lofi window and Mountains follow the time of day. All stay still if your device reduces motion.">
+              <Segmented ariaLabel="Dashboard scene" value={s.heroScene} onChange={v => set({ heroScene: v })}
+                options={[{ value: 'gif', label: 'Server room' }, { value: 'pixel', label: 'Pixel den' }, { value: 'lofi', label: 'Lofi window' }, { value: 'mountains', label: 'Mountains' }]} />
+            </Field>
             <Field label="Week starts on">
               <Segmented ariaLabel="Week start" value={s.weekStart} onChange={v => set({ weekStart: v })} options={[{ value: 1, label: 'Monday' }, { value: 0, label: 'Sunday' }]} />
             </Field>

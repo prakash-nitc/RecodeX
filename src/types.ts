@@ -143,6 +143,8 @@ export interface Settings {
   defaultSessionSize: number;
   defaultDifficulty: DiffChoice;
   theme: 'system' | 'light' | 'dark';
+  /** Artwork at the top of the dashboard. */
+  heroScene: 'gif' | 'pixel' | 'lofi' | 'mountains';
   weekStart: 0 | 1;
   notifyOverdueBanner: boolean;
   notifyTargetReminder: boolean;
@@ -176,6 +178,7 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultSessionSize: 10,
   defaultDifficulty: 'all',
   theme: 'light',   // Dawn
+  heroScene: 'gif',
   weekStart: 1,
   notifyOverdueBanner: true,
   notifyTargetReminder: true,
