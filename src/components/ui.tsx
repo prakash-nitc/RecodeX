@@ -77,8 +77,8 @@ export function Toggle({ checked, onChange, label, id, hint }: { checked: boolea
         {hint && <div className="text-xs text-muted mt-0.5 leading-relaxed">{hint}</div>}
       </label>
       <button id={id} role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-        className={cx('relative shrink-0 h-6 w-11 rounded-full transition-colors', checked ? 'bg-interactive' : 'bg-line')}>
-        <span className={cx('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', checked ? 'translate-x-[22px]' : 'translate-x-0.5')} />
+        className={cx('relative shrink-0 h-6 w-11 rounded-full transition-colors', checked ? 'bg-interactive' : 'bg-muted/35')}>
+        <span className={cx('absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', checked ? 'translate-x-[22px]' : 'translate-x-0.5')} />
       </button>
     </div>
   );
