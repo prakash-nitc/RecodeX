@@ -369,12 +369,12 @@ export function Stat({ label, value, icon, tone, sub, onClick, className }: { cl
   const toneCls = tone === 'bad' ? 'text-bad-ink bg-bad/12' : tone === 'hot' ? 'text-hot-ink bg-hot/15' : tone === 'ok' ? 'text-ok-ink bg-ok/15' : tone === 'warn' ? 'text-warn-ink bg-warn/20' : 'text-muted bg-surface2';
   const Comp: any = onClick ? 'button' : 'div';
   return (
-    <Comp onClick={onClick} className={cx('flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5 text-left shadow-card min-w-0', className, onClick && 'hover:border-interactive/40 hover:shadow-lift transition-[border-color,box-shadow]')}>
-      {icon && <div className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', toneCls)}>{icon}</div>}
+    <Comp onClick={onClick} className={cx('flex flex-col justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-4 text-left shadow-card min-w-0', className, onClick && 'hover:border-interactive/40 hover:shadow-lift transition-[border-color,box-shadow]')}>
+      {icon && <div className={cx('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', toneCls)}>{icon}</div>}
       <div className="min-w-0">
-        <div className="text-xs font-medium text-muted truncate">{label}</div>
+        <div className="text-xs font-medium text-muted leading-snug">{label}</div>
         <div className="font-display text-[26px] font-semibold text-fg tabular-nums leading-tight">{value}</div>
-        {sub && <div className="text-[11px] text-muted truncate">{sub}</div>}
+        {sub && <div className="text-[11px] text-muted leading-snug">{sub}</div>}
       </div>
     </Comp>
   );

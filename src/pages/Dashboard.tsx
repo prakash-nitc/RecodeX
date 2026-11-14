@@ -32,9 +32,9 @@ export function FocusRow({ item, onOpen }: { item: FocusItem; onOpen: (id: strin
     <li className="group flex items-center gap-3 px-4 sm:px-5 py-2.5 hover:bg-hover/60 transition-colors">
       <RatingDot r={p.lastRating} size={9} />
       <button className="min-w-0 flex-1 text-left" onClick={() => onOpen(p.id)}>
-        <div className="text-sm font-semibold text-fg truncate group-hover:text-accent-ink transition-colors">{p.name}</div>
+        <div className="text-sm font-semibold leading-snug text-fg line-clamp-2 group-hover:text-accent-ink transition-colors" title={p.name}>{p.name}</div>
         <div className="flex flex-wrap items-center gap-1.5 mt-1"><PatternTag id={p.patternId} /><DiffPill d={p.difficulty} /><ReasonChip item={item} /></div>
-        <div className="mt-1 text-[11px] text-muted truncate" title={item.why}>{item.why}</div>
+        <div className="mt-1 text-[11px] leading-snug text-muted">{item.why}</div>
       </button>
       <div className="hidden sm:block"><LinkButton url={p.url} size="icon" /></div>
       <QuickRate id={p.id} source="today" />
@@ -371,7 +371,7 @@ export default function Dashboard() {
         <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2.5 max-h-[360px] overflow-y-auto scroll-thin">
           {pstats.map((x, i) => (
             <button key={x.pattern.id} onClick={() => go(patternRoute(x.pattern.id))} className="grid grid-cols-[minmax(0,9.5rem)_1fr_2.75rem] items-center gap-3 text-left group py-0.5">
-              <span className="text-sm text-fg truncate group-hover:text-accent-ink">{x.pattern.name}</span>
+              <span className="text-sm text-fg leading-snug group-hover:text-accent-ink">{x.pattern.name}</span>
               <GYRBar g={x.g} y={x.y} r={x.r} n={x.notReviewed} height={8} />
               <span className="text-xs font-semibold text-muted text-right tabular-nums">{Math.round((camps[i]?.pct ?? 0) * 100)}%</span>
             </button>

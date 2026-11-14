@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, Repeat, ArrowUpRight, Trophy, Layers, CheckCircle2, CircleDashed, Activity, Award, Sparkles, Target, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, Repeat, ArrowUpRight, Trophy, Layers, CheckCircle2, CircleDashed, Activity, Award, Sparkles, Target, Calendar, CalendarRange, CalendarDays } from 'lucide-react';
 import { ColumnChart, RATING_SERIES } from '../components/charts';
 import { useData, settingsOf } from '../lib/store';
 import { statusOf } from '../lib/engine';
@@ -154,13 +154,13 @@ export default function Analytics() {
   const masteryPct = overall.total ? overall.mastered / overall.total : 0;
 
   const ProbList = ({ ids, empty }: { ids: string[]; empty: string }) => ids.length === 0 ? <p className="text-sm text-muted px-1 py-2">{empty}</p> : (
-    <ul className="flex flex-col">{ids.slice(0, 8).map(id => { const p = d.problems[id]; return p ? <li key={id}><button onClick={() => openProblem(id)} className="w-full flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-hover transition-colors"><span className="truncate text-fg">{p.name}</span><span className="text-[11px] text-muted shrink-0">{d.patterns[p.patternId]?.name}</span></button></li> : null; })}
+    <ul className="flex flex-col">{ids.slice(0, 8).map(id => { const p = d.problems[id]; return p ? <li key={id}><button onClick={() => openProblem(id)} className="w-full flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-hover transition-colors"><span className="min-w-0 text-fg leading-snug">{p.name}</span><span className="text-[11px] text-muted shrink-0">{d.patterns[p.patternId]?.name}</span></button></li> : null; })}
       {ids.length > 8 && <li className="text-xs text-muted px-2 pt-1">and {ids.length - 8} more</li>}</ul>
   );
   const PatList = ({ rows, value, tone }: { rows: typeof pstats; value: (x: (typeof pstats)[number]) => string; tone: string }) => rows.length === 0 ? <p className="text-sm text-muted py-2">Not enough data yet.</p> : (
     <ul className="flex flex-col gap-1">{rows.map(x => (
       <li key={x.pattern.id}><button onClick={() => go(patternRoute(x.pattern.id))} className="w-full flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-hover transition-colors">
-        <span className="truncate text-fg">{x.pattern.name}</span><span className={cx('rounded-lg px-1.5 py-0.5 text-[11px] font-semibold tabular-nums shrink-0', tone)}>{value(x)}</span>
+        <span className="min-w-0 text-fg leading-snug">{x.pattern.name}</span><span className={cx('rounded-lg px-1.5 py-0.5 text-[11px] font-semibold tabular-nums shrink-0', tone)}>{value(x)}</span>
       </button></li>))}</ul>
   );
 
@@ -194,8 +194,8 @@ export default function Analytics() {
         </Card>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           <Stat label="Today" value={todayCount} sub="revisions" icon={<Calendar size={18} />} />
-          <Stat label="This week" value={thisWeek} sub="revisions" />
-          <Stat label="This month" value={thisMonth} sub="revisions" />
+          <Stat label="This week" value={thisWeek} sub="revisions" icon={<CalendarRange size={18} />} />
+          <Stat label="This month" value={thisMonth} sub="revisions" icon={<CalendarDays size={18} />} />
           <Stat label="Current streak" value={`${st.current}d`} tone="hot" icon={<Flame size={18} />} />
           <Stat label="Longest streak" value={`${st.longest}d`} tone="ok" icon={<Trophy size={18} />} sub={`${st.activeDays} active days`} />
         </div>
@@ -257,7 +257,7 @@ export default function Analytics() {
         <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-3">
           {pstats.map(x => (
             <button key={x.pattern.id} onClick={() => go(patternRoute(x.pattern.id))} className="grid grid-cols-[minmax(0,10rem)_1fr_3.5rem] items-center gap-3 text-left group">
-              <span className="text-sm text-fg truncate group-hover:text-accent-ink transition-colors">{x.pattern.name}</span>
+              <span className="text-sm text-fg leading-snug group-hover:text-accent-ink transition-colors">{x.pattern.name}</span>
               <GYRBar g={x.g} y={x.y} r={x.r} n={x.notReviewed} height={10} />
               <span className="text-xs text-muted text-right tabular-nums">{x.avg !== null ? x.avg.toFixed(2) : '—'}</span>
             </button>

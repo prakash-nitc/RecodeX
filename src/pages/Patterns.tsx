@@ -46,11 +46,9 @@ export function PatternCard({ st, mastered, subs, onOpen }: { st: PatternStat; m
           <span className="text-[13px] font-bold text-fg tabular-nums">{Math.round(mPct * 100)}%</span>
         </Ring>
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="font-display text-[17px] font-semibold text-fg truncate group-hover:text-accent-ink transition-colors">{p.name}</div>
-            {p.learning !== 'active' && <span className="shrink-0 rounded-lg border border-dashed border-line px-1.5 py-0.5 text-[10px] font-semibold text-muted">{LEARN_LABEL[p.learning]}</span>}
-          </div>
-          <div className="mt-0.5 flex items-center gap-1 text-xs text-muted"><Clock size={11} />{st.lastPracticed ? `practiced ${relDay(st.lastPracticed)}` : 'not practiced yet'} · {mastered}/{st.total} mastered</div>
+          <div className="font-display text-[17px] font-semibold leading-snug text-fg text-balance line-clamp-2 group-hover:text-accent-ink transition-colors" title={p.name}>{p.name}</div>
+          {p.learning !== 'active' && <span className="mt-1 inline-flex rounded-lg border border-dashed border-line px-1.5 py-0.5 text-[10px] font-semibold text-muted">{LEARN_LABEL[p.learning]}</span>}
+          <div className="mt-1 flex items-start gap-1 text-xs leading-snug text-muted"><Clock size={11} className="mt-[3px] shrink-0" /><span>{st.lastPracticed ? `practiced ${relDay(st.lastPracticed)}` : 'not practiced yet'} · {mastered}/{st.total} mastered</span></div>
         </div>
       </div>
       <div>
