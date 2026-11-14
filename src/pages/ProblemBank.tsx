@@ -53,7 +53,7 @@ export function FilterBar({ f, setF, hidePattern }: { f: Filters; setF: (f: Filt
     <div className="flex flex-col gap-2.5">
       <div className="flex flex-wrap gap-2">
         <SearchInput id="bank-q" value={f.q} onChange={q => up({ q })} placeholder="Search by name or sub-pattern" />
-        <Button variant={open || active ? 'outline' : 'ghost'} className={cx('h-10', active > 0 && 'border-accent/50 text-accent-ink')} onClick={() => setOpen(!open)} aria-expanded={open}>
+        <Button variant={open || active ? 'outline' : 'ghost'} className={cx('h-10', active > 0 && 'border-interactive/50 text-accent-ink')} onClick={() => setOpen(!open)} aria-expanded={open}>
           <SlidersHorizontal size={15} />Filters{active ? ` · ${active}` : ''}
         </Button>
         <div className="flex items-center gap-1.5">
@@ -231,7 +231,7 @@ export function ProblemTable({ problems, emptyText, layout = 'flat', dividers = 
   return (
     <div className="min-w-0">
       {sel.size > 0 && (
-        <div className="sticky top-14 lg:top-2 z-20 mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-accent/40 bg-surface px-3 py-2 shadow-lift animate-page-in">
+        <div className="sticky top-14 lg:top-2 z-20 mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-interactive/40 bg-surface px-3 py-2 shadow-lift animate-page-in">
           <span className="text-sm font-semibold text-fg tabular-nums mr-1">{sel.size} selected</span>
           {manualPri && <Button size="sm" variant="outline" onClick={() => setBulk('priority')}>Priority</Button>}
           <Button size="sm" variant="outline" onClick={() => setBulk('pattern')}>Pattern</Button>
@@ -280,7 +280,7 @@ export function ProblemTable({ problems, emptyText, layout = 'flat', dividers = 
                 );
                 const p = l.p; const st = statusOf(p, s, t);
                 return (
-                  <tr key={p.id} className={cx('group border-b border-line/60 last:border-0 hover:bg-surface2/60 cursor-pointer transition-colors', sel.has(p.id) && 'bg-accent/6')} onClick={() => openProblem(p.id)}>
+                  <tr key={p.id} className={cx('group border-b border-line/60 last:border-0 hover:bg-hover/60 cursor-pointer transition-colors', sel.has(p.id) && 'bg-accent/6')} onClick={() => openProblem(p.id)}>
                     <td className="px-3 py-2" onClick={e => e.stopPropagation()}><Checkbox checked={sel.has(p.id)} onChange={() => toggle(p.id)} label={<span className="sr-only">Select {p.name}</span>} /></td>
                     <td className="px-2 py-2 text-xs text-muted tabular-nums" title={posTitle(p)}>{pos.get(p.id)}</td>
                     <td className="px-2 py-2 max-w-[320px]">
@@ -357,7 +357,7 @@ export function ProblemTable({ problems, emptyText, layout = 'flat', dividers = 
 }
 
 function MenuItem({ icon, children, onClick, danger }: { icon: React.ReactNode; children: React.ReactNode; onClick: () => void; danger?: boolean }) {
-  return <button onClick={onClick} className={cx('flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm hover:bg-surface2', danger ? 'text-bad-ink' : 'text-fg')}>{icon}{children}</button>;
+  return <button onClick={onClick} className={cx('flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm hover:bg-hover', danger ? 'text-bad-ink' : 'text-fg')}>{icon}{children}</button>;
 }
 
 function BulkDialog({ kind, ids, onClose, onDone }: { kind: 'priority' | 'pattern' | 'reschedule'; ids: string[]; onClose: () => void; onDone: () => void }) {
@@ -440,7 +440,7 @@ export default function ProblemBank({ initial }: { initial?: Partial<Filters> })
           const on = f.status === q.status; const n = counts.get(q.status) ?? 0;
           return (
             <button key={q.status} onClick={() => setF({ ...f, status: on ? '' : q.status })} aria-pressed={on}
-              className={cx('shrink-0 rounded-2xl border px-3.5 py-2 text-left transition-colors', on ? 'border-accent bg-accent/10' : 'border-line bg-surface hover:border-muted/50')}>
+              className={cx('shrink-0 rounded-2xl border px-3.5 py-2 text-left transition-colors', on ? 'border-interactive bg-accent/10' : 'border-line bg-surface hover:border-muted/50')}>
               <div className={cx('font-display text-lg font-semibold tabular-nums leading-none', n ? q.cls : 'text-muted')}>{n}</div>
               <div className="mt-1 text-[11px] font-semibold text-muted whitespace-nowrap">{q.label}</div>
             </button>

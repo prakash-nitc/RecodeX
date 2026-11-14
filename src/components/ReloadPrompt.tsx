@@ -25,7 +25,7 @@ export function ReloadPrompt() {
 
   return (
     <div className="fixed z-[75] bottom-4 left-4 right-4 sm:left-auto sm:right-6 max-w-md animate-pop-in">
-      <div className="flex items-center gap-3 rounded-2xl border border-accent/40 bg-surface p-4 shadow-pop">
+      <div className="flex items-center gap-3 rounded-2xl border border-interactive/40 bg-surface p-4 shadow-pop">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent-ink">
           <RefreshCw size={18} className="animate-spin" />
         </div>

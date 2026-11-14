@@ -69,12 +69,12 @@ export function JourneyRoadmap({ camps, onOpen }: { camps: Camp[]; onOpen: (id: 
         <svg width={width} height={H} viewBox={`0 0 ${width} ${H}`} className="block" role="list" aria-label="Pattern journey, base camp to summit">
           <defs>
             <linearGradient id="jr-ridge" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgb(var(--accent) / 0.10)" /><stop offset="100%" stopColor="rgb(var(--accent) / 0.02)" />
+              <stop offset="0%" stopColor="rgb(var(--interactive) / 0.10)" /><stop offset="100%" stopColor="rgb(var(--interactive) / 0.02)" />
             </linearGradient>
           </defs>
           <path d={ridge} fill="url(#jr-ridge)" />
           <path d={curve(trail)} fill="none" stroke="rgb(var(--line))" strokeWidth="3" strokeDasharray="2 7" strokeLinecap="round" />
-          {here > 0 && <path d={curve(trail.slice(0, here + 1))} fill="none" stroke="rgb(var(--accent))" strokeWidth="3" strokeLinecap="round" opacity="0.75" />}
+          {here > 0 && <path d={curve(trail.slice(0, here + 1))} fill="none" stroke="rgb(var(--interactive))" strokeWidth="3" strokeLinecap="round" opacity="0.75" />}
 
           <g transform={`translate(${summit[0]} ${summit[1]})`} aria-hidden>
             <path d="M -16 14 L 0 -10 L 16 14 Z" fill="rgb(var(--surface2))" stroke="rgb(var(--line))" />
@@ -94,7 +94,7 @@ export function JourneyRoadmap({ camps, onOpen }: { camps: Camp[]; onOpen: (id: 
                   className="cursor-pointer outline-none" onMouseEnter={() => setSel(i)} onFocus={() => setSel(i)}
                   onClick={() => activate(i)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(c.id); } }}>
                   <circle r={R + 9} fill="transparent" />
-                  {on && <circle r={R + 6} fill="none" stroke="rgb(var(--accent))" strokeWidth="2" opacity="0.6" />}
+                  {on && <circle r={R + 6} fill="none" stroke="rgb(var(--interactive))" strokeWidth="2" opacity="0.6" />}
                   <clipPath id={`jr-c-${i}`}><circle r={R} /></clipPath>
                   <circle r={R} fill="rgb(var(--surface))" stroke={c.pct >= 1 ? 'rgb(var(--ok))' : 'rgb(var(--line))'} strokeWidth="2" />
                   <rect x={-R} y={R - fillH} width={2 * R} height={fillH} fill="rgb(var(--ok))" opacity="0.85" clipPath={`url(#jr-c-${i})`} />

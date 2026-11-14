@@ -79,7 +79,7 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
     <div>
       <PageHeader eyebrow={<span className="inline-flex items-center gap-1.5"><Swords size={13} />Arena</span>} title="Mixed Practice" sub="Problems from several patterns in one sitting, so you have to recognise the pattern yourself." />
       {inProgress && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/8 px-4 py-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-interactive/40 bg-accent/8 px-4 py-3">
           <span className="text-sm text-fg"><b>{inProgress.title}</b> is in progress · {inProgress.results.length} of {inProgress.problemIds.length} done</span>
           <Button size="sm" variant="primary" onClick={() => go('session')}><Play size={14} />Resume</Button>
         </div>
@@ -94,13 +94,13 @@ export default function Practice({ preset: initialPreset }: { preset?: string })
               return (
                 <button key={k} onClick={() => pick(k)} aria-pressed={on}
                   className={cx('group relative flex items-start gap-3 overflow-hidden rounded-2xl border bg-surface px-4 py-4 text-left transition-[border-color,box-shadow] shadow-card',
-                    on ? 'border-accent shadow-lift ring-2 ring-accent/25' : 'border-line hover:border-accent/40 hover:shadow-lift')}>
+                    on ? 'border-interactive shadow-lift ring-2 ring-interactive/25' : 'border-line hover:border-interactive/40 hover:shadow-lift')}>
                   <div className={cx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', TONE[k] ?? 'text-accent-ink bg-accent/12')}>{ICONS[k]}</div>
                   <div className="min-w-0">
                     <div className="font-display text-[17px] font-semibold text-fg">{PRESETS[k].title}</div>
                     <div className="text-xs text-muted mt-0.5 leading-relaxed">{PRESETS[k].blurb}</div>
                   </div>
-                  {on && <span className="absolute top-3 right-3 h-2 w-2 rounded-full bg-accent" aria-hidden />}
+                  {on && <span className="absolute top-3 right-3 h-2 w-2 rounded-full bg-interactive" aria-hidden />}
                 </button>
               );
             })}
@@ -232,7 +232,7 @@ export function RecentSessions({ limit }: { limit?: number }) {
               const rated = s.results.filter(r => r.rating);
               const g = rated.filter(r => r.rating === 'green').length, y = rated.filter(r => r.rating === 'yellow').length, r = rated.filter(r => r.rating === 'red').length;
               return (
-                <tr key={s.id} className="border-b border-line/60 last:border-0 hover:bg-surface2/60 cursor-pointer" onClick={() => go(s.status === 'in_progress' ? 'session' : `summary-${s.id}`)}>
+                <tr key={s.id} className="border-b border-line/60 last:border-0 hover:bg-hover/60 cursor-pointer" onClick={() => go(s.status === 'in_progress' ? 'session' : `summary-${s.id}`)}>
                   <td className="px-4 py-2.5 font-semibold text-fg">{s.title}</td>
                   <td className="px-2 py-2.5 text-muted whitespace-nowrap">{fmtTimestamp(s.startedAt, 'd MMM yyyy')}</td>
                   <td className="px-2 py-2.5"><span className={cx('rounded-lg px-1.5 py-0.5 text-[11px] font-semibold', s.status === 'completed' ? 'bg-ok/15 text-ok-ink' : s.status === 'in_progress' ? 'bg-accent/12 text-accent-ink' : 'bg-surface2 text-muted')}>{s.status === 'completed' ? 'Completed' : s.status === 'in_progress' ? 'In progress' : 'Not finished'}</span></td>

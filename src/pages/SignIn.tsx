@@ -55,17 +55,17 @@ export default function SignIn() {
     <div className="min-h-screen lg:grid lg:grid-cols-[1.15fr_1fr]">
       <section className="relative h-[230px] sm:h-[300px] lg:h-auto lg:min-h-screen overflow-hidden" aria-label="RecodeX">
         <MountainScene className="absolute inset-0 h-full w-full" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[rgb(8_10_28/0.7)] via-[rgb(8_10_28/0.25)] to-[rgb(8_10_28/0.15)] lg:bg-gradient-to-r lg:from-[rgb(8_10_28/0.65)] lg:via-[rgb(8_10_28/0.3)] lg:to-transparent" />
-        <div className="relative flex h-full flex-col justify-between p-6 sm:p-10 text-white [text-shadow:0_1px_14px_rgb(0_0_0/0.35)]">
+        <div className="absolute inset-0 bg-gradient-to-t from-scrim/[0.7] via-scrim/[0.25] to-scrim/[0.15] lg:bg-gradient-to-r lg:from-scrim/[0.65] lg:via-scrim/[0.3] lg:to-transparent" />
+        <div className="relative flex h-full flex-col justify-between p-6 sm:p-10 text-onart [text-shadow:0_1px_14px_rgb(0_0_0/0.35)]">
           <div className="flex items-center gap-2.5">
             <BrandMark size={36} />
             <span className="font-display text-2xl font-semibold tracking-tight">RecodeX</span>
           </div>
           <div className="max-w-lg">
             <h1 className="font-display text-[26px] sm:text-4xl lg:text-5xl font-semibold leading-[1.1] tracking-tight text-balance">
-              Recode. Revise. Reinforce. Repeat. <span className="sunrise-text [text-shadow:none]">Master.</span>
+              Recode. Revise. Reinforce. Repeat. <span className="headline-accent [text-shadow:none]">Master.</span>
             </h1>
-            <p className="mt-3 hidden sm:block text-[15px] text-white/85 leading-relaxed">A calm, daily training ground for problem solving. Spaced repetition decides what to revise; you just show up.</p>
+            <p className="mt-3 hidden sm:block text-[15px] text-onart/85 leading-relaxed">A calm, daily training ground for problem solving. Spaced repetition decides what to revise; you just show up.</p>
           </div>
         </div>
       </section>

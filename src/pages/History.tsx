@@ -37,7 +37,7 @@ function DayCard({ group, isToday }: { group: DayGroup; isToday: boolean }) {
     <div className="relative flex gap-4 sm:gap-5">
       {/* Timeline dot and line */}
       <div className="flex flex-col items-center shrink-0 w-3">
-        <div className={cx('h-3 w-3 rounded-full mt-5 shrink-0 ring-4 ring-bg', isToday ? 'bg-accent' : 'bg-line')} />
+        <div className={cx('h-3 w-3 rounded-full mt-5 shrink-0 ring-4 ring-bg', isToday ? 'bg-interactive' : 'bg-line')} />
         <div className="flex-1 w-0.5 bg-line/60" />
       </div>
 
@@ -45,7 +45,7 @@ function DayCard({ group, isToday }: { group: DayGroup; isToday: boolean }) {
         {/* Date header */}
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <h3 className="font-display text-sm font-bold text-fg">{fmt(group.date, 'EEEE, d MMMM yyyy')}</h3>
-          {isToday && <span className="rounded-lg bg-accent/12 px-1.5 py-0.5 text-[10px] font-bold text-accent-ink">Today</span>}
+          {isToday && <span className="rounded-lg bg-accent/12 px-1.5 py-0.5 text-[10px] font-bold text-selected">Today</span>}
           <span className="text-xs text-muted tabular-nums">{group.revisions.length} revision{group.revisions.length === 1 ? '' : 's'}</span>
           <div className="flex items-center gap-1 text-[11px] text-muted tabular-nums ml-auto">
             <span className="text-ok-ink">{c.green}</span> / <span className="text-warn-ink">{c.yellow}</span> / <span className="text-bad-ink">{c.red}</span>
@@ -62,7 +62,7 @@ function DayCard({ group, isToday }: { group: DayGroup; isToday: boolean }) {
                 <li key={r.id}>
                   <button
                     onClick={() => openProblem(p.id)}
-                    className="w-full flex flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-surface2/60 transition-colors"
+                    className="w-full flex flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-hover/60 transition-colors"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">

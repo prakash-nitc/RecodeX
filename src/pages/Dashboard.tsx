@@ -28,7 +28,7 @@ export function ReasonChip({ item }: { item: FocusItem }) {
 export function FocusRow({ item, onOpen }: { item: FocusItem; onOpen: (id: string) => void }) {
   const p = item.problem;
   return (
-    <li className="group flex items-center gap-3 px-4 sm:px-5 py-2.5 hover:bg-surface2/60 transition-colors">
+    <li className="group flex items-center gap-3 px-4 sm:px-5 py-2.5 hover:bg-hover/60 transition-colors">
       <RatingDot r={p.lastRating} size={9} />
       <button className="min-w-0 flex-1 text-left" onClick={() => onOpen(p.id)}>
         <div className="text-sm font-semibold text-fg truncate group-hover:text-accent-ink transition-colors">{p.name}</div>
@@ -87,7 +87,7 @@ function WeekReview({ t }: { t: string }) {
               </div>
               <div className="mt-2.5 flex flex-wrap gap-1.5">
                 {g.ids.slice(0, 3).map(id => d.problems[id] && (
-                  <button key={id} onClick={() => openProblem(id)} className="max-w-full truncate rounded-lg border border-line bg-surface px-2 py-1 text-xs text-fg hover:border-accent/50">{d.problems[id].name}</button>
+                  <button key={id} onClick={() => openProblem(id)} className="max-w-full truncate rounded-lg border border-line bg-surface px-2 py-1 text-xs text-fg hover:border-interactive/50">{d.problems[id].name}</button>
                 ))}
                 {g.ids.length > 3 && <span className="self-center text-[11px] text-muted">+{g.ids.length - 3} more</span>}
                 {!g.ids.length && <span className="text-xs text-muted">None yet</span>}
@@ -160,21 +160,21 @@ export default function Dashboard() {
             : s.heroScene === 'lofi' ? <StudyScene className="absolute inset-0 h-full w-full" />
             : s.heroScene === 'pixel' ? <PixelScene className="absolute inset-0 h-full w-full" />
             : <GifScene className="absolute inset-0 h-full w-full" />}
-          <div className="absolute inset-0 bg-gradient-to-r from-[rgb(8_10_28/0.72)] via-[rgb(8_10_28/0.38)] to-[rgb(8_10_28/0.05)]" />
-          <div className="relative flex h-full flex-col justify-between p-5 sm:p-7 text-white [text-shadow:0_1px_12px_rgb(0_0_0/0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-r from-scrim/[0.72] via-scrim/[0.38] to-scrim/5" />
+          <div className="relative flex h-full flex-col justify-between p-5 sm:p-7 text-onart [text-shadow:0_1px_12px_rgb(0_0_0/0.35)]">
             <div>
-              <div className="flex flex-wrap items-center gap-x-2 text-[13px] font-semibold text-white/90">
+              <div className="flex flex-wrap items-center gap-x-2 text-[13px] font-semibold text-onart/90">
                 <span>{greeting(hour)}{name ? `, ${name}` : ''}</span>
-                <span className="text-white/50">·</span>
-                <span className="inline-flex items-center gap-1 text-white/80"><CalendarDays size={13} />{fmt(t, 'EEEE, d MMMM')}</span>
+                <span className="text-onart/50">·</span>
+                <span className="inline-flex items-center gap-1 text-onart/80"><CalendarDays size={13} />{fmt(t, 'EEEE, d MMMM')}</span>
               </div>
               <h1 className="mt-2 font-display text-[22px] sm:text-[30px] font-semibold leading-[1.15] tracking-tight max-w-[18ch] sm:max-w-none text-balance">
-                Recode. Revise. Reinforce. Repeat. <span className="sunrise-text [text-shadow:none]">Master.</span>
+                Recode. Revise. Reinforce. Repeat. <span className="headline-accent [text-shadow:none]">Master.</span>
               </h1>
             </div>
             <figure className="max-w-xl hidden sm:block">
-              <blockquote className="font-display text-[15px] italic leading-snug text-white/95">“{quote.text}”</blockquote>
-              <figcaption className="mt-1 text-xs text-white/75">{quote.author}{quote.source ? `, ${quote.source}` : ''}</figcaption>
+              <blockquote className="font-display text-[15px] italic leading-snug text-onart/95">“{quote.text}”</blockquote>
+              <figcaption className="mt-1 text-xs text-onart/75">{quote.author}{quote.source ? `, ${quote.source}` : ''}</figcaption>
             </figure>
           </div>
         </section>
@@ -235,7 +235,7 @@ export default function Dashboard() {
               <div className="flex flex-wrap gap-1.5">
                 {doneIds.map(id => {
                   const p = d.problems[id]; const last = todayRevs.filter(r => r.problemId === id).sort((a, b) => (a.at < b.at ? 1 : -1))[0];
-                  return p ? <button key={id} onClick={() => openProblem(id)} className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface2 px-2 py-1 text-xs text-fg hover:border-accent/50"><RatingDot r={last?.rating ?? null} />{p.name}</button> : null;
+                  return p ? <button key={id} onClick={() => openProblem(id)} className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface2 px-2 py-1 text-xs text-fg hover:border-interactive/50"><RatingDot r={last?.rating ?? null} />{p.name}</button> : null;
                 })}
               </div>
             </div>
@@ -246,7 +246,7 @@ export default function Dashboard() {
           {/* Lifetime mastery */}
           <Card className="p-5">
             <div className="flex items-center gap-5">
-              <Ring value={masteryPct} size={116} stroke={11} tone="sunrise" label={`${Math.round(masteryPct * 100)}% of all problems mastered`}>
+              <Ring value={masteryPct} size={116} stroke={11} tone="mastery" label={`${Math.round(masteryPct * 100)}% of all problems mastered`}>
                 <span className="font-display text-[28px] font-semibold text-fg tabular-nums leading-none">{Math.round(masteryPct * 100)}<span className="text-base text-muted">%</span></span>
                 <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-muted">mastered</span>
               </Ring>
@@ -333,7 +333,7 @@ export default function Dashboard() {
               { icon: <Zap size={17} />, label: 'Weakness Challenge', sub: 'Red and Yellow problems first', run: () => go('practice-weakness') },
               { icon: <Plus size={17} />, label: 'Add Problem', sub: `${counts.total} problems in the bank`, run: () => addProblemDialog() },
             ].map(a => (
-              <button key={a.label} onClick={a.run} className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface2 transition-colors">
+              <button key={a.label} onClick={a.run} className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-hover transition-colors">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/12 text-accent-ink">{a.icon}</span>
                 <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-fg">{a.label}</span><span className="block text-xs text-muted truncate">{a.sub}</span></span>
                 <ArrowRight size={15} className="text-muted group-hover:text-accent-ink transition-colors" />
@@ -347,7 +347,7 @@ export default function Dashboard() {
               {upcoming.map(u => (
                 <div key={u.day} className="flex flex-col items-center gap-1">
                   <div className="text-[10px] font-semibold text-muted">{weekday(u.day, 'EEEEE')}</div>
-                  <div className={cx('w-full rounded-lg py-1.5 text-center text-xs font-bold tabular-nums', u.n ? 'bg-accent/12 text-accent-ink' : 'bg-surface2 text-muted')}>{u.n}</div>
+                  <div className={cx('w-full rounded-lg py-1.5 text-center text-xs font-bold tabular-nums', u.n ? 'bg-accent/12 text-selected' : 'bg-surface2 text-muted')}>{u.n}</div>
                 </div>
               ))}
             </div>

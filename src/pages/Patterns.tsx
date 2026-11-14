@@ -40,7 +40,7 @@ export function PatternCard({ st, mastered, subs, onOpen }: { st: PatternStat; m
   const p = st.pattern;
   const mPct = st.total ? mastered / st.total : 0;
   return (
-    <button onClick={onOpen} className="group flex flex-col gap-3.5 rounded-2xl border border-line bg-surface p-4 sm:p-5 text-left shadow-card hover:border-accent/40 hover:shadow-lift transition-[border-color,box-shadow] min-w-0">
+    <button onClick={onOpen} className="group flex flex-col gap-3.5 rounded-2xl border border-line bg-surface p-4 sm:p-5 text-left shadow-card hover:border-interactive/40 hover:shadow-lift transition-[border-color,box-shadow] min-w-0">
       <div className="flex items-start gap-3.5">
         <Ring value={mPct} size={58} stroke={6} tone="ok" label={`${Math.round(mPct * 100)}% mastered`}>
           <span className="text-[13px] font-bold text-fg tabular-nums">{Math.round(mPct * 100)}%</span>
@@ -247,7 +247,7 @@ export function PatternDetail({ id }: { id: string }) {
           {hist.length === 0 ? <Empty title="No revisions in this pattern yet" /> : (
             <ul className="divide-y divide-line/70">{hist.slice(0, 200).map(r => {
               const p = d.problems[r.problemId];
-              return <li key={r.id}><button onClick={() => openProblem(r.problemId)} className="w-full flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-surface2/60">
+              return <li key={r.id}><button onClick={() => openProblem(r.problemId)} className="w-full flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-hover/60">
                 <span className="min-w-0"><span className="block text-sm font-semibold text-fg truncate">{p?.name}</span><span className="text-xs text-muted">{fmt(r.date, 'EEE, d MMM yyyy')}{r.mistake ? ` · ${r.mistake.slice(0, 80)}` : ''}</span></span>
                 <span className="flex items-center gap-2"><PhasePill p={r.phase} /><RatingPill r={r.rating} /></span>
               </button></li>;

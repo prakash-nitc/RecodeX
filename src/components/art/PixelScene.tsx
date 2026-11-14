@@ -24,15 +24,16 @@ interface Pal {
 }
 
 const NIGHT: Pal = {
-  wall: ['#121835', '#1A2142'], panel: '#151B3A',
-  sky: ['#0A1029', '#0F1738', '#161F4A', '#1F2A5C'], orb: '#EEF0FA', orbGlow: '#8C9BE0', ridges: ['#2D346B', '#1E2452'], slat: '#0A0E22', frame: '#0F1328',
-  metal: '#0F1328', metal2: '#1D2344', metal3: '#2C3460',
-  desk: '#3A2F6E', deskHi: '#5A4AA0', deskFront: '#10132A', drawer: '#1A1E3E',
-  screen: '#CFE0FF', screenHead: '#A9BEF5', code: ['#5B6BB0', '#7A5FC0', '#4A8F9A', '#8A6FD0'], glow: '#9DB4FF', glowAlpha: 0.16,
-  wallScreen: '#2A1F66', wallBar: '#7655D9', wallBarHi: '#C9BDF3',
-  hoodie: '#5B47C4', hoodieDk: '#3A2C86', hoodieHi: '#8C76EC', hair: '#241C3E', hairHi: '#3E3266', rim: '#B9CBFF',
-  skin: '#E9AE94', skinDk: '#B9806A', phones: '#0B0E20', lampOn: true, lampLight: '#FFB46B', shade: '#2C3460',
-  chair: '#090C1C', chairHi: '#1D2344', mug: '#E8E1F7', steam: '#C9D2F5', leds: ['#35C98A', '#FFC857', '#9D85F0', '#FF963D'], ledOff: '#1D2344', night: true,
+  // Dusk palette: deep navy, steel blue and cool silver, with the interactive blue on screen.
+  wall: ['#0B1A22', '#11212D'], panel: '#0E1D27',
+  sky: ['#04101A', '#081A26', '#0E2231', '#152C3D'], orb: '#CCD0CF', orbGlow: '#7D8E99', ridges: ['#253745', '#1A2A36'], slat: '#06141B', frame: '#0B1820',
+  metal: '#0B1820', metal2: '#1A2C38', metal3: '#354956',
+  desk: '#253745', deskHi: '#4A5C6A', deskFront: '#06141B', drawer: '#11212D',
+  screen: '#C9D6E0', screenHead: '#9BA8AB', code: ['#4A5C6A', '#60A5FA', '#354956', '#7D8E99'], glow: '#9FC3E8', glowAlpha: 0.14,
+  wallScreen: '#1A2C38', wallBar: '#4A5C6A', wallBarHi: '#9BA8AB',
+  hoodie: '#4A5C6A', hoodieDk: '#354956', hoodieHi: '#7D8E99', hair: '#14232D', hairHi: '#2E4250', rim: '#C9D6E0',
+  skin: '#E9AE94', skinDk: '#B9806A', phones: '#06141B', lampOn: true, lampLight: '#FFB46B', shade: '#354956',
+  chair: '#06141B', chairHi: '#253745', mug: '#CCD0CF', steam: '#9BA8AB', leds: ['#35C98A', '#FFC857', '#60A5FA', '#FF963D'], ledOff: '#1A2C38', night: true,
 };
 
 const DAY: Pal = {

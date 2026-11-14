@@ -8,7 +8,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bg: c('bg'), surface: c('surface'), surface2: c('surface2'), line: c('line'), fg: c('fg'), muted: c('muted'),
+        bg: c('bg'), sidebar: c('sidebar'), surface: c('surface'), surface2: c('surface2'), hover: c('hover'), line: c('line'),
+        fg: c('fg'), muted: c('muted'), icon: c('icon'), scrim: c('scrim'), backdrop: c('backdrop'), onart: c('onart'),
+        interactive: c('interactive'), selected: c('selected'),
         accent: sem('accent'), accentfg: c('accentfg'),
         ok: sem('ok'), warn: sem('warn'), bad: sem('bad'), idle: sem('none'), hot: sem('hot'), // grey is 'idle': a colour named 'none' collides with outline-none
       },

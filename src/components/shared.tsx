@@ -367,7 +367,7 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
         </div>
         <div className="flex flex-wrap gap-2 mt-3">
           <Button variant="primary" size="sm" onClick={() => rate(p.id)}><Flame size={14} />Record revision</Button>
-          {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[13px] font-semibold text-fg hover:bg-surface2"><ExternalLink size={14} />Open problem</a>}
+          {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[13px] font-semibold text-fg hover:bg-hover"><ExternalLink size={14} />Open problem</a>}
           <Button size="sm" variant="outline" onClick={() => editProblem(p.id)}><Pencil size={14} />Edit</Button>
           {latest && latest.prev && <Button size="sm" variant="ghost" onClick={undo}><Undo2 size={14} />Undo last</Button>}
           <Button size="sm" variant="ghost" className="hover:!text-bad-ink" onClick={del}><Trash2 size={14} />Delete</Button>

@@ -137,8 +137,8 @@ function Shell() {
         return (
           <button key={n.id} onClick={() => go(n.id)} title={compact ? n.label : undefined} aria-current={on ? 'page' : undefined}
             className={cx('group relative flex items-center gap-3 rounded-xl h-10 text-sm font-semibold transition-colors', compact ? 'justify-center px-0' : 'px-3',
-              on ? 'bg-accent/12 text-accent-ink' : 'text-muted hover:text-fg hover:bg-surface2')}>
-            {on && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-accent" aria-hidden />}
+              on ? 'bg-accent/12 text-selected' : 'text-muted hover:text-fg hover:bg-hover')}>
+            {on && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-interactive" aria-hidden />}
             <Icon size={18} className="shrink-0" />
             {!compact && <span className="flex-1 text-left truncate">{n.label}</span>}
             {!compact && badge ? <span className={cx('rounded-lg px-1.5 text-[11px] font-bold tabular-nums', n.id === 'today' ? 'bg-hot/20 text-hot-ink' : 'bg-surface2 text-muted')}>{badge}</span> : null}
@@ -157,20 +157,20 @@ function Shell() {
 
   return (
     <div className="min-h-full lg:flex">
-      <aside className={cx('hidden lg:flex sticky top-0 h-screen shrink-0 flex-col gap-6 border-r border-line bg-surface py-5 side-pad transition-[width] duration-200', collapsed ? 'w-[72px] px-3 items-center' : 'w-64 px-4')}>
+      <aside className={cx('hidden lg:flex sticky top-0 h-screen shrink-0 flex-col gap-6 border-r border-line bg-sidebar py-5 side-pad transition-[width] duration-200', collapsed ? 'w-[72px] px-3 items-center' : 'w-64 px-4')}>
         <button onClick={() => go('dashboard')} className="text-left" aria-label="RecodeX dashboard"><BrandLockup collapsed={collapsed} /></button>
         <Button variant="primary" size="md" className={cx('h-10', collapsed ? '!px-0 w-10' : 'w-full')} onClick={() => addProblemDialog()} title="Add problem"><Plus size={16} />{!collapsed && 'Add problem'}</Button>
         <div className={cx(collapsed && 'w-full')}>{nav(collapsed)}</div>
         <div className={cx('mt-auto flex flex-col gap-3', collapsed && 'w-full')}>
-          {running && <button onClick={() => go('session')} className={cx('flex items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 text-xs font-semibold text-accent-ink h-10', collapsed ? 'justify-center' : 'px-3')}><Play size={14} />{!collapsed && 'Resume session'}</button>}
+          {running && <button onClick={() => go('session')} className={cx('flex items-center gap-2 rounded-xl border border-interactive/40 bg-accent/10 text-xs font-semibold text-selected h-10', collapsed ? 'justify-center' : 'px-3')}><Play size={14} />{!collapsed && 'Resume session'}</button>}
           {syncChip(collapsed)}
-          <button onClick={() => { setCollapsed(!collapsed); lsSet('recodex-sidebar', collapsed ? '0' : '1'); }} className={cx('flex items-center gap-2 rounded-xl h-8 text-xs text-muted hover:text-fg hover:bg-surface2', collapsed ? 'justify-center' : 'px-3')} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+          <button onClick={() => { setCollapsed(!collapsed); lsSet('recodex-sidebar', collapsed ? '0' : '1'); }} className={cx('flex items-center gap-2 rounded-xl h-8 text-xs text-muted hover:text-fg hover:bg-hover', collapsed ? 'justify-center' : 'px-3')} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
             {collapsed ? <PanelLeftOpen size={16} /> : <><PanelLeftClose size={16} />Collapse</>}
           </button>
         </div>
       </aside>
 
-      <header className="lg:hidden sticky z-30 flex items-center justify-between gap-2 border-b border-line bg-surface/90 backdrop-blur-md h-14 mobile-bar">
+      <header className="lg:hidden sticky z-30 flex items-center justify-between gap-2 border-b border-line bg-sidebar/90 backdrop-blur-md h-14 mobile-bar">
         <div className="flex items-center gap-1.5 min-w-0">
           <Button size="icon" variant="ghost" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Menu size={19} /></Button>
           <button onClick={() => go('dashboard')} className="flex items-center gap-2" aria-label="RecodeX dashboard">
@@ -180,8 +180,8 @@ function Shell() {
         <div className="flex items-center gap-2">{syncChip(true)}<Button size="icon" variant="primary" className="h-9 w-9" aria-label="Add problem" onClick={() => addProblemDialog()}><Plus size={16} /></Button></div>
       </header>
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-[rgb(11_16_32/0.5)] backdrop-blur-[2px]" onMouseDown={e => { if (e.target === e.currentTarget) setMobileOpen(false); }}>
-          <div className="h-full w-72 max-w-[85%] bg-surface border-r border-line p-4 flex flex-col gap-5 drawer-left animate-page-in overflow-y-auto">
+        <div className="lg:hidden fixed inset-0 z-40 bg-backdrop/50 backdrop-blur-[2px]" onMouseDown={e => { if (e.target === e.currentTarget) setMobileOpen(false); }}>
+          <div className="h-full w-72 max-w-[85%] bg-sidebar border-r border-line p-4 flex flex-col gap-5 drawer-left animate-page-in overflow-y-auto">
             <div className="flex items-center justify-between"><BrandLockup /><Button size="icon" variant="ghost" aria-label="Close menu" onClick={() => setMobileOpen(false)}><X size={16} /></Button></div>
             {nav(false)}
             {running && <Button variant="outline" onClick={() => go('session')}><Play size={14} />Resume session</Button>}

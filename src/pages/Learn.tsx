@@ -55,20 +55,20 @@ function RoadmapTrail({ topics, allProbs, go }: { topics: Pattern[]; allProbs: R
                   {/* Camp marker on the trail */}
                   <div className={cx(
                     'relative z-10 flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border-2 transition-colors',
-                    isLearning ? 'border-accent/50 bg-accent/12 text-accent-ink' :
+                    isLearning ? 'border-interactive/50 bg-accent/12 text-accent-ink' :
                     'border-line bg-surface2 text-muted',
                   )}>
                     <Mountain size={18} />
                   </div>
 
-                  <div className="flex-1 min-w-0 rounded-2xl border border-line bg-surface p-3.5 sm:p-4 shadow-card group-hover:border-accent/40 group-hover:shadow-lift transition-[border-color,box-shadow]">
+                  <div className="flex-1 min-w-0 rounded-2xl border border-line bg-surface p-3.5 sm:p-4 shadow-card group-hover:border-interactive/40 group-hover:shadow-lift transition-[border-color,box-shadow]">
                     <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-bold text-muted tabular-nums">CAMP {altitude}</span>
                           <span className={cx(
                             'rounded-lg px-1.5 py-0.5 text-[10px] font-bold',
-                            isLearning ? 'bg-accent/12 text-accent-ink' :
+                            isLearning ? 'bg-accent/12 text-selected' :
                             'bg-surface2 text-muted',
                           )}>
                             {isLearning ? 'Learning' : 'Yet to learn'}

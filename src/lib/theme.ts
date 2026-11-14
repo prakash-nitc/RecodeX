@@ -10,7 +10,7 @@ export function applyTheme(mode: ThemeMode) {
   else el.setAttribute('data-theme', mode);
   try { localStorage.setItem('recodex-theme', mode); } catch { /* ignore */ }
   const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', dark ? '#0B1020' : '#F6F4FB'));
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', dark ? '#06141B' : '#F6F4FB'));
   window.dispatchEvent(new Event('recodex-theme'));
 }
 

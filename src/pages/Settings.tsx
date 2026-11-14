@@ -175,7 +175,7 @@ export default function Settings() {
               <div className="flex flex-wrap gap-1.5">
                 {patterns.filter(p => p.learning !== 'yet_to_learn').map(p => (
                   <button key={p.id} onClick={() => togglePlan(p.id)} aria-pressed={s.studyPlanPatternIds.includes(p.id)}
-                    className={cx('rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors', s.studyPlanPatternIds.includes(p.id) ? 'border-accent bg-accent/15 text-accent-ink' : 'border-line text-muted hover:text-fg hover:border-muted/50')}>{p.name}</button>
+                    className={cx('rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors', s.studyPlanPatternIds.includes(p.id) ? 'border-interactive bg-accent/15 text-selected' : 'border-line text-muted hover:text-fg hover:border-muted/50')}>{p.name}</button>
                 ))}
               </div>
             </Field>
@@ -245,7 +245,7 @@ export default function Settings() {
           <div className="px-4 sm:px-5 pb-5 flex flex-col gap-3">
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={backup}><Download size={15} />Download backup (.json)</Button>
-              <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-xl border border-line px-3.5 text-sm font-semibold text-fg hover:bg-surface2 transition-colors">
+              <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-xl border border-line px-3.5 text-sm font-semibold text-fg hover:bg-hover transition-colors">
                 <Upload size={15} />Restore from backup<input type="file" accept=".json,application/json" className="sr-only" onChange={e => { restore(e.target.files?.[0]); e.target.value = ''; }} />
               </label>
               <Button variant="outline" onClick={() => setCsv('export')}><Download size={15} />Export CSV</Button>

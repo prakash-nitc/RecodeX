@@ -83,7 +83,7 @@ export function CsvDialog({ mode, onClose }: { mode: 'import' | 'export'; onClos
       footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!parsed?.rows.length} onClick={run}><Upload size={15} />Import {parsed?.rows.length ?? 0} rows</Button></>}>
       <div className="flex flex-col gap-4">
         <p className="text-sm text-muted">Required columns: <code className="font-mono text-fg">name</code> and <code className="font-mono text-fg">pattern</code>. Optional: sub_pattern, difficulty, url, priority, track (active/backlog), last_rating, last_revised, next_review (YYYY-MM-DD), phase, weakness, notes. New patterns are created automatically. A file exported from here imports as-is.</p>
-        <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-line px-4 py-6 text-center hover:border-accent/60">
+        <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-line px-4 py-6 text-center hover:border-interactive/60">
           <FileText size={22} className="text-muted" />
           <span className="text-sm font-semibold text-fg">Choose a .csv file</span>
           <span className="text-xs text-muted">or paste the contents below</span>

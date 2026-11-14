@@ -8,7 +8,7 @@ RecodeX is built with **React 18 + TypeScript + Vite + Tailwind CSS + Lucide + d
 
 ## Features
 
-- **The Journey to Mastery Design**: Two cohesive themes — **Dawn** (light, default) and **Dusk** (dark) — adhering to strict semantic colour rules, Fraunces display typography, and WCAG AA contrast.
+- **The Journey to Mastery Design**: Two themes from one set of CSS variables (`src/index.css`): **Dawn** (light, default: lavender and purple) and **Dusk** (dark: Deep Navy, muted Steel Blue and Cool Silver, with a restrained blue for interactive elements). Green, yellow and red are reserved for revision status; every text colour pair is checked for WCAG AA by `src/lib/contrast.test.ts`. To retune a theme, change its token values; components only use token names (`bg`, `sidebar`, `surface`, `surface2`, `hover`, `line`, `fg`, `muted`, `icon`, `accent`, `accent-ink`, `interactive`, `selected`, …).
 - **Mountain Sunrise Artwork**: Original procedural artwork that follows your local time (dawn, day, dusk, starry night).
 - **Animated dashboard banner** (Settings → Dashboard scene): *Server room*, a pixel-art animation (public/art/dashboard.gif, shown whole on the right and faded into a matching background, with a still frame for reduced motion); *Pixel den*, an original code-drawn pixel scene that follows the theme (daytime in Dawn, night in Dusk); *Lofi window*, an SVG late-night study scene whose sky follows your local time; or the static *Mountains*.
 - **Spaced Repetition Engine**: Red (1d), Yellow (3d), and Green ladder (7d → 14d → 30d → 60d) with customizable intervals and automatic phase progression (Reconstruction → Recall/Repair → Quick Recall).

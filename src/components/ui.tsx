@@ -1,6 +1,7 @@
 // RecodeX design system: core components. Colours follow the spec's meanings:
 // green = Green rating / mastered, gold = Yellow, red = Red (failed recall), grey = not reviewed,
-// sunrise orange = overdue / high priority / needs attention, purple accent = actions, links, selection, focus.
+// sunrise orange = overdue / high priority / needs attention, accent = actions, links, selection, focus.
+// Colours come only from the tokens in src/index.css (Dawn and Dusk).
 import React, { createContext, useCallback, useContext, useEffect, useId, useRef, useState } from 'react';
 import { X, Check, AlertTriangle, Info, ExternalLink, Search } from 'lucide-react';
 import type { Rating, Priority, Difficulty, Status, Phase } from '../types';
@@ -26,10 +27,10 @@ export const Button = React.forwardRef<HTMLButtonElement, BtnProps>(function But
         size === 'lg' && 'h-11 px-5 text-[15px]',
         size === 'xl' && 'h-14 px-7 text-base rounded-2xl',
         size === 'icon' && 'h-8 w-8 text-sm',
-        variant === 'primary' && 'bg-accent text-accentfg shadow-[0_6px_16px_-6px_rgb(var(--accent)/0.55)] hover:bg-accent/90 hover:shadow-[0_8px_20px_-6px_rgb(var(--accent)/0.6)]',
+        variant === 'primary' && 'bg-accent text-accentfg shadow-[0_6px_16px_-6px_rgb(var(--accent)/var(--glow))] hover:bg-accent/90 hover:shadow-[0_8px_20px_-6px_rgb(var(--accent)/var(--glow)),0_0_0_1px_rgb(var(--interactive)/var(--edge))]',
         variant === 'secondary' && 'bg-surface2 text-fg hover:bg-line/70 border border-line',
-        variant === 'outline' && 'border border-line bg-surface text-fg hover:border-accent/50 hover:bg-surface2',
-        variant === 'ghost' && 'text-muted hover:text-fg hover:bg-surface2',
+        variant === 'outline' && 'border border-line bg-surface text-fg hover:border-interactive/50 hover:bg-hover',
+        variant === 'ghost' && 'text-muted hover:text-fg hover:bg-hover',
         variant === 'danger' && 'bg-bad text-white hover:bg-bad/90',
         className,
       )}
@@ -37,7 +38,7 @@ export const Button = React.forwardRef<HTMLButtonElement, BtnProps>(function But
   );
 });
 
-const field = 'w-full rounded-xl border border-line bg-surface text-sm text-fg placeholder:text-muted/70 transition-colors hover:border-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50';
+const field = 'w-full rounded-xl border border-line bg-surface text-sm text-fg placeholder:text-muted/70 transition-colors hover:border-muted/40 focus:outline-none focus:ring-2 focus:ring-interactive/40 focus:border-interactive disabled:opacity-50';
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cx('h-10 px-3', field, props.className)} />;
 }
@@ -63,7 +64,7 @@ export function Field({ label, hint, children, htmlFor, className }: { label: st
 export function Checkbox({ checked, onChange, label, id, disabled }: { checked: boolean; onChange: (v: boolean) => void; label?: React.ReactNode; id?: string; disabled?: boolean }) {
   return (
     <label className={cx('inline-flex items-center gap-2 text-sm select-none', disabled ? 'opacity-50' : 'cursor-pointer')}>
-      <input id={id} type="checkbox" disabled={disabled} checked={checked} onChange={e => onChange(e.target.checked)} className="h-4 w-4 rounded border-line accent-[rgb(var(--accent))] cursor-pointer" />
+      <input id={id} type="checkbox" disabled={disabled} checked={checked} onChange={e => onChange(e.target.checked)} className="h-4 w-4 rounded border-line accent-[rgb(var(--interactive))] cursor-pointer" />
       {label}
     </label>
   );
@@ -76,7 +77,7 @@ export function Toggle({ checked, onChange, label, id, hint }: { checked: boolea
         {hint && <div className="text-xs text-muted mt-0.5 leading-relaxed">{hint}</div>}
       </label>
       <button id={id} role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-        className={cx('relative shrink-0 h-6 w-11 rounded-full transition-colors', checked ? 'bg-accent' : 'bg-line')}>
+        className={cx('relative shrink-0 h-6 w-11 rounded-full transition-colors', checked ? 'bg-interactive' : 'bg-line')}>
         <span className={cx('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', checked ? 'translate-x-[22px]' : 'translate-x-0.5')} />
       </button>
     </div>
@@ -107,7 +108,7 @@ export function SearchInput({ value, onChange, placeholder, id }: { value: strin
 export function Chip({ on, onClick, children, className }: { on: boolean; onClick: () => void; children: React.ReactNode; className?: string }) {
   return (
     <button onClick={onClick} aria-pressed={on}
-      className={cx('rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors', on ? 'border-accent bg-accent/12 text-accent-ink' : 'border-line text-muted hover:text-fg hover:border-muted/50', className)}>
+      className={cx('rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors', on ? 'border-interactive bg-accent/12 text-selected' : 'border-line text-muted hover:text-fg hover:border-muted/50', className)}>
       {children}
     </button>
   );
@@ -123,7 +124,7 @@ export function CardHeader({ title, sub, right, icon }: { title: React.ReactNode
   return (
     <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3 sm:px-5">
       <div className="flex items-start gap-2.5 min-w-0">
-        {icon && <div className="mt-0.5 text-muted shrink-0">{icon}</div>}
+        {icon && <div className="mt-0.5 text-icon shrink-0">{icon}</div>}
         <div className="min-w-0">
           <h2 className="font-display text-[17px] font-semibold text-fg leading-tight">{title}</h2>
           {sub && <div className="text-xs text-muted mt-1">{sub}</div>}
@@ -160,7 +161,7 @@ export function Empty({ icon, title, body, action, art }: { icon?: React.ReactNo
   );
 }
 export function Spinner({ size = 18 }: { size?: number }) {
-  return <span className="inline-block animate-spin rounded-full border-2 border-line border-t-accent" style={{ width: size, height: size }} aria-label="Loading" role="status" />;
+  return <span className="inline-block animate-spin rounded-full border-2 border-line border-t-interactive" style={{ width: size, height: size }} aria-label="Loading" role="status" />;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -232,13 +233,13 @@ export function GYRBar({ g, y, r, n = 0, height = 8 }: { g: number; y: number; r
 export function Progress({ value, className, tone = 'accent' }: { value: number; className?: string; tone?: 'accent' | 'ok' }) {
   return (
     <div className={cx('h-2 w-full overflow-hidden rounded-full bg-surface2', className)} role="progressbar" aria-valuenow={Math.round(value * 100)} aria-valuemin={0} aria-valuemax={100}>
-      <div className={cx('h-full rounded-full transition-[width] duration-500 ease-out', tone === 'ok' ? 'bg-ok' : 'bg-accent')} style={{ width: `${Math.min(100, Math.max(0, value * 100))}%` }} />
+      <div className={cx('h-full rounded-full transition-[width] duration-500 ease-out', tone === 'ok' ? 'bg-ok' : 'bg-interactive')} style={{ width: `${Math.min(100, Math.max(0, value * 100))}%` }} />
     </div>
   );
 }
 
-/** Progress ring. `sunrise` uses the orange→gold gradient (reserved for lifetime mastery). */
-export function Ring({ value, size = 120, stroke = 10, tone = 'accent', children, label }: { value: number; size?: number; stroke?: number; tone?: 'accent' | 'ok' | 'sunrise'; children?: React.ReactNode; label?: string }) {
+/** Progress ring. `mastery` uses the --ring-a/b gradient (reserved for lifetime mastery). */
+export function Ring({ value, size = 120, stroke = 10, tone = 'accent', children, label }: { value: number; size?: number; stroke?: number; tone?: 'accent' | 'ok' | 'mastery'; children?: React.ReactNode; label?: string }) {
   const id = useId().replace(/:/g, '');
   const r = (size - stroke) / 2, c = 2 * Math.PI * r;
   const v = Math.min(1, Math.max(0, value));
@@ -247,12 +248,12 @@ export function Ring({ value, size = 120, stroke = 10, tone = 'accent', children
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
         <defs>
           <linearGradient id={`ring-${id}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="rgb(var(--sun-a))" /><stop offset="100%" stopColor="rgb(var(--sun-b))" />
+            <stop offset="0%" stopColor="rgb(var(--ring-a))" /><stop offset="100%" stopColor="rgb(var(--ring-b))" />
           </linearGradient>
         </defs>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(var(--surface2))" strokeWidth={stroke} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} strokeLinecap="round"
-          stroke={tone === 'sunrise' ? `url(#ring-${id})` : tone === 'ok' ? 'rgb(var(--ok))' : 'rgb(var(--accent))'}
+          stroke={tone === 'mastery' ? `url(#ring-${id})` : tone === 'ok' ? 'rgb(var(--ok))' : 'rgb(var(--interactive))'}
           strokeDasharray={c} strokeDashoffset={c * (1 - v)} style={{ transition: 'stroke-dashoffset 700ms cubic-bezier(.2,.8,.2,1)' }} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>
@@ -290,7 +291,7 @@ export function Dialog({ open, onClose, title, sub, children, footer, width = 'm
   useEffect(() => { if (open) setTimeout(() => ref.current?.querySelector<HTMLElement>('[data-autofocus], input, textarea, select, button:not([data-close])')?.focus(), 30); }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[rgb(11_16_32/0.5)] backdrop-blur-[3px] dlg-pad" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-backdrop/50 backdrop-blur-[3px] dlg-pad" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div ref={ref} role="dialog" aria-modal="true" className={cx('w-full max-h-[92%] flex flex-col rounded-t-3xl sm:rounded-3xl border border-line bg-surface shadow-pop animate-rise', width)}>
         <div className="flex items-start justify-between gap-3 px-5 sm:px-6 pt-5 pb-3">
           <div className="min-w-0">
@@ -310,7 +311,7 @@ export function Drawer({ open, onClose, children, title }: { open: boolean; onCl
   useEscape(open, onClose);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-[rgb(11_16_32/0.4)] backdrop-blur-[2px]" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-40 flex justify-end bg-backdrop/40 backdrop-blur-[2px]" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
       <aside role="dialog" aria-modal="true" aria-label={title} className="h-full w-full max-w-xl overflow-y-auto border-l border-line bg-bg shadow-pop drawer-pad animate-page-in sm:rounded-l-3xl">
         {children}
       </aside>
@@ -367,7 +368,7 @@ export function Stat({ label, value, icon, tone, sub, onClick, className }: { cl
   const toneCls = tone === 'bad' ? 'text-bad-ink bg-bad/12' : tone === 'hot' ? 'text-hot-ink bg-hot/15' : tone === 'ok' ? 'text-ok-ink bg-ok/15' : tone === 'warn' ? 'text-warn-ink bg-warn/20' : 'text-muted bg-surface2';
   const Comp: any = onClick ? 'button' : 'div';
   return (
-    <Comp onClick={onClick} className={cx('flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5 text-left shadow-card min-w-0', className, onClick && 'hover:border-accent/40 hover:shadow-lift transition-[border-color,box-shadow]')}>
+    <Comp onClick={onClick} className={cx('flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5 text-left shadow-card min-w-0', className, onClick && 'hover:border-interactive/40 hover:shadow-lift transition-[border-color,box-shadow]')}>
       {icon && <div className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', toneCls)}>{icon}</div>}
       <div className="min-w-0">
         <div className="text-xs font-medium text-muted truncate">{label}</div>

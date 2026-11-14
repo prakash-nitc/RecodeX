@@ -121,7 +121,7 @@ function Runner({ session }: { session: Session }) {
           <span className="hidden sm:inline text-xs font-semibold text-muted tabular-nums">{Math.round(pct * 100)}%</span>
         </div>
         <div className="h-1 w-full bg-surface2" role="progressbar" aria-label="Session progress" aria-valuenow={Math.round(pct * 100)} aria-valuemin={0} aria-valuemax={100}>
-          <div className="h-full bg-accent transition-[width] duration-500 ease-out" style={{ width: `${pct * 100}%` }} />
+          <div className="h-full bg-interactive transition-[width] duration-500 ease-out" style={{ width: `${pct * 100}%` }} />
         </div>
       </header>
 
@@ -141,7 +141,7 @@ function Runner({ session }: { session: Session }) {
             <div className="flex flex-wrap items-center justify-center gap-2">
               <Button variant="outline" onClick={toggle} aria-label={running ? 'Pause timer' : 'Resume timer'}>{running ? <><Pause size={15} />Pause</> : <><Play size={15} />Resume</>}</Button>
               {p.url && (
-                <a href={p.url} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-accentfg shadow-[0_6px_16px_-6px_rgb(var(--accent)/0.55)] hover:bg-accent/90">
+                <a href={p.url} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-accentfg shadow-[0_6px_16px_-6px_rgb(var(--accent)/var(--glow))] hover:bg-accent/90">
                   <ExternalLink size={15} />Open on {site}
                 </a>
               )}
@@ -196,7 +196,7 @@ function Runner({ session }: { session: Session }) {
             const r = resultOf(id); const q = d.problems[id];
             return (
               <span key={id} title={q?.name} className={cx('inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-lg border px-1.5 text-xs font-semibold tabular-nums',
-                i === index ? 'border-accent bg-accent/12 text-accent-ink' : r ? 'border-line bg-surface2 text-muted' : 'border-line text-muted')}>
+                i === index ? 'border-interactive bg-accent/12 text-selected' : r ? 'border-line bg-surface2 text-muted' : 'border-line text-muted')}>
                 {r?.rating ? <RatingDot r={r.rating} size={7} /> : r ? '–' : null}{i + 1}
               </span>
             );
@@ -237,11 +237,11 @@ function Summary({ session }: { session: Session }) {
     <div className="flex flex-col gap-4">
       <section className="relative overflow-hidden rounded-3xl h-[220px] sm:h-[260px] shadow-lift animate-rise">
         <MountainScene className="absolute inset-0 h-full w-full" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[rgb(8_10_28/0.75)] via-[rgb(8_10_28/0.3)] to-transparent" />
-        <div className="relative flex h-full flex-col justify-end p-6 sm:p-8 text-white [text-shadow:0_1px_14px_rgb(0_0_0/0.4)]">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white/85">{done ? <><Trophy size={16} />Session complete</> : 'Session ended early'}</div>
+        <div className="absolute inset-0 bg-gradient-to-t from-scrim/[0.75] via-scrim/[0.3] to-transparent" />
+        <div className="relative flex h-full flex-col justify-end p-6 sm:p-8 text-onart [text-shadow:0_1px_14px_rgb(0_0_0/0.4)]">
+          <div className="flex items-center gap-2 text-sm font-semibold text-onart/85">{done ? <><Trophy size={16} />Session complete</> : 'Session ended early'}</div>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl font-semibold tracking-tight text-balance">{done ? (acc >= 80 ? 'A clear view from up here.' : 'Another stretch of the trail behind you.') : 'Every step still counts.'}</h1>
-          <p className="mt-1 text-sm text-white/80">{session.title} · {fmtTimestamp(session.startedAt)}</p>
+          <p className="mt-1 text-sm text-onart/80">{session.title} · {fmtTimestamp(session.startedAt)}</p>
         </div>
       </section>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -280,7 +280,7 @@ function Summary({ session }: { session: Session }) {
             {again.map(r => {
               const p = d.problems[r.problemId]; if (!p) return null;
               return (
-                <li key={r.problemId}><button onClick={() => openProblem(p.id)} className="w-full flex items-center justify-between gap-3 px-5 py-2.5 text-left hover:bg-surface2/60">
+                <li key={r.problemId}><button onClick={() => openProblem(p.id)} className="w-full flex items-center justify-between gap-3 px-5 py-2.5 text-left hover:bg-hover/60">
                   <span className="min-w-0"><span className="block text-sm font-semibold text-fg truncate">{p.name}</span><span className="text-xs text-muted">{d.patterns[p.patternId]?.name} · next review {fmt(p.nextReview, 'd MMM')}</span></span>
                   <RatingPill r={r.rating} />
                 </button></li>

@@ -52,7 +52,7 @@ function Heatmap({ revs, weekStart, t }: { revs: import('../types').Revision[]; 
   }, [revs, weekStart, t]);
 
   const heatCls = (n: number) =>
-    n < 0 ? 'bg-transparent' : n === 0 ? 'bg-surface2' : n / heatMax < 0.25 ? 'bg-accent/25' : n / heatMax < 0.5 ? 'bg-accent/45' : n / heatMax < 0.75 ? 'bg-accent/70' : 'bg-accent';
+    n < 0 ? 'bg-transparent' : n === 0 ? 'bg-surface2' : n / heatMax < 0.25 ? 'bg-interactive/25' : n / heatMax < 0.5 ? 'bg-interactive/45' : n / heatMax < 0.75 ? 'bg-interactive/70' : 'bg-interactive';
 
   // Month labels above columns
   const monthLabels = useMemo(() => {
@@ -96,7 +96,7 @@ function Heatmap({ revs, weekStart, t }: { revs: import('../types').Revision[]; 
       </div>
       <div className="flex items-center gap-1.5 mt-3 text-[11px] text-muted">
         Less
-        {['bg-surface2', 'bg-accent/25', 'bg-accent/45', 'bg-accent/70', 'bg-accent'].map(x => (
+        {['bg-surface2', 'bg-interactive/25', 'bg-interactive/45', 'bg-interactive/70', 'bg-interactive'].map(x => (
           <span key={x} className={cx('h-3 w-3 rounded-[3px]', x)} />
         ))}
         More
@@ -154,12 +154,12 @@ export default function Analytics() {
   const masteryPct = overall.total ? overall.mastered / overall.total : 0;
 
   const ProbList = ({ ids, empty }: { ids: string[]; empty: string }) => ids.length === 0 ? <p className="text-sm text-muted px-1 py-2">{empty}</p> : (
-    <ul className="flex flex-col">{ids.slice(0, 8).map(id => { const p = d.problems[id]; return p ? <li key={id}><button onClick={() => openProblem(id)} className="w-full flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-surface2 transition-colors"><span className="truncate text-fg">{p.name}</span><span className="text-[11px] text-muted shrink-0">{d.patterns[p.patternId]?.name}</span></button></li> : null; })}
+    <ul className="flex flex-col">{ids.slice(0, 8).map(id => { const p = d.problems[id]; return p ? <li key={id}><button onClick={() => openProblem(id)} className="w-full flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-hover transition-colors"><span className="truncate text-fg">{p.name}</span><span className="text-[11px] text-muted shrink-0">{d.patterns[p.patternId]?.name}</span></button></li> : null; })}
       {ids.length > 8 && <li className="text-xs text-muted px-2 pt-1">and {ids.length - 8} more</li>}</ul>
   );
   const PatList = ({ rows, value, tone }: { rows: typeof pstats; value: (x: (typeof pstats)[number]) => string; tone: string }) => rows.length === 0 ? <p className="text-sm text-muted py-2">Not enough data yet.</p> : (
     <ul className="flex flex-col gap-1">{rows.map(x => (
-      <li key={x.pattern.id}><button onClick={() => go(patternRoute(x.pattern.id))} className="w-full flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-surface2 transition-colors">
+      <li key={x.pattern.id}><button onClick={() => go(patternRoute(x.pattern.id))} className="w-full flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-hover transition-colors">
         <span className="truncate text-fg">{x.pattern.name}</span><span className={cx('rounded-lg px-1.5 py-0.5 text-[11px] font-semibold tabular-nums shrink-0', tone)}>{value(x)}</span>
       </button></li>))}</ul>
   );
@@ -172,7 +172,7 @@ export default function Analytics() {
       {/* Lifetime mastery ring + overall stats */}
       <div className="grid grid-cols-1 xl:grid-cols-[auto_1fr] gap-4 mb-6">
         <Card className="flex items-center gap-6 p-5 sm:p-6">
-          <Ring value={masteryPct} size={120} stroke={12} tone="sunrise" label={`${Math.round(masteryPct * 100)}% mastered`}>
+          <Ring value={masteryPct} size={120} stroke={12} tone="mastery" label={`${Math.round(masteryPct * 100)}% mastered`}>
             <span className="font-display text-2xl font-semibold text-fg tabular-nums leading-none">{Math.round(masteryPct * 100)}%</span>
             <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-muted">mastered</span>
           </Ring>
@@ -238,7 +238,7 @@ export default function Analytics() {
         <Card className="xl:col-span-2 min-w-0">
           <CardHeader title="Monthly revisions" sub="Last 6 months" />
           <div className="h-48 px-4 sm:px-5 pb-4">
-            <ColumnChart ariaLabel="Revisions per month, last 6 months" series={[{ key: 'total', label: 'Revisions', color: 'rgb(var(--accent))' }]} height={168}
+            <ColumnChart ariaLabel="Revisions per month, last 6 months" series={[{ key: 'total', label: 'Revisions', color: 'rgb(var(--interactive))' }]} height={168}
               data={monthly.map(m => ({ key: m.month, label: m.label, title: fmt(`${m.month}-01`, 'MMMM yyyy'), values: { total: m.total } }))} />
           </div>
         </Card>

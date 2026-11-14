@@ -24,7 +24,7 @@ export default function ImportReview() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-6">
-        <div className="inline-flex items-center gap-1.5 rounded-md bg-accent/12 px-2 py-1 text-xs font-semibold text-accent-ink"><Sparkles size={13} />First run</div>
+        <div className="inline-flex items-center gap-1.5 rounded-md bg-accent/12 px-2 py-1 text-xs font-semibold text-selected"><Sparkles size={13} />First run</div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-fg mt-3 text-balance">Review your imported problem bank</h1>
         <p className="text-sm text-muted mt-2 max-w-2xl">Extracted from your "DSA patterns Cheat Sheet – Revision Master" PDF and the Today's Focus sheet. Ratings and dates come only from the rows that had them. Untick anything you do not want, then finalize.</p>
       </div>

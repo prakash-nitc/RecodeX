@@ -87,7 +87,7 @@ export function ColumnChart({ data, series, height = 176, ariaLabel, note, highl
                       ? <path key={g.s.key} d={topRounded(cx0, y1, barW, h, 4)} fill={g.s.color} />
                       : <rect key={g.s.key} x={cx0} y={y1} width={barW} height={h} fill={g.s.color} />;
                   })}
-                  {c.key === highlight && <line x1={cx0} x2={cx0 + barW} y1={top + plotH + 3} y2={top + plotH + 3} stroke="rgb(var(--accent))" strokeWidth={2} strokeLinecap="round" />}
+                  {c.key === highlight && <line x1={cx0} x2={cx0 + barW} y1={top + plotH + 3} y2={top + plotH + 3} stroke="rgb(var(--interactive))" strokeWidth={2} strokeLinecap="round" />}
                   {i % labelEvery === 0 && <text x={left + band * i + band / 2} y={height - 6} textAnchor="middle" className="fill-muted text-[11px]">{c.label}</text>}
                   {/* hit target: the whole band, larger than the bar */}
                   <rect x={left + band * i} y={top} width={band} height={plotH + bottom} fill="transparent" tabIndex={0}
