@@ -117,7 +117,7 @@ export function StudyScene({ phase: forced, className }: { phase?: SkyPhase; cla
   }), []);
 
   return (
-    <svg ref={ref} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMaxYMid slice" className={`rxs ${className ?? ''}`}
+    <svg ref={ref} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMaxYMid slice" className={`rxs art-tone ${className ?? ''}`}
       data-paused={visible ? undefined : ''} role="img" aria-label="Animated illustration: someone coding on a laptop by a window, late at night">
       <style>{STYLE}</style>
       <defs>

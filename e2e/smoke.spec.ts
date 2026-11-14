@@ -50,7 +50,7 @@ test.describe('Smoke test', () => {
     // 5. Switch theme in Settings
     await go(page, 'prefs');
     await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
-    await page.getByRole('radio', { name: 'Dusk' }).click();
+    await page.getByRole('radio', { name: 'Midnight Steel' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.getByRole('radio', { name: 'Dawn' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');

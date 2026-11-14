@@ -27,7 +27,7 @@ export const Button = React.forwardRef<HTMLButtonElement, BtnProps>(function But
         size === 'lg' && 'h-11 px-5 text-[15px]',
         size === 'xl' && 'h-14 px-7 text-base rounded-2xl',
         size === 'icon' && 'h-8 w-8 text-sm',
-        variant === 'primary' && 'bg-accent text-accentfg shadow-[0_6px_16px_-6px_rgb(var(--accent)/var(--glow))] hover:bg-accent/90 hover:shadow-[0_8px_20px_-6px_rgb(var(--accent)/var(--glow)),0_0_0_1px_rgb(var(--interactive)/var(--edge))]',
+        variant === 'primary' && 'bg-accent text-accentfg shadow-[0_6px_16px_-6px_rgb(var(--accent)/var(--glow)),inset_0_0_0_1px_rgb(var(--btn-ring)/var(--btn-ring-a))] hover:bg-accent/90 hover:shadow-[0_8px_20px_-6px_rgb(var(--accent)/var(--glow)),0_0_0_1px_rgb(var(--interactive)/var(--edge)),inset_0_0_0_1px_rgb(var(--btn-ring)/var(--btn-ring-a))]',
         variant === 'secondary' && 'bg-btn2 text-btn2fg hover:bg-line/70 border border-line',
         variant === 'outline' && 'border border-line bg-surface text-fg hover:border-interactive/50 hover:bg-hover',
         variant === 'ghost' && 'text-muted hover:text-fg hover:bg-hover',
@@ -38,7 +38,7 @@ export const Button = React.forwardRef<HTMLButtonElement, BtnProps>(function But
   );
 });
 
-const field = 'w-full rounded-xl border border-line bg-surface text-sm text-fg placeholder:text-muted/70 transition-colors hover:border-muted/40 focus:outline-none focus:ring-2 focus:ring-interactive/40 focus:border-interactive disabled:opacity-50';
+const field = 'w-full rounded-xl border border-line bg-surface text-sm text-fg placeholder:text-muted/70 transition-colors hover:border-muted/40 focus:outline-none focus:ring-2 focus:ring-focus/40 focus:border-focus disabled:opacity-50';
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cx('h-10 px-3', field, props.className)} />;
 }
@@ -89,7 +89,7 @@ export function Segmented<T extends string | number>({ value, options, onChange,
       {options.map(o => (
         <button key={String(o.value)} role="radio" aria-checked={o.value === value} onClick={() => onChange(o.value)}
           className={cx('rounded-[10px] font-semibold transition-colors', size === 'sm' ? 'px-2.5 h-7 text-xs' : 'px-3 h-8 text-[13px]',
-            o.value === value ? 'bg-accent text-accentfg shadow-sm' : 'text-muted hover:text-fg hover:bg-surface')}>
+            o.value === value ? 'bg-accent text-accentfg shadow-sm ring-1 ring-inset ring-[rgb(var(--btn-ring)/var(--btn-ring-a))]' : 'text-muted hover:text-fg hover:bg-surface')}>
           {o.label}
         </button>
       ))}

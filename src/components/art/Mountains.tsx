@@ -115,12 +115,12 @@ export function MountainScene({ phase: forced, className, label = 'Mountain rang
   }, []);
 
   if (override) {
-    return <img src={override} alt={decorative ? '' : label} aria-hidden={decorative || undefined} className={className} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />;
+    return <img src={override} alt={decorative ? '' : label} aria-hidden={decorative || undefined} className={`art-tone ${className ?? ''}`} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />;
   }
 
   const g = (k: string) => `${k}-${uid}`;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" className={className} role={decorative ? undefined : 'img'} aria-hidden={decorative || undefined} aria-label={decorative ? undefined : label}>
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" className={`art-tone ${className ?? ''}`} role={decorative ? undefined : 'img'} aria-hidden={decorative || undefined} aria-label={decorative ? undefined : label}>
       <defs>
         <linearGradient id={g('sky')} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={pal.sky[0]} /><stop offset="55%" stopColor={pal.sky[1]} /><stop offset="100%" stopColor={pal.sky[2]} />

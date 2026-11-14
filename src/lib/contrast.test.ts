@@ -12,7 +12,8 @@ function tokens(block: string): Record<string, number[]> {
 }
 const dawn = tokens(css.slice(css.indexOf(':root {'), css.indexOf('@media (prefers-color-scheme: dark)')));
 const dusk = tokens(css.slice(css.indexOf(':root[data-theme="dark"]'), css.indexOf(':root[data-theme="cloud"]')));
-const cloud = tokens(css.slice(css.indexOf(':root[data-theme="cloud"]'), css.indexOf('@tailwind base')));
+const cloud = tokens(css.slice(css.indexOf(':root[data-theme="cloud"]'), css.indexOf(':root[data-theme="obsidian"]')));
+const obsidian = tokens(css.slice(css.indexOf(':root[data-theme="obsidian"]'), css.indexOf('@tailwind base')));
 // The same Dusk values, as applied for "System" on a dark device.
 const duskSystem = tokens(css.slice(css.indexOf('@media (prefers-color-scheme: dark)'), css.indexOf(':root[data-theme="dark"]')));
 
@@ -23,10 +24,11 @@ const lum = (c: number[]) => {
 const ratio = (a: number[], b: number[]) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
 const mix = (a: number[], b: number[], t: number) => a.map((v, i) => Math.round(v * (1 - t) + b[i] * t));
 
-describe.each([['Dawn', dawn], ['Dusk', dusk], ['Cloud', cloud]] as const)('%s theme', (_name, t) => {
+// Dawn's block (:root) also holds the defaults the other themes inherit, so they are merged in.
+describe.each([['Dawn', dawn], ['Midnight Steel', { ...dawn, ...dusk }], ['Cloud & Slate', { ...dawn, ...cloud }], ['Obsidian Graphite', { ...dawn, ...obsidian }]] as const)('%s theme', (_name, t) => {
   it('defines every token', () => {
     for (const k of ['bg', 'sidebar', 'surface', 'surface2', 'elevated', 'hover', 'line', 'fg', 'muted', 'icon', 'onart', 'onart-shadow',
-      'btn2', 'btn2fg', 'accent', 'accent-ink', 'accentfg',
+      'btn2', 'btn2fg', 'accent', 'accent-ink', 'accentfg', 'focus',
       'interactive', 'selected', 'ok-ink', 'warn-ink', 'bad-ink', 'hot-ink', 'none-ink', 'scrim', 'backdrop',
       'headline-a', 'headline-b', 'ring-a', 'ring-b']) expect(t[k], k).toBeTruthy();
   });
@@ -60,6 +62,7 @@ describe.each([['Dawn', dawn], ['Dusk', dusk], ['Cloud', cloud]] as const)('%s t
 
   it('interactive marks, icons and the headline highlight are visible (3:1 for graphics and large text)', () => {
     for (const bg of ['surface', 'sidebar', 'bg']) expect(ratio(t.interactive, t[bg]), `interactive on ${bg}`).toBeGreaterThanOrEqual(3);
+    for (const bg of ['surface', 'sidebar', 'bg', 'elevated']) expect(ratio(t.focus, t[bg]), `focus ring on ${bg}`).toBeGreaterThanOrEqual(3);
     expect(ratio(t.icon, t.surface), 'icon on surface').toBeGreaterThanOrEqual(3);
     expect(ratio(t['headline-a'], t.scrim), 'headline highlight on the scrim').toBeGreaterThanOrEqual(3);
     expect(ratio(t.onart, t.scrim), 'text over artwork on the scrim').toBeGreaterThanOrEqual(4.5);

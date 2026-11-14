@@ -5,10 +5,13 @@
 import React from 'react';
 import { usePalette } from '../lib/theme';
 
-/** The logo inside the app: purple on Dawn, steel blue on Dusk, charcoal and slate on Cloud (same shapes). */
+/** The logo inside the app, in each theme's colours (same shapes): purple on Dawn, steel blue on Midnight Steel,
+ * charcoal and slate on Cloud & Slate, graphite and warm grey on Obsidian Graphite. */
+const LOGO = { dawn: '/favicon.svg', dusk: '/brand-dusk.svg', cloud: '/brand-cloud.svg', obsidian: '/brand-obsidian.svg' } as const;
+
 export function BrandMark({ size = 32, className }: { size?: number; className?: string }) {
   const palette = usePalette();
-  return <img src={palette === 'dusk' ? '/brand-dusk.svg' : palette === 'cloud' ? '/brand-cloud.svg' : '/favicon.svg'} width={size} height={size} alt="" aria-hidden draggable={false} className={className} />;
+  return <img src={LOGO[palette]} width={size} height={size} alt="" aria-hidden draggable={false} className={className} />;
 }
 
 export function BrandLockup({ collapsed }: { collapsed?: boolean }) {

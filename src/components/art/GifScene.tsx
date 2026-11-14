@@ -12,7 +12,7 @@ const FADE = 'linear-gradient(90deg, transparent 0%, #000 42%)';
 
 export function GifScene({ className }: { className?: string }) {
   return (
-    <div className={className} style={{ background: EDGE }} aria-hidden data-scene="gif">
+    <div className={`art-tone ${className ?? ''}`} style={{ background: EDGE }} aria-hidden data-scene="gif">
       <picture className="absolute inset-y-0 right-0 block h-full aspect-[412/414]">
         <source srcSet="/art/dashboard-still.png" media="(prefers-reduced-motion: reduce)" />
         <img src="/art/dashboard.gif" alt="" width={412} height={414} decoding="async" draggable={false}

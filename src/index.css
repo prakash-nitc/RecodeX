@@ -1,6 +1,7 @@
-/* RecodeX design tokens. Three themes from one token system:
-   Dawn (light, default: lavender and purple), Dusk (dark: Deep Navy + Muted Steel Blue + Cool Silver)
-   and Cloud (light, monochromatic: Cloud + Slate + Steel + Soft White).
+/* RecodeX design tokens. Four themes from one token system (names as shown in Settings):
+   Dawn (light, default: lavender and purple), Midnight Steel (data-theme "dark": Deep Navy + Muted Steel Blue
+   + Cool Silver), Cloud & Slate ("cloud": Cloud + Slate + Steel + Soft White) and Obsidian Graphite
+   ("obsidian": Almost Black + Dark Charcoal + Warm Grey + Soft White). The registry is src/lib/theme.ts.
    Tokens are RGB triplets so Tailwind can apply alpha (see tailwind.config.cjs). Semantic colours have a
    fill shade and an -ink shade for text; src/lib/contrast.test.ts checks WCAG AA for both themes.
    To retune a theme, change the values here; components only ever refer to the token names.
@@ -11,13 +12,16 @@
    Text:      fg (primary) · muted (secondary) · icon (card-header icons) · onart (text over artwork)
    Accent:    accent = filled primary buttons, selected tabs, selected tints · accentfg = text on an accent fill
               accent-ink = links and highlighted text on plain surfaces
-              interactive = focus rings, the selected-page indicator, selected borders, progress, charts, toggles
+              interactive = the selected-page indicator, selected borders, progress, charts, toggles
+              focus = keyboard focus rings and focused inputs (the same as interactive except in Obsidian)
               selected = the label of a selected item (on an accent tint)
    Status:    ok / warn / bad = Green / Yellow / Red ratings only · hot = overdue / attention · none = not reviewed
    Effects:   scrim = fade behind text on artwork · onart-shadow = text shadow on artwork
               hero-bg = background of the dashboard banner beside the animation · backdrop = behind dialogs and drawers
               glow = strength (0..1) of the accent glow under primary buttons and the logo
               edge = strength (0..1) of the interactive outline on a hovered primary button
+              btn-ring / btn-ring-a = colour and strength of a faint outline on primary buttons and selected tabs
+              art-filter = CSS filter for artwork (Obsidian shows it in grayscale; unset elsewhere)
               headline-a/b = highlighted word in hero headlines · ring-a/b = lifetime-mastery ring */
 :root {
   /* Dawn */
@@ -25,6 +29,7 @@
   --elevated: 255 255 255; --btn2: 241 238 249; --btn2fg: 26 29 58;
   --fg: 26 29 58; --muted: 99 104 135; --icon: 99 104 135; --onart: 255 255 255;
   --accent: 106 75 209; --accent-ink: 106 75 209; --accentfg: 255 255 255; --interactive: 106 75 209; --selected: 106 75 209;
+  --focus: 106 75 209; --btn-ring: 0 0 0; --btn-ring-a: 0;
   --ok: 53 201 138;   --ok-ink: 14 122 78;
   --warn: 255 200 87; --warn-ink: 138 90 0;
   --bad: 240 86 91;   --bad-ink: 192 38 44;
@@ -49,6 +54,7 @@
     --elevated: 37 55 69; --btn2: 43 62 76; --btn2fg: 204 208 207;
     --fg: 204 208 207; --muted: 155 168 171; --icon: 155 168 171; --onart: 204 208 207;
     --accent: 74 92 106; --accent-ink: 96 165 250; --accentfg: 221 225 224; --interactive: 96 165 250; --selected: 204 208 207;
+    --focus: 96 165 250;
     --ok: 53 201 138;   --ok-ink: 95 217 163;
     --warn: 255 200 87; --warn-ink: 255 200 87;
     --bad: 240 86 91;   --bad-ink: 255 154 157;
@@ -67,6 +73,7 @@
     --elevated: 37 55 69; --btn2: 43 62 76; --btn2fg: 204 208 207;
   --fg: 204 208 207; --muted: 155 168 171; --icon: 155 168 171; --onart: 204 208 207;
   --accent: 74 92 106; --accent-ink: 96 165 250; --accentfg: 221 225 224; --interactive: 96 165 250; --selected: 204 208 207;
+    --focus: 96 165 250;
   --ok: 53 201 138;   --ok-ink: 95 217 163;
   --warn: 255 200 87; --warn-ink: 255 200 87;
   --bad: 240 86 91;   --bad-ink: 255 154 157;
@@ -89,6 +96,7 @@
   --elevated: 255 255 255; --btn2: 143 151 161; --btn2fg: 32 40 51;
   --fg: 32 40 51; --muted: 78 86 97; --icon: 112 120 129; --onart: 32 40 51;
   --accent: 107 115 124; --accent-ink: 63 90 115; --accentfg: 255 255 255; --interactive: 79 110 141; --selected: 32 40 51;
+  --focus: 79 110 141;
   --ok: 53 201 138;   --ok-ink: 10 107 68;
   --warn: 255 200 87; --warn-ink: 138 90 0;
   --bad: 240 86 91;   --bad-ink: 192 38 44;
@@ -100,6 +108,30 @@
   --headline-a: 112 120 129; --headline-b: 112 120 129;
   --ring-a: 112 120 129; --ring-b: 174 181 191;
   color-scheme: light;
+}
+
+/* Obsidian Graphite: dark and monochromatic. Palette: #040204 page · #1A1A18 sidebar · #242421 cards ·
+   #3A3A35 primary buttons and selected tabs · #8C8C7C warm grey (indicator, progress, charts, icons) ·
+   #F0EFEB soft white text · #A5A49D muted text · #30302D borders · #A8C7E8 ice blue for links and focus only.
+   #3A3A35 is not used for dialogs or featured cards, so primary buttons stay visible on them: those use a
+   subtler #2A2A27 (chips and tracks are #33332F), and buttons carry a faint warm-grey outline (btn-ring). */
+:root[data-theme="obsidian"] {
+  --bg: 4 2 4; --sidebar: 26 26 24; --surface: 36 36 33; --surface2: 51 51 47; --hover: 48 48 45; --line: 48 48 45;
+  --elevated: 42 42 39; --btn2: 44 44 41; --btn2fg: 240 239 235;
+  --fg: 240 239 235; --muted: 165 164 157; --icon: 140 140 124; --onart: 240 239 235;
+  --accent: 58 58 53; --accent-ink: 168 199 232; --accentfg: 240 239 235; --interactive: 140 140 124; --selected: 240 239 235;
+  --focus: 168 199 232; --btn-ring: 140 140 124; --btn-ring-a: 0.3;
+  --ok: 53 201 138;   --ok-ink: 95 217 163;
+  --warn: 255 200 87; --warn-ink: 255 200 87;
+  --bad: 240 86 91;   --bad-ink: 255 154 157;
+  --hot: 255 150 61;  --hot-ink: 255 160 82;
+  --none: 120 119 110; --none-ink: 176 175 167;
+  --shadow: 0 0 0; --scrim: 4 2 4; --onart-shadow: 0 0 0; --backdrop: 0 0 0; --glow: 0; --edge: 0.45;
+  --hero-bg: linear-gradient(180deg, #020e22 0%, #030d1f 30%, #041833 55%, #092849 76%, #020b1c 100%);
+  --art-filter: grayscale(1) contrast(1.04);
+  --headline-a: 140 140 124; --headline-b: 165 164 157;
+  --ring-a: 140 140 124; --ring-b: 165 164 157;
+  color-scheme: dark;
 }
 
 @tailwind base;
@@ -140,6 +172,9 @@ select option { background: rgb(var(--surface)); color: rgb(var(--fg)); }
 .recharts-wrapper, .recharts-surface { outline: none; }
 .recharts-text { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
 
+/* Artwork follows the theme's tone (Obsidian Graphite renders it in grayscale). */
+.art-tone { filter: var(--art-filter, none); }
+
 /* Light themes with dark artwork lay a veil under the hero text (Cloud defines --hero-veil; elsewhere it paints nothing). */
 .hero-veil { background: var(--hero-veil, none); }
 
@@ -147,7 +182,7 @@ select option { background: rgb(var(--surface)); color: rgb(var(--fg)); }
 .headline-accent { background: linear-gradient(90deg, rgb(var(--headline-a)), rgb(var(--headline-b))); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
 /* Visible keyboard focus everywhere. */
-:focus-visible { outline: 2px solid rgb(var(--interactive)); outline-offset: 2px; }
+:focus-visible { outline: 2px solid rgb(var(--focus)); outline-offset: 2px; }
 input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
 
 /* Thin, theme-aware scrollbars for horizontal trails and lists. */

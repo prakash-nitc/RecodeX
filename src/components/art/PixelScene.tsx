@@ -2,7 +2,8 @@
 // seen from behind at a big monitor, surrounded by gear, with the app's mountain range through the
 // blinds. Drawn on a 240×72 canvas and scaled up with crisp pixels; animated at 12 fps.
 //
-// The palette follows the app theme: Dawn is daytime, Cloud is daytime in cool greys, Dusk is night.
+// The palette follows the app theme: Dawn is daytime, Cloud is daytime in cool greys, Midnight Steel is night,
+// and Obsidian Graphite is night in grayscale (via the art-tone filter).
 // Static layers are painted once per palette; each frame only redraws what moves. The loop stops while
 // the scene is off-screen or the tab is hidden, and draws a single still frame for reduced motion.
 import React, { useEffect, useRef } from 'react';
@@ -269,7 +270,7 @@ export function PixelScene({ className }: { className?: string }) {
   useEffect(() => {
     const cv = ref.current; if (!cv) return;
     const c = cv.getContext('2d'); if (!c) return;
-    const pal = dusk ? NIGHT : palette === 'cloud' ? CLOUD : DAY;
+    const pal = dusk || palette === 'obsidian' ? NIGHT : palette === 'cloud' ? CLOUD : DAY;
     const bg = document.createElement('canvas'); bg.width = LW; bg.height = LH;
     const bc = bg.getContext('2d'); if (!bc) return;
     paintStatic(bc, pal);
@@ -293,8 +294,8 @@ export function PixelScene({ className }: { className?: string }) {
   }, [palette]);
 
   return (
-    <canvas ref={ref} width={LW} height={LH} className={className} data-scene="pixel" data-palette={dusk ? 'night' : 'day'}
+    <canvas ref={ref} width={LW} height={LH} className={`art-tone ${className ?? ''}`} data-scene="pixel" data-palette={dusk || palette === 'obsidian' ? 'night' : 'day'}
       style={{ imageRendering: 'pixelated', objectFit: 'cover', objectPosition: '100% 100%' }}
-      role="img" aria-label={`Pixel-art animation: someone coding at a big monitor${dusk ? ' late at night' : ' in the daytime'}`} />
+      role="img" aria-label={`Pixel-art animation: someone coding at a big monitor${dusk || palette === 'obsidian' ? ' late at night' : ' in the daytime'}`} />
   );
 }

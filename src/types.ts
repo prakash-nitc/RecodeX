@@ -142,7 +142,7 @@ export interface Settings {
   activationDelayDays: number;
   defaultSessionSize: number;
   defaultDifficulty: DiffChoice;
-  theme: 'system' | 'light' | 'dark' | 'cloud';
+  theme: 'system' | 'light' | 'dark' | 'cloud' | 'obsidian';
   /** Artwork at the top of the dashboard. */
   heroScene: 'gif' | 'pixel' | 'lofi' | 'mountains';
   weekStart: 0 | 1;

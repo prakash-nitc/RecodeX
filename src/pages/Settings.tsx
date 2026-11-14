@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Cloud as CloudIcon, Download, Upload, RotateCcw, Trash2, Plus, X, Monitor, Sun, Moon, Database, HardDrive, LogOut, KeyRound, Settings2, Palette, Bell, Shield, Sliders, BookOpen, Smartphone } from 'lucide-react';
+import { Download, Upload, RotateCcw, Trash2, Plus, X, Database, HardDrive, LogOut, KeyRound, Settings2, Palette, Bell, Shield, Sliders, BookOpen, Smartphone } from 'lucide-react';
 import { useData, settingsOf, updateSettings, makeBackup, restoreBackup, resetToImport, Backup, BACKUP_APP_IDS, shutdown } from '../lib/store';
 import { supabase } from '../lib/supabase/client';
 import { intervalFor } from '../lib/engine';
@@ -10,6 +10,7 @@ import type { Settings as S, DiffChoice } from '../types';
 import { DEFAULT_SETTINGS } from '../types';
 import { Button, Card, CardHeader, Field, Input, PageHeader, Segmented, Toggle, Select, useUi, Dialog, cx, SectionLabel } from '../components/ui';
 import { saveFile, CopyBox, readFileText, CsvDialog } from './CsvDialog';
+import { ThemePicker } from '../components/ThemePicker';
 
 function Num({ id, value, onChange, min = 0, max = 365, suffix }: { id: string; value: number; onChange: (n: number) => void; min?: number; max?: number; suffix?: string }) {
   const [v, setV] = useState(String(value));
@@ -146,11 +147,10 @@ export default function Settings() {
             <Field label="Display name" htmlFor="st-name" hint="Used in the dashboard greeting." className="md:col-span-2">
               <NameInput value={s.displayName} onChange={v => set({ displayName: v })} />
             </Field>
-            <Field label="Theme">
-              <Segmented ariaLabel="Theme" value={s.theme} onChange={v => { set({ theme: v }); applyTheme(v); }}
-                options={[{ value: 'system', label: <span className="inline-flex items-center gap-1"><Monitor size={13} />System</span> }, { value: 'light', label: <span className="inline-flex items-center gap-1"><Sun size={13} />Dawn</span> }, { value: 'dark', label: <span className="inline-flex items-center gap-1"><Moon size={13} />Dusk</span> }, { value: 'cloud', label: <span className="inline-flex items-center gap-1"><CloudIcon size={13} />Cloud</span> }]} />
+            <Field label="Theme" className="md:col-span-2" hint="Applies instantly, on every device signed in to your account.">
+              <ThemePicker value={s.theme} onChange={v => { set({ theme: v }); applyTheme(v); }} />
             </Field>
-            <Field label="Dashboard scene" hint="Server room is your own animation. Pixel den follows the theme (daytime in Dawn, night in Dusk); Lofi window and Mountains follow the time of day. All stay still if your device reduces motion.">
+            <Field label="Dashboard scene" hint="Server room is your own animation. Pixel den follows the theme (daytime in the light themes, night in the dark ones); Lofi window and Mountains follow the time of day. Obsidian Graphite shows all of them in grayscale. All stay still if your device reduces motion.">
               <Segmented ariaLabel="Dashboard scene" value={s.heroScene} onChange={v => set({ heroScene: v })}
                 options={[{ value: 'gif', label: 'Server room' }, { value: 'pixel', label: 'Pixel den' }, { value: 'lofi', label: 'Lofi window' }, { value: 'mountains', label: 'Mountains' }]} />
             </Field>
