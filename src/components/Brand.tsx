@@ -3,12 +3,12 @@
 // stops widening like review intervals); public/favicon.svg drops the trail for small sizes and is
 // what the app shows. Edit those files, then run `npm run icons` to rebuild the PNGs.
 import React from 'react';
-import { useDusk } from '../lib/theme';
+import { usePalette } from '../lib/theme';
 
-/** The logo inside the app: purple on Dawn, steel blue on Dusk (public/brand-dusk.svg, same shapes). */
+/** The logo inside the app: purple on Dawn, steel blue on Dusk, charcoal and slate on Cloud (same shapes). */
 export function BrandMark({ size = 32, className }: { size?: number; className?: string }) {
-  const dusk = useDusk();
-  return <img src={dusk ? '/brand-dusk.svg' : '/favicon.svg'} width={size} height={size} alt="" aria-hidden draggable={false} className={className} />;
+  const palette = usePalette();
+  return <img src={palette === 'dusk' ? '/brand-dusk.svg' : palette === 'cloud' ? '/brand-cloud.svg' : '/favicon.svg'} width={size} height={size} alt="" aria-hidden draggable={false} className={className} />;
 }
 
 export function BrandLockup({ collapsed }: { collapsed?: boolean }) {

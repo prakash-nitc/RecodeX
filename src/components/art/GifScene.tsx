@@ -5,8 +5,9 @@
 // GIFs cannot be paused, so reduced-motion users get the first frame (dashboard-still.png).
 import React from 'react';
 
-// The GIF's left edge, top to bottom: night sky, wall, the lamp-lit desk, the floor.
-const EDGE = 'linear-gradient(180deg, #020e22 0%, #030d1f 30%, #041833 55%, #092849 76%, #020b1c 100%)';
+// Background beside the GIF: the --hero-bg token. In Dawn and Dusk it is sampled from the GIF's left edge
+// (night sky, wall, the lamp-lit desk, the floor); Cloud uses a light cool grey.
+const EDGE = 'var(--hero-bg)';
 const FADE = 'linear-gradient(90deg, transparent 0%, #000 42%)';
 
 export function GifScene({ className }: { className?: string }) {

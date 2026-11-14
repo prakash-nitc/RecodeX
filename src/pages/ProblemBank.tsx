@@ -192,7 +192,7 @@ export function ProblemTable({ problems, emptyText, layout = 'flat', dividers = 
       <QuickRate id={p.id} />
       <Button size="icon" variant="ghost" aria-label="More actions" aria-expanded={menu === p.id} onClick={() => setMenu(menu === p.id ? null : p.id)}><MoreHorizontal size={16} /></Button>
       {menu === p.id && (
-        <div className="absolute right-0 top-9 z-20 w-48 rounded-2xl border border-line bg-surface p-1.5 shadow-pop animate-pop-in" onMouseLeave={() => setMenu(null)}>
+        <div className="absolute right-0 top-9 z-20 w-48 rounded-2xl border border-line bg-elevated p-1.5 shadow-pop animate-pop-in" onMouseLeave={() => setMenu(null)}>
           <MenuItem icon={<History size={14} />} onClick={() => { setMenu(null); openProblem(p.id); }}>Details & history</MenuItem>
           <MenuItem icon={<Pencil size={14} />} onClick={() => { setMenu(null); editProblem(p.id); }}>Edit</MenuItem>
           <MenuItem icon={<Flame size={14} />} onClick={() => { setMenu(null); rate(p.id); }}>Record revision</MenuItem>

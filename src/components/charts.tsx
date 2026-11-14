@@ -99,7 +99,7 @@ export function ColumnChart({ data, series, height = 176, ariaLabel, note, highl
           </svg>
         )}
         {hv && hover !== null && (
-          <div className="pointer-events-none absolute z-10 w-[8.75rem] rounded-xl border border-line bg-surface px-3 py-2 text-xs shadow-pop"
+          <div className="pointer-events-none absolute z-10 w-[8.75rem] rounded-xl border border-line bg-elevated px-3 py-2 text-xs shadow-pop"
             style={{ top: 0, ...(() => {
               // Beside the bar, never over it: to the right when it fits, otherwise to the left.
               const barRight = left + band * hover + (band + barW) / 2 + 8, barLeft = left + band * hover + (band - barW) / 2 - 8;

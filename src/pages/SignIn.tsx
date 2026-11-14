@@ -56,7 +56,7 @@ export default function SignIn() {
       <section className="relative h-[230px] sm:h-[300px] lg:h-auto lg:min-h-screen overflow-hidden" aria-label="RecodeX">
         <MountainScene className="absolute inset-0 h-full w-full" />
         <div className="absolute inset-0 bg-gradient-to-t from-scrim/[0.7] via-scrim/[0.25] to-scrim/[0.15] lg:bg-gradient-to-r lg:from-scrim/[0.65] lg:via-scrim/[0.3] lg:to-transparent" />
-        <div className="relative flex h-full flex-col justify-between p-6 sm:p-10 text-onart [text-shadow:0_1px_14px_rgb(0_0_0/0.35)]">
+        <div className="relative flex h-full flex-col justify-between p-6 sm:p-10 text-onart [text-shadow:0_1px_14px_rgb(var(--onart-shadow)/0.35)]">
           <div className="flex items-center gap-2.5">
             <BrandMark size={36} />
             <span className="font-display text-2xl font-semibold tracking-tight">RecodeX</span>

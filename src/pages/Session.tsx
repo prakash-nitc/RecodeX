@@ -238,7 +238,7 @@ function Summary({ session }: { session: Session }) {
       <section className="relative overflow-hidden rounded-3xl h-[220px] sm:h-[260px] shadow-lift animate-rise">
         <MountainScene className="absolute inset-0 h-full w-full" />
         <div className="absolute inset-0 bg-gradient-to-t from-scrim/[0.75] via-scrim/[0.3] to-transparent" />
-        <div className="relative flex h-full flex-col justify-end p-6 sm:p-8 text-onart [text-shadow:0_1px_14px_rgb(0_0_0/0.4)]">
+        <div className="relative flex h-full flex-col justify-end p-6 sm:p-8 text-onart [text-shadow:0_1px_14px_rgb(var(--onart-shadow)/0.4)]">
           <div className="flex items-center gap-2 text-sm font-semibold text-onart/85">{done ? <><Trophy size={16} />Session complete</> : 'Session ended early'}</div>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl font-semibold tracking-tight text-balance">{done ? (acc >= 80 ? 'A clear view from up here.' : 'Another stretch of the trail behind you.') : 'Every step still counts.'}</h1>
           <p className="mt-1 text-sm text-onart/80">{session.title} · {fmtTimestamp(session.startedAt)}</p>

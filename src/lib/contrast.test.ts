@@ -11,7 +11,8 @@ function tokens(block: string): Record<string, number[]> {
   return out;
 }
 const dawn = tokens(css.slice(css.indexOf(':root {'), css.indexOf('@media (prefers-color-scheme: dark)')));
-const dusk = tokens(css.slice(css.indexOf(':root[data-theme="dark"]'), css.indexOf('@tailwind base')));
+const dusk = tokens(css.slice(css.indexOf(':root[data-theme="dark"]'), css.indexOf(':root[data-theme="cloud"]')));
+const cloud = tokens(css.slice(css.indexOf(':root[data-theme="cloud"]'), css.indexOf('@tailwind base')));
 // The same Dusk values, as applied for "System" on a dark device.
 const duskSystem = tokens(css.slice(css.indexOf('@media (prefers-color-scheme: dark)'), css.indexOf(':root[data-theme="dark"]')));
 
@@ -22,15 +23,16 @@ const lum = (c: number[]) => {
 const ratio = (a: number[], b: number[]) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
 const mix = (a: number[], b: number[], t: number) => a.map((v, i) => Math.round(v * (1 - t) + b[i] * t));
 
-describe.each([['Dawn', dawn], ['Dusk', dusk]] as const)('%s theme', (_name, t) => {
+describe.each([['Dawn', dawn], ['Dusk', dusk], ['Cloud', cloud]] as const)('%s theme', (_name, t) => {
   it('defines every token', () => {
-    for (const k of ['bg', 'sidebar', 'surface', 'surface2', 'hover', 'line', 'fg', 'muted', 'icon', 'onart', 'accent', 'accent-ink', 'accentfg',
+    for (const k of ['bg', 'sidebar', 'surface', 'surface2', 'elevated', 'hover', 'line', 'fg', 'muted', 'icon', 'onart', 'onart-shadow',
+      'btn2', 'btn2fg', 'accent', 'accent-ink', 'accentfg',
       'interactive', 'selected', 'ok-ink', 'warn-ink', 'bad-ink', 'hot-ink', 'none-ink', 'scrim', 'backdrop',
       'headline-a', 'headline-b', 'ring-a', 'ring-b']) expect(t[k], k).toBeTruthy();
   });
 
   it('body and muted text pass AA on background, sidebar, cards, raised surfaces and hovered items', () => {
-    for (const bg of ['bg', 'sidebar', 'surface', 'surface2', 'hover']) {
+    for (const bg of ['bg', 'sidebar', 'surface', 'surface2', 'elevated', 'hover']) {
       expect(ratio(t.fg, t[bg]), `fg on ${bg}`).toBeGreaterThanOrEqual(4.5);
       expect(ratio(t.muted, t[bg]), `muted on ${bg}`).toBeGreaterThanOrEqual(4.5);
     }
@@ -51,8 +53,9 @@ describe.each([['Dawn', dawn], ['Dusk', dusk]] as const)('%s theme', (_name, t) 
     }
   });
 
-  it('button text passes AA on the accent', () => {
-    expect(ratio(t.accentfg, t.accent)).toBeGreaterThanOrEqual(4.5);
+  it('button text passes AA on primary and secondary buttons', () => {
+    expect(ratio(t.accentfg, t.accent), 'primary').toBeGreaterThanOrEqual(4.5);
+    expect(ratio(t.btn2fg, t.btn2), 'secondary').toBeGreaterThanOrEqual(4.5);
   });
 
   it('interactive marks, icons and the headline highlight are visible (3:1 for graphics and large text)', () => {

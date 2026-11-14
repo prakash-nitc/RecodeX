@@ -2,11 +2,11 @@
 // seen from behind at a big monitor, surrounded by gear, with the app's mountain range through the
 // blinds. Drawn on a 240×72 canvas and scaled up with crisp pixels; animated at 12 fps.
 //
-// The palette follows the app theme: Dawn (light) is daytime, Dusk (dark) is night.
+// The palette follows the app theme: Dawn is daytime, Cloud is daytime in cool greys, Dusk is night.
 // Static layers are painted once per palette; each frame only redraws what moves. The loop stops while
 // the scene is off-screen or the tab is hidden, and draws a single still frame for reduced motion.
 import React, { useEffect, useRef } from 'react';
-import { useDusk } from '../../lib/theme';
+import { usePalette } from '../../lib/theme';
 
 const LW = 240, LH = 72, FPS = 12;
 type Ctx = CanvasRenderingContext2D;
@@ -46,6 +46,18 @@ const DAY: Pal = {
   hoodie: '#6A4BD1', hoodieDk: '#4B33A8', hoodieHi: '#8F74E6', hair: '#3B2A22', hairHi: '#6B4A3A', rim: '#8A6A58',
   skin: '#E9AE94', skinDk: '#C48B72', phones: '#2A2448', lampOn: false, lampLight: '#FFB46B', shade: '#57507F',
   chair: '#2A2448', chairHi: '#57507F', mug: '#FFFFFF', steam: '#FFFFFF', leds: ['#35C98A', '#FFC857', '#6A4BD1', '#FF963D'], ledOff: '#57507F', night: false,
+};
+
+// Cloud: the daytime room in cool greys, slate and steel.
+const CLOUD: Pal = {
+  ...DAY,
+  wall: ['#D6DCE3', '#E1E5EA'], panel: '#D0D6DE', slat: '#D0D6DE', frame: '#AEB5BF',
+  metal: '#4E5661', metal2: '#707881', metal3: '#8F97A1',
+  desk: '#AEB5BF', deskHi: '#CCD3DD', deskFront: '#8F97A1', drawer: '#9AA2AC',
+  screen: '#202833', screenHead: '#2E3744', code: ['#AEB5BF', '#7FA6CC', '#CCD3DD', '#8F97A1'],
+  wallScreen: '#707881', wallBar: '#8F97A1', wallBarHi: '#E1E5EA',
+  hoodie: '#707881', hoodieDk: '#4E5661', hoodieHi: '#8F97A1', phones: '#202833', shade: '#707881',
+  chair: '#4E5661', chairHi: '#707881', leds: ['#35C98A', '#FFC857', '#4F6E8D', '#FF963D'], ledOff: '#8F97A1',
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -250,13 +262,14 @@ function paintFrame(c: Ctx, bg: HTMLCanvasElement, p: Pal, f: number) {
 // ---------------------------------------------------------------------------------------------
 
 export function PixelScene({ className }: { className?: string }) {
-  const dusk = useDusk();
+  const palette = usePalette();
+  const dusk = palette === 'dusk';
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const cv = ref.current; if (!cv) return;
     const c = cv.getContext('2d'); if (!c) return;
-    const pal = dusk ? NIGHT : DAY;
+    const pal = dusk ? NIGHT : palette === 'cloud' ? CLOUD : DAY;
     const bg = document.createElement('canvas'); bg.width = LW; bg.height = LH;
     const bc = bg.getContext('2d'); if (!bc) return;
     paintStatic(bc, pal);
@@ -277,7 +290,7 @@ export function PixelScene({ className }: { className?: string }) {
     document.addEventListener('visibilitychange', sync);
     reduce.addEventListener?.('change', sync);
     return () => { stop(); io?.disconnect(); document.removeEventListener('visibilitychange', sync); reduce.removeEventListener?.('change', sync); };
-  }, [dusk]);
+  }, [palette]);
 
   return (
     <canvas ref={ref} width={LW} height={LH} className={className} data-scene="pixel" data-palette={dusk ? 'night' : 'day'}

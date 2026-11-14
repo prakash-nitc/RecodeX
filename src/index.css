@@ -1,24 +1,28 @@
-/* RecodeX design tokens. Two themes from one token system:
-   Dawn (light, default: lavender and purple) and Dusk (dark: Deep Navy + Muted Steel Blue + Cool Silver).
+/* RecodeX design tokens. Three themes from one token system:
+   Dawn (light, default: lavender and purple), Dusk (dark: Deep Navy + Muted Steel Blue + Cool Silver)
+   and Cloud (light, monochromatic: Cloud + Slate + Steel + Soft White).
    Tokens are RGB triplets so Tailwind can apply alpha (see tailwind.config.cjs). Semantic colours have a
    fill shade and an -ink shade for text; src/lib/contrast.test.ts checks WCAG AA for both themes.
    To retune a theme, change the values here; components only ever refer to the token names.
 
    Surfaces:  bg (page) < sidebar < surface (cards) < surface2 (raised: chips, tags, tracks, tiles)
-              hover = row and item hover · line = borders
+              elevated = dialogs, menus, toasts and featured cards · hover = row and item hover · line = borders
+              btn2 / btn2fg = secondary button fill and text
    Text:      fg (primary) · muted (secondary) · icon (card-header icons) · onart (text over artwork)
    Accent:    accent = filled primary buttons, selected tabs, selected tints · accentfg = text on an accent fill
               accent-ink = links and highlighted text on plain surfaces
               interactive = focus rings, the selected-page indicator, selected borders, progress, charts, toggles
               selected = the label of a selected item (on an accent tint)
    Status:    ok / warn / bad = Green / Yellow / Red ratings only · hot = overdue / attention · none = not reviewed
-   Effects:   scrim = dark fade behind text on artwork · backdrop = behind dialogs and drawers
+   Effects:   scrim = fade behind text on artwork · onart-shadow = text shadow on artwork
+              hero-bg = background of the dashboard banner beside the animation · backdrop = behind dialogs and drawers
               glow = strength (0..1) of the accent glow under primary buttons and the logo
               edge = strength (0..1) of the interactive outline on a hovered primary button
               headline-a/b = highlighted word in hero headlines · ring-a/b = lifetime-mastery ring */
 :root {
   /* Dawn */
   --bg: 246 244 251; --sidebar: 255 255 255; --surface: 255 255 255; --surface2: 241 238 249; --hover: 241 238 249; --line: 230 226 240;
+  --elevated: 255 255 255; --btn2: 241 238 249; --btn2fg: 26 29 58;
   --fg: 26 29 58; --muted: 99 104 135; --icon: 99 104 135; --onart: 255 255 255;
   --accent: 106 75 209; --accent-ink: 106 75 209; --accentfg: 255 255 255; --interactive: 106 75 209; --selected: 106 75 209;
   --ok: 53 201 138;   --ok-ink: 14 122 78;
@@ -26,7 +30,8 @@
   --bad: 240 86 91;   --bad-ink: 192 38 44;
   --hot: 255 150 61;  --hot-ink: 163 72 0;
   --none: 139 144 173; --none-ink: 94 99 130;
-  --shadow: 46 34 110; --scrim: 8 10 28; --backdrop: 11 16 32; --glow: 0.55; --edge: 0;
+  --shadow: 46 34 110; --scrim: 8 10 28; --onart-shadow: 0 0 0; --backdrop: 11 16 32; --glow: 0.55; --edge: 0;
+  --hero-bg: linear-gradient(180deg, #020e22 0%, #030d1f 30%, #041833 55%, #092849 76%, #020b1c 100%);
   --headline-a: 255 150 61; --headline-b: 255 200 87;
   --ring-a: 255 150 61; --ring-b: 255 200 87;
   --sun-a: 255 150 61; --sun-b: 255 200 87;
@@ -38,9 +43,10 @@
    #9BA8AB cool grey · #CCD0CF soft silver · #354956 borders · #60A5FA interactive blue.
    #2B3E4C is the raised step for chips and tracks: cool-grey text on #4A5C6A would be only 2.8:1. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme]) {
     /* Dusk */
     --bg: 6 20 27; --sidebar: 17 33 45; --surface: 37 55 69; --surface2: 43 62 76; --hover: 43 62 76; --line: 53 73 86;
+    --elevated: 37 55 69; --btn2: 43 62 76; --btn2fg: 204 208 207;
     --fg: 204 208 207; --muted: 155 168 171; --icon: 155 168 171; --onart: 204 208 207;
     --accent: 74 92 106; --accent-ink: 96 165 250; --accentfg: 221 225 224; --interactive: 96 165 250; --selected: 204 208 207;
     --ok: 53 201 138;   --ok-ink: 95 217 163;
@@ -48,7 +54,8 @@
     --bad: 240 86 91;   --bad-ink: 255 154 157;
     --hot: 255 150 61;  --hot-ink: 255 160 82;
     --none: 116 132 140; --none-ink: 170 182 186;
-    --shadow: 0 0 0; --scrim: 6 20 27; --backdrop: 2 8 12; --glow: 0; --edge: 0.55;
+    --shadow: 0 0 0; --scrim: 6 20 27; --onart-shadow: 0 0 0; --backdrop: 2 8 12; --glow: 0; --edge: 0.55;
+    --hero-bg: linear-gradient(180deg, #020e22 0%, #030d1f 30%, #041833 55%, #092849 76%, #020b1c 100%);
     --headline-a: 96 165 250; --headline-b: 96 165 250;
     --ring-a: 96 165 250; --ring-b: 125 160 190;
     color-scheme: dark;
@@ -57,6 +64,7 @@
 :root[data-theme="dark"] {
   /* Dusk */
   --bg: 6 20 27; --sidebar: 17 33 45; --surface: 37 55 69; --surface2: 43 62 76; --hover: 43 62 76; --line: 53 73 86;
+    --elevated: 37 55 69; --btn2: 43 62 76; --btn2fg: 204 208 207;
   --fg: 204 208 207; --muted: 155 168 171; --icon: 155 168 171; --onart: 204 208 207;
   --accent: 74 92 106; --accent-ink: 96 165 250; --accentfg: 221 225 224; --interactive: 96 165 250; --selected: 204 208 207;
   --ok: 53 201 138;   --ok-ink: 95 217 163;
@@ -64,10 +72,34 @@
   --bad: 240 86 91;   --bad-ink: 255 154 157;
   --hot: 255 150 61;  --hot-ink: 255 160 82;
   --none: 116 132 140; --none-ink: 170 182 186;
-  --shadow: 0 0 0; --scrim: 6 20 27; --backdrop: 2 8 12; --glow: 0; --edge: 0.55;
+  --shadow: 0 0 0; --scrim: 6 20 27; --onart-shadow: 0 0 0; --backdrop: 2 8 12; --glow: 0; --edge: 0.55;
+    --hero-bg: linear-gradient(180deg, #020e22 0%, #030d1f 30%, #041833 55%, #092849 76%, #020b1c 100%);
   --headline-a: 96 165 250; --headline-b: 96 165 250;
   --ring-a: 96 165 250; --ring-b: 125 160 190;
   color-scheme: dark;
+}
+
+/* Cloud: light and monochromatic. Palette: #E1E5EA page · #CCD3DD sidebar · #F7F8FA cards · #FFFFFF elevated ·
+   #AEB5BF slate (mastery ring) · #8F97A1 steel (secondary buttons) · #202833 charcoal text · #D0D6DE borders.
+   Contrast-driven adjustments (contrast.test.ts): secondary text #4E5661 (the specified #707881 is 3.5:1 on the
+   page, so it is used for icons), primary button #6B737C (white on #707881 is 4.47:1), and cool #F7F8FA cards
+   (the specified #FBEFF0 reads pink against the cool greys). */
+:root[data-theme="cloud"] {
+  --bg: 225 229 234; --sidebar: 204 211 221; --surface: 247 248 250; --surface2: 233 236 240; --hover: 216 222 229; --line: 208 214 222;
+  --elevated: 255 255 255; --btn2: 143 151 161; --btn2fg: 32 40 51;
+  --fg: 32 40 51; --muted: 78 86 97; --icon: 112 120 129; --onart: 32 40 51;
+  --accent: 107 115 124; --accent-ink: 63 90 115; --accentfg: 255 255 255; --interactive: 79 110 141; --selected: 32 40 51;
+  --ok: 53 201 138;   --ok-ink: 10 107 68;
+  --warn: 255 200 87; --warn-ink: 138 90 0;
+  --bad: 240 86 91;   --bad-ink: 192 38 44;
+  --hot: 255 150 61;  --hot-ink: 163 72 0;
+  --none: 150 158 168; --none-ink: 78 86 97;
+  --shadow: 32 40 51; --scrim: 225 229 234; --onart-shadow: 255 255 255; --backdrop: 32 40 51; --glow: 0; --edge: 0.5;
+  --hero-bg: linear-gradient(180deg, #EEF1F4 0%, #E5E9EE 55%, #D6DCE3 100%);
+  --hero-veil: linear-gradient(180deg, rgb(238 241 244 / 0.95) 0%, rgb(238 241 244 / 0.9) 40%, rgb(238 241 244 / 0) 62%), linear-gradient(90deg, rgb(238 241 244 / 0.94) 0%, rgb(238 241 244 / 0.88) 50%, rgb(238 241 244 / 0) 74%);
+  --headline-a: 112 120 129; --headline-b: 112 120 129;
+  --ring-a: 112 120 129; --ring-b: 174 181 191;
+  color-scheme: light;
 }
 
 @tailwind base;
@@ -107,6 +139,9 @@ select option { background: rgb(var(--surface)); color: rgb(var(--fg)); }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .recharts-wrapper, .recharts-surface { outline: none; }
 .recharts-text { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
+
+/* Light themes with dark artwork lay a veil under the hero text (Cloud defines --hero-veil; elsewhere it paints nothing). */
+.hero-veil { background: var(--hero-veil, none); }
 
 /* The highlighted word in hero headlines ("Master."): sunrise on Dawn, ice blue on Dusk. */
 .headline-accent { background: linear-gradient(90deg, rgb(var(--headline-a)), rgb(var(--headline-b))); -webkit-background-clip: text; background-clip: text; color: transparent; }

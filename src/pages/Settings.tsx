@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Upload, RotateCcw, Trash2, Plus, X, Monitor, Sun, Moon, Database, HardDrive, LogOut, KeyRound, Settings2, Palette, Bell, Shield, Sliders, BookOpen, Smartphone } from 'lucide-react';
+import { Cloud as CloudIcon, Download, Upload, RotateCcw, Trash2, Plus, X, Monitor, Sun, Moon, Database, HardDrive, LogOut, KeyRound, Settings2, Palette, Bell, Shield, Sliders, BookOpen, Smartphone } from 'lucide-react';
 import { useData, settingsOf, updateSettings, makeBackup, restoreBackup, resetToImport, Backup, BACKUP_APP_IDS, shutdown } from '../lib/store';
 import { supabase } from '../lib/supabase/client';
 import { intervalFor } from '../lib/engine';
@@ -148,7 +148,7 @@ export default function Settings() {
             </Field>
             <Field label="Theme">
               <Segmented ariaLabel="Theme" value={s.theme} onChange={v => { set({ theme: v }); applyTheme(v); }}
-                options={[{ value: 'system', label: <span className="inline-flex items-center gap-1"><Monitor size={13} />System</span> }, { value: 'light', label: <span className="inline-flex items-center gap-1"><Sun size={13} />Dawn</span> }, { value: 'dark', label: <span className="inline-flex items-center gap-1"><Moon size={13} />Dusk</span> }]} />
+                options={[{ value: 'system', label: <span className="inline-flex items-center gap-1"><Monitor size={13} />System</span> }, { value: 'light', label: <span className="inline-flex items-center gap-1"><Sun size={13} />Dawn</span> }, { value: 'dark', label: <span className="inline-flex items-center gap-1"><Moon size={13} />Dusk</span> }, { value: 'cloud', label: <span className="inline-flex items-center gap-1"><CloudIcon size={13} />Cloud</span> }]} />
             </Field>
             <Field label="Dashboard scene" hint="Server room is your own animation. Pixel den follows the theme (daytime in Dawn, night in Dusk); Lofi window and Mountains follow the time of day. All stay still if your device reduces motion.">
               <Segmented ariaLabel="Dashboard scene" value={s.heroScene} onChange={v => set({ heroScene: v })}

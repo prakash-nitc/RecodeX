@@ -28,7 +28,7 @@ export const Button = React.forwardRef<HTMLButtonElement, BtnProps>(function But
         size === 'xl' && 'h-14 px-7 text-base rounded-2xl',
         size === 'icon' && 'h-8 w-8 text-sm',
         variant === 'primary' && 'bg-accent text-accentfg shadow-[0_6px_16px_-6px_rgb(var(--accent)/var(--glow))] hover:bg-accent/90 hover:shadow-[0_8px_20px_-6px_rgb(var(--accent)/var(--glow)),0_0_0_1px_rgb(var(--interactive)/var(--edge))]',
-        variant === 'secondary' && 'bg-surface2 text-fg hover:bg-line/70 border border-line',
+        variant === 'secondary' && 'bg-btn2 text-btn2fg hover:bg-line/70 border border-line',
         variant === 'outline' && 'border border-line bg-surface text-fg hover:border-interactive/50 hover:bg-hover',
         variant === 'ghost' && 'text-muted hover:text-fg hover:bg-hover',
         variant === 'danger' && 'bg-bad text-white hover:bg-bad/90',
@@ -117,8 +117,9 @@ export function Chip({ on, onClick, children, className }: { on: boolean; onClic
 // ---------------------------------------------------------------------------------------------
 // Surfaces
 
-export function Card({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div {...rest} className={cx('rounded-2xl border border-line bg-surface shadow-card', className)}>{children}</div>;
+/** A card. `elevated` lifts featured cards onto the elevated surface (white in Cloud; the same as a card in Dawn and Dusk). */
+export function Card({ className, children, elevated, ...rest }: React.HTMLAttributes<HTMLDivElement> & { elevated?: boolean }) {
+  return <div {...rest} className={cx('rounded-2xl border border-line shadow-card', elevated ? 'bg-elevated' : 'bg-surface', className)}>{children}</div>;
 }
 export function CardHeader({ title, sub, right, icon }: { title: React.ReactNode; sub?: React.ReactNode; right?: React.ReactNode; icon?: React.ReactNode }) {
   return (
@@ -292,7 +293,7 @@ export function Dialog({ open, onClose, title, sub, children, footer, width = 'm
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-backdrop/50 backdrop-blur-[3px] dlg-pad" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={ref} role="dialog" aria-modal="true" className={cx('w-full max-h-[92%] flex flex-col rounded-t-3xl sm:rounded-3xl border border-line bg-surface shadow-pop animate-rise', width)}>
+      <div ref={ref} role="dialog" aria-modal="true" className={cx('w-full max-h-[92%] flex flex-col rounded-t-3xl sm:rounded-3xl border border-line bg-elevated shadow-pop animate-rise', width)}>
         <div className="flex items-start justify-between gap-3 px-5 sm:px-6 pt-5 pb-3">
           <div className="min-w-0">
             <h2 className="font-display text-xl font-semibold text-fg leading-snug">{title}</h2>
@@ -348,7 +349,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
       </Dialog>
       <div className="fixed z-[60] bottom-0 right-0 flex flex-col gap-2 items-end toast-pad pointer-events-none" aria-live="polite">
         {toasts.map(t => (
-          <div key={t.id} className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm shadow-pop max-w-[min(440px,calc(100vw-32px))] animate-pop-in">
+          <div key={t.id} className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-line bg-elevated px-4 py-3 text-sm shadow-pop max-w-[min(440px,calc(100vw-32px))] animate-pop-in">
             <span className={cx('flex h-6 w-6 shrink-0 items-center justify-center rounded-full', t.tone === 'ok' ? 'bg-ok/15 text-ok-ink' : t.tone === 'error' ? 'bg-bad/12 text-bad-ink' : 'bg-accent/12 text-accent-ink')}>
               {t.tone === 'ok' ? <Check size={14} strokeWidth={3} /> : t.tone === 'error' ? <AlertTriangle size={13} /> : <Info size={13} />}
             </span>

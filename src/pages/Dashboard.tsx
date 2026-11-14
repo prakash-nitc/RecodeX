@@ -160,8 +160,9 @@ export default function Dashboard() {
             : s.heroScene === 'lofi' ? <StudyScene className="absolute inset-0 h-full w-full" />
             : s.heroScene === 'pixel' ? <PixelScene className="absolute inset-0 h-full w-full" />
             : <GifScene className="absolute inset-0 h-full w-full" />}
+          <div className="hero-veil absolute inset-0" aria-hidden />
           <div className="absolute inset-0 bg-gradient-to-r from-scrim/[0.72] via-scrim/[0.38] to-scrim/5" />
-          <div className="relative flex h-full flex-col justify-between p-5 sm:p-7 text-onart [text-shadow:0_1px_12px_rgb(0_0_0/0.35)]">
+          <div className="relative flex h-full flex-col justify-between p-5 sm:p-7 text-onart [text-shadow:0_1px_12px_rgb(var(--onart-shadow)/0.35)]">
             <div>
               <div className="flex flex-wrap items-center gap-x-2 text-[13px] font-semibold text-onart/90">
                 <span>{greeting(hour)}{name ? `, ${name}` : ''}</span>
@@ -179,7 +180,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <Card className="flex flex-col justify-between p-5 sm:p-6 lg:h-[240px]">
+        <Card elevated className="flex flex-col justify-between p-5 sm:p-6 lg:h-[240px]">
           <div>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted">Today's mission</span>
@@ -244,7 +245,7 @@ export default function Dashboard() {
 
         <div className="flex flex-col gap-4 min-w-0">
           {/* Lifetime mastery */}
-          <Card className="p-5">
+          <Card elevated className="p-5">
             <div className="flex items-center gap-5">
               <Ring value={masteryPct} size={116} stroke={11} tone="mastery" label={`${Math.round(masteryPct * 100)}% of all problems mastered`}>
                 <span className="font-display text-[28px] font-semibold text-fg tabular-nums leading-none">{Math.round(masteryPct * 100)}<span className="text-base text-muted">%</span></span>
