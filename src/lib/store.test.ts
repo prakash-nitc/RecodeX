@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { Backend, BackendEvents } from './backend';
 import {
   boot, getState, settingsOf, addPattern, addProblem, recordRevision, undoRevision, latestRevisionOf, activateProblems,
-  setLearned, importRows, restoreBackup, makeBackup, deletePattern, setLearningState, updateSettings, type ImportRow,
+  setLearned, importRows, restoreBackup, makeBackup, deletePattern, setLearningState, updateSettings, updateRevisionText, type ImportRow,
 } from './store';
 import { addDays, today } from './dates';
 
@@ -59,6 +59,29 @@ describe('revisions and undo', () => {
     expect(undoRevision(r1.id)).toBe(true);           // back to the untouched backlog problem
     cur = getState().problems[p.id];
     expect(cur).toMatchObject({ lastRating: null, nextReview: null, track: 'backlog', learnedAt: null, revisionCount: 0 });
+  });
+
+  it('rewording a revision keeps its schedule and carries the new wording into the weakness and into undo', () => {
+    const pt = addPattern('P');
+    const p = addProblem({ name: 'A', patternId: pt.id, subPattern: '', difficulty: 'Easy', url: '', priority: 'Medium', track: 'active', notes: '' });
+    const r1 = recordRevision(p.id, rate('red', '2026-11-01', { mistake: 'forgot base case' }))!;
+    const r2 = recordRevision(p.id, rate('yellow', '2026-11-02'))!;        // no mistake: the weakness stays r1's
+    expect(getState().problems[p.id].weakness).toBe('forgot base case');
+
+    updateRevisionText(r1.id, { mistake: '  **1. Forgot the base case**\n- returned too late  ', notes: 'dry run first' });
+    const reworded = '**1. Forgot the base case**\n- returned too late';
+    expect(getState().revisions[r1.id]).toMatchObject({ mistake: reworded, notes: 'dry run first', rating: 'red', nextReview: r1.nextReview });
+    expect(getState().problems[p.id]).toMatchObject({ weakness: reworded, lastRating: 'yellow', nextReview: r2.nextReview });
+
+    updateRevisionText(r2.id, { mistake: 'off by one', notes: '' });       // the latest revision's mistake becomes the weakness
+    expect(getState().problems[p.id].weakness).toBe('off by one');
+    updateRevisionText(r2.id, { mistake: '', notes: '' });                 // clearing it falls back to the one before
+    expect(getState().problems[p.id].weakness).toBe(reworded);
+
+    expect(undoRevision(r2.id)).toBe(true);
+    expect(getState().problems[p.id].weakness).toBe(reworded);
+    updateRevisionText(r1.id, { mistake: '', notes: '' });
+    expect(getState().problems[p.id].weakness).toBe('');
   });
 });
 

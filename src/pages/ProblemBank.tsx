@@ -4,6 +4,7 @@ import { useData, settingsOf, bulkUpdate, deleteProblems, markNotReviewed, activ
 import { statusOf, PRIORITY_RANK } from '../lib/engine';
 import { byStudyOrder } from '../lib/order';
 import { fmt, today, addDays, relDay, diffDays } from '../lib/dates';
+import { noteSummary } from '../lib/notes';
 import type { Pattern, Problem, Status, Priority } from '../types';
 import { STATUSES, PHASES, PRIORITIES, DIFFICULTIES } from '../types';
 import {
@@ -288,7 +289,7 @@ export function ProblemTable({ problems, emptyText, layout = 'flat', dividers = 
                         <span className="font-semibold text-fg truncate group-hover:text-accent-ink transition-colors" title={p.name}>{p.name}</span>
                         {p.url && <LinkButton url={p.url} size="icon" />}
                       </div>
-                      {(p.weakness || (p.subPattern && !dividers)) && <div className="text-[11px] text-muted truncate" title={p.weakness}>{p.weakness ? `⚑ ${p.weakness}` : p.subPattern}</div>}
+                      {(p.weakness || (p.subPattern && !dividers)) && <div className="text-[11px] text-muted truncate" title={p.weakness ? noteSummary(p.weakness).text : undefined}>{p.weakness ? `⚑ ${noteSummary(p.weakness).text}` : p.subPattern}</div>}
                     </td>
                     {showPattern && <td className="px-2 py-2"><Tag>{d.patterns[p.patternId]?.name ?? '—'}</Tag></td>}
                     <td className="px-2 py-2 hidden 2xl:table-cell"><DiffPill d={p.difficulty} /></td>

@@ -7,6 +7,7 @@ import { useToday, FocusRow, startTodayRun } from './Dashboard';
 import { useData } from '../lib/store';
 import type { FocusReason } from '../lib/engine';
 import { fmt, today } from '../lib/dates';
+import { noteSummary } from '../lib/notes';
 
 const GROUPS: { reason: FocusReason; title: string; sub: string }[] = [
   { reason: 'Overdue', title: 'Overdue', sub: 'Past their review date. They stay here until you revise them.' },
@@ -70,11 +71,12 @@ export default function Today() {
             <ul className="divide-y divide-line/70 border-t border-line/70">
               {doneSorted.map(r => {
                 const p = d.problems[r.problemId]; if (!p) return null;
+                const m = r.mistake ? noteSummary(r.mistake) : null;
                 return (
                   <li key={r.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-2.5">
                     <button className="min-w-0 text-left" onClick={() => openProblem(p.id)}>
                       <div className="text-sm font-semibold text-fg truncate">{p.name}</div>
-                      <div className="text-xs text-muted truncate">{r.mistake ? `Mistake: ${r.mistake}` : 'No mistake noted'}</div>
+                      <div className="text-xs text-muted truncate">{m && m.text ? `${m.count > 1 ? `${m.count} mistakes` : 'Mistake'}: ${m.text}` : 'No mistake noted'}</div>
                     </button>
                     <div className="flex items-center gap-2 shrink-0"><RatingPill r={r.rating} /><span className="text-xs text-muted hidden sm:inline">next {fmt(r.nextReview, 'd MMM')}</span></div>
                   </li>

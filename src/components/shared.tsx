@@ -4,12 +4,15 @@ import type { Difficulty, Phase, Priority, Problem, Rating, Revision, Track } fr
 import { DIFFICULTIES, PHASES, PRIORITIES } from '../types';
 import {
   useData, settingsOf, recordRevision, addProblem, updateProblem, deleteProblems, findDuplicates, undoRevision, latestRevisionOf, addPattern,
+  updateRevisionText,
 } from '../lib/store';
 import { previewNext, statusOf, revisionTypeOf, RATING_MEANING, PHASE_HINT, suggestPhase } from '../lib/engine';
 import { fmt, relDay, today } from '../lib/dates';
 import { patternPositions } from '../lib/order';
+import { noteSummary } from '../lib/notes';
+import { NoteEditor, NoteSection } from './Note';
 import {
-  Button, Dialog, Field, Input, Select, Textarea, Segmented, cx, RatingPill, DiffPill, PriorityPill, StatusPill, PhasePill, Tag, Drawer, useUi, RatingDot, Card,
+  Button, Dialog, Field, Input, Select, Segmented, cx, RatingPill, DiffPill, PriorityPill, StatusPill, PhasePill, Tag, Drawer, useUi, RatingDot, Card,
 } from './ui';
 
 // ---------------------------------------------------------------------------------------------
@@ -87,15 +90,17 @@ export function RatingForm({ problem, value, onChange, idPrefix, collapsible, ke
   const [more, setMore] = useState(!collapsible);
   const pv = value.rating ? previewNext(problem, value.rating, s) : null;
   const set = (patch: Partial<RatingFormValue>) => onChange({ ...value, ...patch });
+  const last = problem.weakness ? noteSummary(problem.weakness).text : '';
+  const mistakeField = (
+    <Field label="Main mistake or weakness" htmlFor={`${idPrefix}-mistake`} hint={last ? <>Last time: <span className="text-fg/80">{last.slice(0, 140)}{last.length > 140 ? '…' : ''}</span></> : undefined}>
+      <NoteEditor id={`${idPrefix}-mistake`} tone="mistake" placeholder="e.g. off-by-one when shrinking the window" value={value.mistake} onChange={v => set({ mistake: v })} />
+    </Field>
+  );
   return (
     <div className="flex flex-col gap-4">
       <RatingButtons keys={keys} value={value.rating} onPick={r => set({ rating: r, independent: value.independent ?? (r === 'green') })} />
       {value.rating && <p className="text-xs text-muted -mt-1">{RATING_MEANING[value.rating]}</p>}
-      {collapsible && (
-        <Field label="Main mistake or weakness" htmlFor={`${idPrefix}-mistake`} hint={problem.weakness ? <>Last time: <span className="text-fg/80">{problem.weakness.slice(0, 140)}{problem.weakness.length > 140 ? '…' : ''}</span></> : undefined}>
-          <Textarea id={`${idPrefix}-mistake`} rows={2} placeholder="e.g. off-by-one when shrinking the window" value={value.mistake} onChange={e => set({ mistake: e.target.value })} />
-        </Field>
-      )}
+      {collapsible && mistakeField}
       {collapsible && (
         <button type="button" onClick={() => setMore(!more)} aria-expanded={more} className="-mt-1 self-start text-xs font-semibold text-accent-ink hover:underline">
           {more ? 'Fewer details' : 'More details: time, independence, notes, phases, next date'}
@@ -112,13 +117,9 @@ export function RatingForm({ problem, value, onChange, idPrefix, collapsible, ke
             onChange={v => set({ independent: v === 'yes' })} />
         </Field>
       </div>
-      {!collapsible && (
-      <Field label="Main mistake or weakness" htmlFor={`${idPrefix}-mistake`} hint={problem.weakness ? <>Last time: <span className="text-fg/80">{problem.weakness.slice(0, 140)}{problem.weakness.length > 140 ? '…' : ''}</span></> : undefined}>
-        <Textarea id={`${idPrefix}-mistake`} rows={2} placeholder="e.g. off-by-one when shrinking the window" value={value.mistake} onChange={e => set({ mistake: e.target.value })} />
-      </Field>
-      )}
+      {!collapsible && mistakeField}
       <Field label="Additional notes" htmlFor={`${idPrefix}-notes`}>
-        <Textarea id={`${idPrefix}-notes`} rows={2} placeholder="Optional" value={value.notes} onChange={e => set({ notes: e.target.value })} />
+        <NoteEditor id={`${idPrefix}-notes`} placeholder="Optional: approach, key insight, edge cases" value={value.notes} onChange={v => set({ notes: v })} />
       </Field>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Phase used" htmlFor={`${idPrefix}-phase`} hint={PHASE_HINT[value.phaseUsed]}>
@@ -306,12 +307,12 @@ function ProblemFormDialog({ mode, id, prefill, onClose }: { mode: 'add' | 'edit
               <Input id="pf-next" type="date" value={f.nextReview} onChange={e => set({ nextReview: e.target.value })} />
             </Field>
             <Field label="Main weakness" htmlFor="pf-weak" className="sm:col-span-2">
-              <Textarea id="pf-weak" rows={2} value={f.weakness} onChange={e => set({ weakness: e.target.value })} />
+              <NoteEditor id="pf-weak" tone="mistake" value={f.weakness} onChange={v => set({ weakness: v })} />
             </Field>
           </>
         )}
         <Field label="Notes" htmlFor="pf-notes" className="sm:col-span-2">
-          <Textarea id="pf-notes" rows={3} value={f.notes} onChange={e => set({ notes: e.target.value })} placeholder="Approach, edge cases, mistake notes" />
+          <NoteEditor id="pf-notes" rows={3} value={f.notes} onChange={v => set({ notes: v })} placeholder="Approach, key insight, edge cases" />
         </Field>
       </div>
     </Dialog>
@@ -383,16 +384,10 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
           {p.importedName && <Row k="Name in source" v={<span className="text-muted">{p.importedName}</span>} />}
         </Card>
         {p.weakness && (
-          <div className="rounded-xl border border-hot/30 bg-hot/8 px-4 py-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-hot-ink mb-1">Main weakness</div>
-            <p className="text-sm text-fg leading-relaxed whitespace-pre-wrap">{p.weakness}</p>
-          </div>
+          <NoteSection label="Main weakness" tone="mistake" text={p.weakness} className="rounded-xl border border-hot/30 bg-hot/8 px-4 py-3" />
         )}
         {p.notes && (
-          <div className="rounded-xl border border-line bg-surface px-4 py-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Notes</div>
-            <p className="text-sm text-fg leading-relaxed whitespace-pre-wrap">{p.notes}</p>
-          </div>
+          <NoteSection label="Notes" text={p.notes} className="rounded-xl border border-line bg-surface px-4 py-3" />
         )}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -411,26 +406,51 @@ function ProblemDrawer({ id, onClose }: { id: string | null; onClose: () => void
             </div>
           ) : (
             <ol className="flex flex-col gap-2">
-              {history.map(r => (
-                <li key={r.id} className="rounded-xl border border-line bg-surface px-3.5 py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2"><RatingPill r={r.rating} /><span className="text-sm font-semibold text-fg">{fmt(r.date, 'EEE, d MMM yyyy')}</span></div>
-                    <div className="flex items-center gap-2 text-xs text-muted">
-                      <PhasePill p={r.phase} />
-                      {r.timeMin !== null && <span className="tabular-nums">{r.timeMin} min</span>}
-                      {r.independent !== null && <span>{r.independent ? 'Independent' : 'With help'}</span>}
-                    </div>
-                  </div>
-                  {r.mistake && <p className="text-sm text-fg mt-2 leading-relaxed"><span className="text-hot-ink font-semibold">Mistake: </span>{r.mistake}</p>}
-                  {r.notes && <p className="text-xs text-muted mt-1.5 leading-relaxed">{r.notes}</p>}
-                  <div className="text-[11px] text-muted mt-1.5">Next review set to {fmt(r.nextReview)} · {r.source === 'session' ? 'mixed practice' : r.source === 'today' ? "today's revision" : r.source === 'import' ? 'imported' : 'quick rating'}</div>
-                </li>
-              ))}
+              {history.map(r => <RevisionCard key={r.id} r={r} />)}
             </ol>
           )}
         </div>
       </div>
     </Drawer>
+  );
+}
+
+/** One revision in a problem's history. What was written on it (mistake, notes) can be reworded later. */
+function RevisionCard({ r }: { r: Revision }) {
+  const { toast } = useUi();
+  const [draft, setDraft] = useState<{ mistake: string; notes: string } | null>(null);
+  const save = () => { if (!draft) return; updateRevisionText(r.id, draft); setDraft(null); toast('Revision updated'); };
+  return (
+    <li className="rounded-xl border border-line bg-surface px-3.5 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2"><RatingPill r={r.rating} /><span className="text-sm font-semibold text-fg">{fmt(r.date, 'EEE, d MMM yyyy')}</span></div>
+        <div className="flex items-center gap-2 text-xs text-muted">
+          <PhasePill p={r.phase} />
+          {r.timeMin !== null && <span className="tabular-nums">{r.timeMin} min</span>}
+          {r.independent !== null && <span>{r.independent ? 'Independent' : 'With help'}</span>}
+          {!draft && (
+            <button type="button" onClick={() => setDraft({ mistake: r.mistake, notes: r.notes })} title="Reword the mistake and notes" aria-label="Reword the mistake and notes"
+              className="-my-1 -mr-1.5 inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted hover:bg-hover hover:text-fg"><Pencil size={13} /></button>
+          )}
+        </div>
+      </div>
+      {draft ? (
+        <div className="mt-3 flex flex-col gap-3">
+          <Field label="Mistake" htmlFor={`rv-m-${r.id}`}><NoteEditor id={`rv-m-${r.id}`} tone="mistake" autoFocus value={draft.mistake} onChange={v => setDraft(x => x && { ...x, mistake: v })} /></Field>
+          <Field label="Additional notes" htmlFor={`rv-n-${r.id}`}><NoteEditor id={`rv-n-${r.id}`} value={draft.notes} onChange={v => setDraft(x => x && { ...x, notes: v })} /></Field>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>Cancel</Button>
+            <Button size="sm" variant="primary" onClick={save}>Save</Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {r.mistake && <NoteSection label="Mistake" tone="mistake" text={r.mistake} collapse={260} className="mt-3" />}
+          {r.notes && <NoteSection label="Notes" text={r.notes} collapse={200} className="mt-3" />}
+        </>
+      )}
+      <div className="text-[11px] text-muted mt-2.5">Next review set to {fmt(r.nextReview)} · {r.source === 'session' ? 'mixed practice' : r.source === 'today' ? "today's revision" : r.source === 'import' ? 'imported' : 'quick rating'}</div>
+    </li>
   );
 }
 

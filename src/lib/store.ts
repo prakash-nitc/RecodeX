@@ -246,6 +246,28 @@ export function undoRevision(revisionId: string): boolean {
   return true;
 }
 
+/**
+ * Rewrites what was written on a revision. Its rating, date and schedule stay as recorded. The problem's
+ * main weakness follows along when it was copied from this revision, or when this is the latest one.
+ */
+export function updateRevisionText(revisionId: string, text: { mistake: string; notes: string }) {
+  const r = state.revisions[revisionId]; if (!r) return;
+  const mistake = text.mistake.trim(), notes = text.notes.trim();
+  if (mistake === r.mistake && notes === r.notes) return;
+  putDoc('revisions', { ...r, mistake, notes });
+  const p = state.problems[r.problemId];
+  if (!p || mistake === r.mistake) return;
+  const next = mistake || r.prev?.weakness || '';
+  if (r.mistake && p.weakness === r.mistake) updateProblem(p.id, { weakness: next });
+  else if (mistake && latestRevisionOf(p.id)?.id === r.id) updateProblem(p.id, { weakness: mistake });
+  // Later revisions remember the old wording as the weakness to restore on undo: keep those in step.
+  if (r.mistake) {
+    for (const x of Object.values(state.revisions)) {
+      if (x.problemId === r.problemId && x.id !== r.id && x.prev?.weakness === r.mistake) putDoc('revisions', { ...x, prev: { ...x.prev, weakness: next } });
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // patterns
 

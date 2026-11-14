@@ -3,7 +3,8 @@ import { ArrowRight, ExternalLink, Pause, Play, SkipForward, Eye, RotateCcw, Che
 import { useData, addSessionResult, finishSession, startSession, updateProblem } from '../lib/store';
 import { PHASE_HINT } from '../lib/engine';
 import { fmt, fmtTimestamp } from '../lib/dates';
-import { Button, Card, Dialog, DiffPill, PhasePill, RatingPill, cx, Empty, GYRBar, PageHeader, RatingDot, Textarea } from '../components/ui';
+import { Button, Card, Dialog, DiffPill, PhasePill, RatingPill, cx, Empty, GYRBar, PageHeader, RatingDot } from '../components/ui';
+import { NoteEditor, NoteSection } from '../components/Note';
 import { useApp, RatingForm, initialRatingValue, submitRating, PatternTag, useTicker, RatingFormValue } from '../components/shared';
 import { MountainScene } from '../components/art/Mountains';
 import type { Rating, Session } from '../types';
@@ -152,8 +153,10 @@ function Runner({ session }: { session: Session }) {
           {notesDraft !== null ? (
             <div className="mt-4 rounded-2xl border border-line bg-surface px-4 py-3 animate-page-in">
               <label htmlFor="run-pnotes" className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted">Problem notes</label>
-              <Textarea id="run-pnotes" rows={4} className="mt-1.5" autoFocus value={notesDraft} onChange={e => setNotesDraft(e.target.value)}
-                placeholder="Approach, key insight, edge cases. Shown with this problem from now on." />
+              <div className="mt-1.5">
+                <NoteEditor id="run-pnotes" rows={4} autoFocus value={notesDraft} onChange={setNotesDraft}
+                  placeholder="Approach, key insight, edge cases. Shown with this problem from now on." />
+              </div>
               <div className="mt-2 flex justify-end gap-2">
                 <Button size="sm" variant="ghost" onClick={() => setNotesDraft(null)}>Cancel</Button>
                 <Button size="sm" variant="primary" onClick={() => { updateProblem(p.id, { notes: notesDraft.trim() }); setNotesDraft(null); setPeek(true); }}>Save notes</Button>
@@ -164,10 +167,10 @@ function Runner({ session }: { session: Session }) {
               {!peek ? (
                 <Button variant="ghost" size="sm" onClick={() => setPeek(true)}><Eye size={14} />Show last weakness and notes</Button>
               ) : (
-                <div className="rounded-2xl border border-hot/35 bg-hot/8 px-4 py-3 text-sm animate-page-in">
-                  {p.weakness && <p className="text-fg"><span className="font-semibold text-hot-ink">Last weakness: </span>{p.weakness}</p>}
-                  {p.notes && <p className="text-muted mt-1.5 whitespace-pre-wrap">{p.notes}</p>}
-                  <button className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-accent-ink hover:underline" onClick={() => setNotesDraft(p.notes)}><Pencil size={12} />{p.notes ? 'Edit notes' : 'Add notes'}</button>
+                <div className="flex flex-col gap-3.5 rounded-2xl border border-hot/35 bg-hot/8 px-4 py-3 animate-page-in">
+                  {p.weakness && <NoteSection label="Last weakness" tone="mistake" text={p.weakness} />}
+                  {p.notes && <NoteSection label="Notes" text={p.notes} />}
+                  <button className="self-start inline-flex items-center gap-1 text-xs font-semibold text-accent-ink hover:underline" onClick={() => setNotesDraft(p.notes)}><Pencil size={12} />{p.notes ? 'Edit notes' : 'Add notes'}</button>
                 </div>
               )}
               {!peek && form.phaseUsed === 'Reconstruction' && <p className="text-xs text-muted mt-1 ml-1">Reconstruction works best without peeking.</p>}

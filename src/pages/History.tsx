@@ -6,6 +6,7 @@ import { Button, Card, PageHeader, Select, Input, Segmented, RatingPill, PhasePi
 import { useApp } from '../components/shared';
 import { RecentSessions } from './Practice';
 import { countRatings, sequences } from '../lib/stats';
+import { noteSummary } from '../lib/notes';
 import type { Revision, Rating } from '../types';
 
 const PAGE = 50;
@@ -58,6 +59,7 @@ function DayCard({ group, isToday }: { group: DayGroup; isToday: boolean }) {
             {group.revisions.map(r => {
               const p = d.problems[r.problemId];
               if (!p) return null;
+              const m = r.mistake ? noteSummary(r.mistake) : null;
               return (
                 <li key={r.id}>
                   <button
@@ -78,9 +80,9 @@ function DayCard({ group, isToday }: { group: DayGroup; isToday: boolean }) {
                     <div className="shrink-0 flex items-center gap-2">
                       <RatingChange prev={r.prevRating} current={r.rating} />
                     </div>
-                    {r.mistake && (
+                    {m && m.text && (
                       <div className="w-full text-xs text-fg/80 mt-1 pl-0 line-clamp-2">
-                        <span className="text-hot-ink font-semibold">Mistake: </span>{r.mistake}
+                        <span className="text-hot-ink font-semibold">{m.count > 1 ? `${m.count} mistakes: ` : 'Mistake: '}</span>{m.text}
                       </div>
                     )}
                   </button>
