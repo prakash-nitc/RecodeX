@@ -9,7 +9,9 @@ export type Track = 'active' | 'backlog';
 /** 'learning' marks the topic you are studying now. A legacy 'completed' value is migrated on load (store.ts). */
 export type LearningState = 'active' | 'yet_to_learn' | 'learning';
 export type Status = 'Yet to Learn' | 'Not Reviewed' | 'Overdue' | 'Due Today' | 'Scheduled' | 'Mastered';
-export type UrlKind = 'leetcode' | 'gfg' | 'search' | 'other' | '';
+/** Whether the mistake from the previous revision came back ('repeated') or was avoided without help ('avoided'). */
+export type MistakeCheck = 'repeated' | 'avoided';
+export type UrlKind ='leetcode' | 'gfg' | 'search' | 'other' | '';
 
 export const PHASES: Phase[] = ['Reconstruction', 'Recall/Repair', 'Quick Recall'];
 export const PRIORITIES: Priority[] = ['High', 'Medium', 'Low'];
@@ -78,6 +80,8 @@ export interface Revision {
   independent: boolean | null;
   mistake: string;
   notes: string;
+  /** Previous-mistake verification. Absent on revisions saved before it existed, and on a problem's first revision. */
+  mistakeCheck?: MistakeCheck | null;
   sessionId: string | null;
   source: 'import' | 'quick' | 'today' | 'session';
   nextReview: string;

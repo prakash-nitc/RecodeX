@@ -36,7 +36,7 @@ const FIELDS: Record<Table, Field[]> = {
     ['id', 'id'], ['problemId', 'problem_id', 'plain', ''], ['date', 'revised_on'], ['at', 'revised_at', 'ts'],
     ['rating', 'rating'], ['phase', 'phase', 'plain', 'Reconstruction'], ['timeMin', 'time_min', 'plain', null],
     ['independent', 'independent', 'plain', null], ['mistake', 'mistake', 'plain', ''], ['notes', 'notes', 'plain', ''],
-    ['sessionId', 'session_id', 'plain', null], ['source', 'source', 'plain', 'quick'], ['nextReview', 'next_review'],
+    ['mistakeCheck', 'mistake_check', 'plain', null], ['sessionId', 'session_id', 'plain', null], ['source', 'source', 'plain', 'quick'], ['nextReview', 'next_review'],
     ['prev', 'prev_state', 'plain', null],
   ],
   practice_sessions: [

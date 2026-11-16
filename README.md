@@ -88,7 +88,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-public-key
 ### 3. Apply Database Migration
 
 1. In your Supabase Dashboard, open the **SQL Editor**.
-2. Run the migration script located at `supabase/migrations/20261107000000_init.sql`.
+2. Run every script in `supabase/migrations/` in file-name order (`20261107000000_init.sql` first). When you update the app, run any script added since, before deploying the new build.
 3. This creates:
    - `patterns`, `problems`, `revisions`, `sessions`, and `user_meta` tables
    - Row-level security (RLS) policies ensuring users only view and mutate their own records

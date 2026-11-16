@@ -37,7 +37,7 @@ test.describe('Focus reasons, week in review, focus-mode notes, history export',
     const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Save CSV file' }).click()]);
     expect(dl.suggestedFilename()).toMatch(/^recodex-revision-history-\d{4}-\d{2}-\d{2}\.csv$/);
     const csv = await (await dl.createReadStream()).toArray().then(c => Buffer.concat(c).toString('utf8'));
-    expect(csv.split('\n')[0]).toBe('date,time,problem_id,problem,pattern,rating,phase,time_min,independent,mistake,notes,source,next_review,session_id');
+    expect(csv.split('\n')[0]).toBe('date,time,problem_id,problem,pattern,rating,phase,time_min,independent,mistake,notes,source,next_review,session_id,previous_mistake');
     expect(csv.trim().split('\n')).toHaveLength(1 + 30); // 29 imported + 1 rated above
     expect(errors).toEqual([]);
   });

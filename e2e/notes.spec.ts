@@ -33,9 +33,22 @@ test.describe('Mistakes and notes', () => {
     await freshImport(page);
     await go(page, 'today');
 
-    // Record a revision with a multi-line mistake and a note
+    // A never-revised problem (the last group, "New from your study plan") has no previous mistake to verify
+    await page.getByRole('button', { name: 'Rate red' }).last().click();
+    await expect(page.getByRole('dialog').getByLabel('Main mistake or weakness')).toBeVisible();
+    await expect(page.getByRole('dialog').getByText('Previous mistake verification')).toHaveCount(0);
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
+
+    // Record a revision with a multi-line mistake and a note, on a problem that has an earlier revision
     await page.getByRole('button', { name: 'Rate red' }).first().click();
     const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText('Previous mistake verification')).toBeVisible();
+    const repeated = dialog.getByRole('button', { name: /Repeated mistake/ }), avoided = dialog.getByRole('button', { name: /Avoided independently/ });
+    await avoided.click();
+    await repeated.click();                      // one answer at a time
+    await expect(repeated).toHaveAttribute('aria-pressed', 'true');
+    await expect(avoided).toHaveAttribute('aria-pressed', 'false');
+    if (SHOTS) await dialog.screenshot({ path: `${SHOTS}/dialog-verify.png` });
     await dialog.getByLabel('Main mistake or weakness').fill(MISTAKE);
     await dialog.getByLabel('Additional notes').fill('Sort first.\nInvariant: `left < right`');
     await dialog.getByRole('button', { name: 'Preview' }).first().click();
@@ -49,6 +62,7 @@ test.describe('Mistakes and notes', () => {
     let data = await stored(page);
     const rev = Object.values<any>(data.revisions).find(r => r.mistake.startsWith('**1. Confused'));
     expect(rev.mistake).toBe(MISTAKE);
+    expect(rev.mistakeCheck).toBe('repeated');
     expect(data.problems[rev.problemId].weakness).toBe(MISTAKE);
 
     // The done list summarises it by its titles
@@ -63,6 +77,7 @@ test.describe('Mistakes and notes', () => {
     await expect(drawer.locator('code', { hasText: 'Math.abs(target - sum)' }).first()).toBeVisible();
     await expect(drawer.getByText('**')).toHaveCount(0);
     await expect(drawer.getByText('Invariant:')).toBeVisible();
+    await expect(drawer.getByText('Repeated the previous mistake')).toBeVisible();
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/drawer.png` });
 
     // The copy in the history is folded; "Show all" opens it

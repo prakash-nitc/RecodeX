@@ -136,6 +136,15 @@ describe('applyRevision (the green ladder end to end)', () => {
     expect(applyRevision(p, rate('red', { date: T, mistake: ' new one ' }), S, 'b').problem.weakness).toBe('new one');
   });
 
+  it('records the previous-mistake verification without changing the schedule or the weakness', () => {
+    const p = prob({ weakness: 'old' });
+    const plain = applyRevision(p, rate('green', { date: T }), S, 'a');
+    const checked = applyRevision(p, rate('green', { date: T, mistakeCheck: 'avoided' }), S, 'a');
+    expect(plain.revision.mistakeCheck).toBeNull();
+    expect(checked.revision.mistakeCheck).toBe('avoided');
+    expect({ ...checked.problem, updatedAt: '' }).toEqual({ ...plain.problem, updatedAt: '' });
+  });
+
   it('honours a manual next date and a manual next phase', () => {
     const p = prob();
     const { problem, revision } = applyRevision(p, rate('green', { date: T, nextOverride: '2026-12-01', nextPhase: 'Reconstruction' }), S, 'r');

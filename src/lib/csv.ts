@@ -39,7 +39,7 @@ export function problemsToCsv(problems: Problem[], patterns: Record<string, Patt
   return lines.join('\n');
 }
 
-export const REVISION_CSV_HEADERS = ['date', 'time', 'problem_id', 'problem', 'pattern', 'rating', 'phase', 'time_min', 'independent', 'mistake', 'notes', 'source', 'next_review', 'session_id'];
+export const REVISION_CSV_HEADERS = ['date', 'time', 'problem_id', 'problem', 'pattern', 'rating', 'phase', 'time_min', 'independent', 'mistake', 'notes', 'source', 'next_review', 'session_id', 'previous_mistake'];
 
 /** Every revision record, oldest first: the history that the problem-bank CSV leaves out. */
 export function revisionsToCsv(revisions: Revision[], problems: Record<string, Problem>, patterns: Record<string, Pattern>, localTime: (iso: string) => string): string {
@@ -50,7 +50,7 @@ export function revisionsToCsv(revisions: Revision[], problems: Record<string, P
     lines.push([
       r.date, localTime(r.at), p?.num ?? '', p?.name ?? '(deleted problem)', p ? patterns[p.patternId]?.name ?? '' : '',
       r.rating, r.phase, r.timeMin ?? '', r.independent === null ? '' : r.independent ? 'yes' : 'no',
-      r.mistake, r.notes, r.source, r.nextReview, r.sessionId ?? '',
+      r.mistake, r.notes, r.source, r.nextReview, r.sessionId ?? '', r.mistakeCheck ?? '',
     ].map(esc).join(','));
   }
   return lines.join('\n');

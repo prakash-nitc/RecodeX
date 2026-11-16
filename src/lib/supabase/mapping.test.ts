@@ -30,8 +30,12 @@ describe('mapping', () => {
   it('normalises Postgres timestamps so string comparison of `at` keeps working', () => {
     const rev: Revision = {
       id: 'r-1', problemId: 'p-101', date: '2026-11-07', at: '2026-11-07T06:30:00.000Z', rating: 'red', phase: 'Reconstruction',
-      timeMin: 12.5, independent: false, mistake: 'm', notes: '', sessionId: null, source: 'quick', nextReview: '2026-11-08', prev: null,
+      timeMin: 12.5, independent: false, mistake: 'm', notes: '', mistakeCheck: 'repeated', sessionId: null, source: 'quick', nextReview: '2026-11-08', prev: null,
     };
+    // A revision saved before the verification existed has no such field: it is sent, and read back, as null.
+    const { mistakeCheck, ...old } = rev;
+    expect(toRow('revisions', old, UID).mistake_check).toBeNull();
+    expect(fromRow('revisions', toRow('revisions', old, UID)).mistakeCheck).toBeNull();
     const row = { ...toRow('revisions', rev, UID), revised_at: '2026-11-07T06:30:00+00:00', synced_at: 'x' };
     expect(fromRow('revisions', row)).toEqual(rev);
   });

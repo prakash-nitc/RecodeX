@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { CalendarClock, Pencil, Trash2, Undo2, ExternalLink, BookOpen, Flame } from 'lucide-react';
-import type { Difficulty, Phase, Priority, Problem, Rating, Revision, Track } from '../types';
+import { CalendarClock, Pencil, Trash2, Undo2, ExternalLink, BookOpen, Flame, Repeat2, ShieldCheck } from 'lucide-react';
+import type { Difficulty, MistakeCheck, Phase, Priority, Problem, Rating, Revision, Track } from '../types';
 import { DIFFICULTIES, PHASES, PRIORITIES } from '../types';
 import {
   useData, settingsOf, recordRevision, addProblem, updateProblem, deleteProblems, findDuplicates, undoRevision, latestRevisionOf, addPattern,
@@ -57,11 +57,18 @@ export function AppProvider({ route, go, children }: { route: Route; go: (r: Rou
 
 export interface RatingFormValue {
   rating: Rating | null; timeMin: string; independent: boolean | null; mistake: string; notes: string;
+  mistakeCheck: MistakeCheck | null;
   phaseUsed: Phase; nextPhase: Phase | null; nextOverride: string;
 }
 export function initialRatingValue(p: Problem, rating?: Rating | null, timeMin = ''): RatingFormValue {
-  return { rating: rating ?? null, timeMin, independent: rating === 'green' ? true : rating ? false : null, mistake: '', notes: '', phaseUsed: p.phase, nextPhase: null, nextOverride: '' };
+  return { rating: rating ?? null, timeMin, independent: rating === 'green' ? true : rating ? false : null, mistake: '', notes: '', mistakeCheck: null, phaseUsed: p.phase, nextPhase: null, nextOverride: '' };
 }
+
+const MISTAKE_CHECKS: { value: MistakeCheck; label: string; sub: string; on: string; icon: React.ReactNode }[] = [
+  { value: 'repeated', label: 'Repeated mistake', sub: 'Weakness remains.', on: 'aria-pressed:border-hot aria-pressed:bg-hot/15 aria-pressed:text-hot-ink', icon: <Repeat2 size={15} /> },
+  { value: 'avoided', label: 'Avoided independently', sub: 'Improvement demonstrated.', on: 'aria-pressed:border-ok aria-pressed:bg-ok/15 aria-pressed:text-ok-ink', icon: <ShieldCheck size={15} /> },
+];
+const MISTAKE_CHECK_LABEL: Record<MistakeCheck, string> = { repeated: 'Repeated the previous mistake', avoided: 'Avoided the previous mistake independently' };
 
 export const RATING_BTN: Record<Rating, string> = {
   green: 'border-ok/45 bg-ok/10 text-ok-ink hover:bg-ok/20 aria-pressed:bg-ok aria-pressed:text-[#06281A] aria-pressed:border-ok aria-pressed:shadow-[0_8px_20px_-8px_rgb(var(--ok)/0.7)]',
@@ -91,10 +98,27 @@ export function RatingForm({ problem, value, onChange, idPrefix, collapsible, ke
   const pv = value.rating ? previewNext(problem, value.rating, s) : null;
   const set = (patch: Partial<RatingFormValue>) => onChange({ ...value, ...patch });
   const last = problem.weakness ? noteSummary(problem.weakness).text : '';
+  const hasPrevious = useMemo(() => Object.values(d.revisions).some(r => r.problemId === problem.id), [d.revisions, problem.id]);
   const mistakeField = (
-    <Field label="Main mistake or weakness" htmlFor={`${idPrefix}-mistake`} hint={last ? <>Last time: <span className="text-fg/80">{last.slice(0, 140)}{last.length > 140 ? '…' : ''}</span></> : undefined}>
-      <NoteEditor id={`${idPrefix}-mistake`} tone="mistake" placeholder="e.g. off-by-one when shrinking the window" value={value.mistake} onChange={v => set({ mistake: v })} />
-    </Field>
+    <>
+      <Field label="Main mistake or weakness" htmlFor={`${idPrefix}-mistake`} hint={last ? <>Last time: <span className="text-fg/80">{last.slice(0, 140)}{last.length > 140 ? '…' : ''}</span></> : undefined}>
+        <NoteEditor id={`${idPrefix}-mistake`} tone="mistake" placeholder="e.g. off-by-one when shrinking the window" value={value.mistake} onChange={v => set({ mistake: v })} />
+      </Field>
+      {hasPrevious && (
+        <Field label="Previous mistake verification">
+          <div className="grid grid-cols-2 gap-2">
+            {MISTAKE_CHECKS.map(c => (
+              <button key={c.value} type="button" aria-pressed={value.mistakeCheck === c.value}
+                onClick={() => set({ mistakeCheck: value.mistakeCheck === c.value ? null : c.value })}
+                className={cx('rounded-xl border border-line bg-surface px-3 py-2 text-left text-fg transition-colors hover:border-muted/50', c.on)}>
+                <div className="flex items-center gap-1.5 text-sm font-semibold">{c.icon}{c.label}</div>
+                <div className="mt-0.5 text-[11px] opacity-80">{c.sub}</div>
+              </button>
+            ))}
+          </div>
+        </Field>
+      )}
+    </>
   );
   return (
     <div className="flex flex-col gap-4">
@@ -155,7 +179,7 @@ export function submitRating(problemId: string, v: RatingFormValue, source: Revi
   const t = v.timeMin.trim() === '' ? null : Math.max(0, Number(v.timeMin));
   return recordRevision(problemId, {
     rating: v.rating, timeMin: t === null || Number.isNaN(t) ? null : t, independent: v.independent,
-    mistake: v.mistake, notes: v.notes, phaseUsed: v.phaseUsed, nextPhase: v.nextPhase, nextOverride: v.nextOverride || null,
+    mistake: v.mistake, notes: v.notes, mistakeCheck: v.mistakeCheck, phaseUsed: v.phaseUsed, nextPhase: v.nextPhase, nextOverride: v.nextOverride || null,
     source, sessionId,
   });
 }
@@ -445,6 +469,11 @@ function RevisionCard({ r }: { r: Revision }) {
         </div>
       ) : (
         <>
+          {r.mistakeCheck && (
+            <div className={cx('mt-3 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold', r.mistakeCheck === 'repeated' ? 'bg-hot/15 text-hot-ink' : 'bg-ok/15 text-ok-ink')}>
+              {r.mistakeCheck === 'repeated' ? <Repeat2 size={13} /> : <ShieldCheck size={13} />}{MISTAKE_CHECK_LABEL[r.mistakeCheck]}
+            </div>
+          )}
           {r.mistake && <NoteSection label="Mistake" tone="mistake" text={r.mistake} collapse={260} className="mt-3" />}
           {r.notes && <NoteSection label="Notes" text={r.notes} collapse={200} className="mt-3" />}
         </>

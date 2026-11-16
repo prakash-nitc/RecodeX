@@ -119,15 +119,15 @@ describe('revisionsToCsv', () => {
       mistake: '', notes: '', sessionId: null, source: 'quick', nextReview: '2026-11-08', prev: null, ...over,
     }) as any;
     const csv = revisionsToCsv([
-      rev('r2', '2026-11-08T10:00:00.000Z', { rating: 'green', timeMin: 12, independent: true, mistake: 'off by one, again', sessionId: 's-1', source: 'session' }),
+      rev('r2', '2026-11-08T10:00:00.000Z', { rating: 'green', timeMin: 12, independent: true, mistake: 'off by one, again', sessionId: 's-1', source: 'session', mistakeCheck: 'avoided' }),
       rev('r1', '2026-11-07T10:00:00.000Z'),
       rev('r3', '2026-11-09T10:00:00.000Z', { problemId: 'p-gone' }),
     ], { 'p-101': problem }, { 'pt-a': pattern }, iso => iso.slice(11, 16));
     expect(csv.split('\n')).toEqual([
       REVISION_CSV_HEADERS.join(','),
-      '2026-11-07,10:00,101,Two Sum,Two Pointers,red,Reconstruction,,,,,quick,2026-11-08,',
-      '2026-11-08,10:00,101,Two Sum,Two Pointers,green,Reconstruction,12,yes,"off by one, again",,session,2026-11-08,s-1',
-      '2026-11-09,10:00,,(deleted problem),,red,Reconstruction,,,,,quick,2026-11-08,',
+      '2026-11-07,10:00,101,Two Sum,Two Pointers,red,Reconstruction,,,,,quick,2026-11-08,,',
+      '2026-11-08,10:00,101,Two Sum,Two Pointers,green,Reconstruction,12,yes,"off by one, again",,session,2026-11-08,s-1,avoided',
+      '2026-11-09,10:00,,(deleted problem),,red,Reconstruction,,,,,quick,2026-11-08,,',
     ]);
   });
 });

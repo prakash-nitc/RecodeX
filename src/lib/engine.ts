@@ -1,6 +1,6 @@
 // Revision engine: status, spaced repetition, phase suggestion, Today's Focus and session generation.
 import type {
-  Problem, Rating, Phase, Settings, Status, Revision, SessionConfig, Pattern, Priority, ProblemSnapshot, Preset,
+  Problem, Rating, Phase, Settings, Status, Revision, SessionConfig, Pattern, Priority, ProblemSnapshot, Preset, MistakeCheck,
 } from '../types';
 import { addDays, diffDays, today, nowIso, fmt, relDay } from './dates';
 import { byStudyOrder } from './order';
@@ -83,6 +83,7 @@ export interface RevisionInput {
   independent: boolean | null;
   mistake: string;
   notes: string;
+  mistakeCheck?: MistakeCheck | null;   // only asked when the problem has an earlier revision
   phaseUsed: Phase;
   nextPhase?: Phase | null;     // manual override for the next revision
   nextOverride?: string | null; // manual next review date
@@ -108,7 +109,7 @@ export function applyRevision(p: Problem, input: RevisionInput, s: Settings, id:
   const revision: Revision = {
     id, problemId: p.id, date, at: nowIso(), rating: input.rating, phase: input.phaseUsed,
     timeMin: input.timeMin, independent: input.independent, mistake: input.mistake.trim(), notes: input.notes.trim(),
-    sessionId: input.sessionId ?? null, source: input.source, nextReview: next, prev: snapshotOf(p),
+    mistakeCheck: input.mistakeCheck ?? null, sessionId: input.sessionId ?? null, source: input.source, nextReview: next, prev: snapshotOf(p),
   };
   const problem: Problem = {
     ...p,
