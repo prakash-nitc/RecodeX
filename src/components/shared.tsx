@@ -98,7 +98,9 @@ export function RatingForm({ problem, value, onChange, idPrefix, collapsible, ke
   const pv = value.rating ? previewNext(problem, value.rating, s) : null;
   const set = (patch: Partial<RatingFormValue>) => onChange({ ...value, ...patch });
   const last = problem.weakness ? noteSummary(problem.weakness).text : '';
-  const hasPrevious = useMemo(() => Object.values(d.revisions).some(r => r.problemId === problem.id), [d.revisions, problem.id]);
+  // Rated before: its rating counts even if a revision record is missing (one that failed to sync, for example).
+  const hasPrevious = useMemo(() => !!problem.lastRating || problem.revisionCount > 0 || Object.values(d.revisions).some(r => r.problemId === problem.id),
+    [d.revisions, problem.id, problem.lastRating, problem.revisionCount]);
   const mistakeField = (
     <>
       <Field label="Main mistake or weakness" htmlFor={`${idPrefix}-mistake`} hint={last ? <>Last time: <span className="text-fg/80">{last.slice(0, 140)}{last.length > 140 ? '…' : ''}</span></> : undefined}>

@@ -18,6 +18,8 @@ class FakeDb {
   failNext = 0;
   failWith: Err = { status: 0, error: { message: 'TypeError: Failed to fetch' } };
   rejectRow: ((row: any) => boolean) | null = null;
+  /** Columns the server does not have (a migration that was not run). */
+  missingCols: Record<string, string[]> = {};
   duplicateUpserts = 0;
   writes: { table: string; op: 'upsert' | 'delete'; n: number }[] = [];
   now() { return new Date(Date.UTC(2026, 10, 7) + ++this.clock * 1000).toISOString(); }
@@ -57,6 +59,9 @@ class FakeQuery {
         const bad = this.rows.flatMap(r => Object.keys(r).filter(k => !META_COLS.has(k)));
         if (bad.length) return { data: null, status: 400, error: { message: `Could not find the '${bad[0]}' column of 'user_meta' in the schema cache`, code: 'PGRST204' } };
       }
+      const absent = this.db.missingCols[this.table] ?? [];
+      const unknown = this.rows.flatMap(r => Object.keys(r)).find(k => absent.includes(k));
+      if (unknown) return { data: null, status: 400, error: { message: `Could not find the '${unknown}' column of '${this.table}' in the schema cache`, code: 'PGRST204' } };
       const conflictKeys = new Set<string>();
       for (const r of this.rows) {
         const key = this.table === 'user_meta' ? r.user_id : `${r.user_id}/${r.id}`;
@@ -190,6 +195,21 @@ describe('SupabaseBackend', () => {
     expect(db.tables.problems.has('p-retry')).toBe(true);
     expect(ev.recovered).toBe(1);
   }, 15_000); // three retries with 1s → 2s → 4s backoff take longer than the default 5s
+
+  it('saves rows without a column the server lacks, instead of dropping them, and says which migration is missing', async () => {
+    const { b, db, ev } = setup();
+    await until(() => ev.ready !== null);
+    db.missingCols = { revisions: ['mistake_check'] };
+    const rev = (id: string) => ({ id, problemId: 'p-1', date: '2026-11-17', at: '2026-11-17T00:00:00.000Z', rating: 'yellow', nextReview: '2026-11-20', mistake: 'm', mistakeCheck: 'repeated' });
+    b.put('revisions', 'r-1', rev('r-1'));
+    b.put('revisions', 'r-2', rev('r-2'));
+    await b.flushed();
+    expect([...db.tables.revisions.keys()].sort()).toEqual(['r-1', 'r-2']);
+    expect(db.tables.revisions.get('r-1')).toMatchObject({ mistake: 'm', rating: 'yellow' });
+    expect('mistake_check' in db.tables.revisions.get('r-1')).toBe(false);
+    expect(ev.errors).toHaveLength(1);
+    expect(ev.errors[0]).toMatch(/missing the column "mistake_check" on revisions/);
+  });
 
   it('writes user_meta without an id column (the table is keyed by user_id alone)', async () => {
     const { b, db, ev } = setup();

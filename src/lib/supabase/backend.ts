@@ -68,6 +68,8 @@ export class SupabaseBackend implements Backend {
   private waiters: (() => void)[] = [];
   private backoff = 0;
   private failures = 0;            // consecutive failed write requests that are being retried
+  /** Columns the server does not have yet (a migration not run): rows are sent without them. */
+  private missing = new Map<Table, Set<string>>();
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private slowTimer: ReturnType<typeof setTimeout> | null = null;
   private cacheTimer: ReturnType<typeof setTimeout> | null = null;
@@ -342,7 +344,11 @@ export class SupabaseBackend implements Backend {
         // The queue key is the identity used for coalescing and in-flight ordering. Keep it
         // authoritative: a stale/malformed embedded data.id must not turn two distinct jobs
         // into duplicate (user_id, id) rows in one Postgres upsert.
-        const rows = upsertRows(b.table, b.jobs, this.uid);
+        const gone = this.missing.get(b.table);
+        const rows = upsertRows(b.table, b.jobs, this.uid).map(r => {
+          if (!gone) return r;
+          const out = { ...r }; gone.forEach(c => delete out[c]); return out;
+        });
         ({ error, status } = await this.sb.from(b.table).upsert(rows, { onConflict: b.table === 'user_meta' ? 'user_id' : 'user_id,id' }));
       } else {
         ({ error, status } = await this.sb.from(b.table).delete().eq('user_id', this.uid).in('id', b.jobs.map(j => j.id)));
@@ -360,6 +366,16 @@ export class SupabaseBackend implements Backend {
     }
     console.warn('[RecodeX] write failed', b.table, b.op, status, error);
     if (this.stopped) { this.requeue(b.jobs); return; }
+    // A database that lacks a column the app now writes (its migration was not run): save the row
+    // without that column instead of losing it, and say which migration is missing.
+    const col = b.op === 'put' && String(error?.code ?? '') === 'PGRST204' ? /'([^']+)' column/.exec(String(error?.message ?? ''))?.[1] : undefined;
+    if (col && !this.missing.get(b.table)?.has(col)) {
+      const set = this.missing.get(b.table) ?? new Set<string>();
+      set.add(col); this.missing.set(b.table, set);
+      this.ev.onError(`The database is missing the column "${col}" on ${b.table}. Your changes are saved without it: run the newest script in supabase/migrations in the Supabase SQL editor, then reload.`);
+      this.requeue(b.jobs);
+      return;
+    }
     const kind = classify(error, status);
     if (kind !== 'fatal') {
       if (kind === 'network') this.setOffline(true);
